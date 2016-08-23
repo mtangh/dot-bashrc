@@ -1,0 +1,245 @@
+#!/bin/bash
+# $Id$
+THIS="${0##*/}"
+CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
+
+##
+## internal variables
+##
+MODE=
+PRNT=none
+FRCE=0
+TARG=
+NEWP=
+BUFF=
+
+##
+## functions
+##
+
+# check exist path string
+_path_exist() {
+  _IFS="$IFS"
+  IFS=":"
+  for _ent in $1; do
+    _ent="${_ent%/}"
+    if [ -z "${2//$_ent}" ]
+    then
+      IFS="$_IFS"
+      unset _IFS _ent
+      return 0
+    fi
+  done
+  IFS="$_IFS"
+  unset _IFS _ent
+  return 1
+}
+
+# path remove
+_path_remove() {
+  _newp="$1"; shift
+  _newp=${_newp#$1:}
+  _newp=${_newp//:$1:/:}
+  _newp=${_newp%:$1}
+  echo "$_newp"
+  unset _newp
+  return $?
+}
+
+# add path string
+add_path() {
+  newp="$1"; shift
+  while [ $# -gt 0 ]
+  do
+    [ -e "${1%/}" ] ||
+      { shift; continue; }
+    [ $FRCE -ne 0 ] &&
+      newp=`_path_remove "$newp" "${1%/}"`
+    _path_exist "$newp" "${1%/}" &&
+      { shift; continue; }
+    newp="$newp"`[ -n "$newp" ] && echo ":"`"${1%/}"
+    shift
+  done
+  echo "$newp"
+  unset newp
+  return 0
+}
+
+# insert path
+ins_path() {
+  newp="$1"; shift
+  insp=
+  while [ $# -gt 0 ]
+  do
+    [ -e "${1%/}" ] ||
+      { shift; continue; }
+    [ $FRCE -ne 0 ] &&
+      newp=`_path_remove "$newp" "${1%/}"`
+    _path_exist "$newp" "${1%/}" &&
+      { shift; continue; }
+    _path_exist "$insp" "${1%/}" &&
+      { shift; continue; }
+    insp="$insp"`[ -n "$insp" ] && echo ":"`"${1%/}"
+    shift
+  done
+  [ -n "$insp" -a -n "$newp" ] &&
+    echo "$insp:$newp" ||
+    echo "$insp$newp"
+  unset newp insp
+  return 0
+}
+
+# delete path
+del_path() {
+  newp="$1"
+  shift
+  while [ $# -gt 0 ]
+  do
+    newp=`_path_remove "$newp" "${1%/}"`
+    shift
+  done
+  echo "$newp"
+  return 0
+}
+
+# modify path environment
+mod_path_env() {
+  _mode="$1"; shift
+  _newp="$1"; shift
+  case $_mode in
+  1) add_path "$_newp" $@ ;;
+  2) ins_path "$_newp" $@ ;;
+  3) del_path "$_newp" $@ ;;
+  *) echo "$_newp" ;;
+  esac
+  return 0
+}
+
+# print path list
+path_list() {
+  _IFS="$IFS"
+  IFS=":"
+  for _ent in $1; do
+    echo "${_ent%/}"
+  done
+  IFS="$_IFS"
+  unset _IFS _ent
+  return 0
+}
+
+# usage
+usage() {
+  cat <<__EOF__
+Configuration for PATH environment
+
+Usage: $THIS env_name [OPTION] {-a|-i|-d} path_string ...
+
+[OPTIONS]
+-s	shell format
+-c	c shell format
+-l	list result
+-f	force path manipulation
+-h	Print this help
+
+__EOF__
+  return 0
+}
+
+##
+## parse option(s)
+##
+for ARGV in $@
+do
+  case $ARGV in
+  -s|-sh)       PRNT=sh ;;
+  -c|-csh)      PRNT=csh ;;
+  -l|-list)     PRNT=list ;;
+  -f|-force)    FRCE=1 ;;
+  -h|-help)     usage; exit 0 ;;
+  -a|-i|-d)     break ;;
+  -*)
+    echo "$THIS: ERROR: Illegal option '$ARGV'" 1>&2
+    usage
+    exit 1
+    ;;
+  *)
+    ;;
+  esac
+done
+unset ARGV
+
+##
+## first argument
+##
+if [ -n "$1" ]
+then
+  TARG="$1"
+  NEWP="${!TARG}"
+  shift
+else
+  usage
+  exit 1
+fi
+
+##
+## path manipulation
+##
+MODE=0
+while [ $# -gt 0 ]
+do
+  case $1 in
+  -a)
+    NEWP=`mod_path_env $MODE "$NEWP" $BUFF`
+    MODE=1
+    BUFF=
+    ;;
+  -i)
+    NEWP=`mod_path_env $MODE "$NEWP" $BUFF`
+    MODE=2
+    BUFF=
+    ;;
+  -d)
+    NEWP=`mod_path_env $MODE "$NEWP" $BUFF`
+    MODE=3
+    BUFF=
+    ;;
+  -*)
+    ;;
+  *)
+    if [ $MODE -gt 0 ]
+    then
+      BUFF=`[ -n "$BUFF" ] && echo "$BUFF "`"$1"
+      if [ $# -le 1 ]
+      then
+        NEWP=`mod_path_env $MODE "$NEWP" $BUFF`
+      fi
+    else
+      echo "$THIS: ERROR: Illegal option '$1'" 1>&2
+      usage
+      exit 1
+    fi
+    ;;
+  esac
+  shift
+done
+
+##
+## print new value
+##
+case $PRNT in
+sh)
+  echo "$TARG="'"'"$NEWP"'"'"; export $TARG"
+  ;;
+csh)
+  echo "setenv $TARG "'"'"$NEWP"'"'
+  ;;
+list)
+  path_list $NEWP
+  ;;
+*)
+  echo "$NEWP"
+  ;;
+esac
+
+# end of shell
+exit 0

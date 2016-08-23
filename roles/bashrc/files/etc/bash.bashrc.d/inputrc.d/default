@@ -1,0 +1,103 @@
+# /etc/profile.d/inputrc.d/default
+# System-wide inputrc file for readline library.
+
+##
+# Readline Options
+##
+
+#set meta-flag    on
+set input-meta   on
+set output-meta  on
+set convert-meta off
+
+#set editing-mode           emacs
+#set keymap                 emacs
+#set enable-keypad          off
+#set horizontal-scroll-mode off
+
+#set disable-completion             off
+#set page-completions               on
+#set completion-ignore-casei        off
+set completion-query-items         64
+#set print-completions-horizontally off
+set visible-stats                  on
+#set expand-tilde                   off
+
+#set byte-oriented off
+#set blink-matching-paren on
+#set history-preserve-point off
+
+#set mark-directories           on
+#set mark-modified-lines        off
+#set mark-symlinked-directories on
+
+set bell-style          off
+#set prefer-visible-bell on
+
+#set match-hidden-files on
+#set show-all-if-ambiguous off
+
+#set comment-begin #
+
+
+##
+# key bindings
+##
+
+# forward and backward
+"\C-f":     forward-char
+"\M-[C":    forward-char        # [RIGHT-ALLOW]
+"\M-f":     forward-word
+"\C-b":     backward-char
+"\M-[D":    backward-char       # [LEFT-ALLOW]
+"\M-b":     backward-word
+
+# line editing
+"\C-j":     accept-line
+"\C-m":     accept-line
+"\C-a":     beginning-of-line
+"\C-e":     end-of-line
+"\C-k":     kill-line
+"\C-u":     backward-kill-line
+
+# yank
+"\C-y":     yank
+"\M-y":     yank-pop
+
+# history
+"\C-p":     previous-history
+"\M-[A":    previous-history    # [UP-ARROW]
+"\C-n":     next-history
+"\M-[B":    next-history        # [DOWN-ARROW]
+"\C-s":     forward-search-history
+"\C-r":     reverse-search-history
+
+# completions
+"\C-i":      complete
+"\M-!":     complete-command
+"\M-/":     complete-filename
+"\M-@":     complete-hostname
+"\M-{":     complete-into-braces
+"\M-~":     complete-username
+"\M-$":     complete-variable
+#"\C-x/":    possible-filename-completions
+#"\C-x@":    possible-hostname-completions
+#"\C-x~":    possible-username-completions
+#"\C-x$":    possible-variable-completions
+
+# backspace
+"\C-h":     backward-delete-char
+
+# delete char
+DEL:        delete-char
+"\C-d":     delete-char
+"\C-?":     delete-char
+"\M-[3~":   delete-char         # [DEL]
+
+# other
+"\C-g":     abort
+"\C-l":     clear-screen
+"\C-x\C-r": re-read-init-file
+
+
+# *eof*

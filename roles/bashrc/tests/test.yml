@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tags:
+    01_default
+
+  vars:
+
+  roles:
+  - test-setup
+  - { role: ../.. }
+  - test-teardown
+

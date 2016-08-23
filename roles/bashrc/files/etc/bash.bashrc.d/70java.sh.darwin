@@ -1,0 +1,9 @@
+# ${bashrcdir}/70java.sh.darwin
+# $Id$
+
+JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
+
+export _JAVA_OPTIONS
+export JAVA_TOOL_OPTIONS
+
+# *eof*

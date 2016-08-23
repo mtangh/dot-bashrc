@@ -1,0 +1,26 @@
+# bash.profile
+# {{ ansible_managed }}
+
+# /etc/profile
+# System-wide profile for sh(1)
+
+[ -z "$USER" ]    && USER="`id -un`"
+[ -z "$LOGNAME" ] && LOGNAME=$USER
+[ -z "$UID" ]     && UID=`id -ru`
+[ -z "$EUID" ]    && EUID=`id -u`
+
+export USER LOGNAME UID EUID
+
+# bash ?
+if [ -n "$BASH" ]
+then
+  if [ -e "/etc/bash.bashrc" ]
+  then
+    . /etc/bash.bashrc
+  elif [ -e "/etc/bashrc" ]
+  then
+    . /etc/bashrc
+  fi
+fi
+
+# *eof*

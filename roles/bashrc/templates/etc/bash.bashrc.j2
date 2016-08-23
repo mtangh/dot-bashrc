@@ -1,0 +1,68 @@
+# bash.bashrc
+# {{ ansible_managed }}
+
+# /etc/bash.bashrc
+# System-wide .bashrc file for interactive bash(1) shells.
+
+# Bash ?
+[ -z "$BASH" ] &&
+  return 0
+# Interactive shell ?
+[ -z "$PS1" ] &&
+  return 0
+
+# Block recursive call !
+[[ "${BASH_SOURCE[@]}" \
+  =~ .*\ ${BASH_SOURCE}(\ .*|\ *)$ ]] &&
+  return 127
+
+# Treat unset variables as an error when
+# performing parameterr expansion.
+set -u
+
+# bash resource configs default
+bashrcdir="/etc/bash.bashrc.d"
+
+# platform and vendor
+if [[ "${MACHTYPE}" =~ ^([^-]+)-([^-]+)-([_A-Za-z]+).*$ ]]
+then
+  ostype="${BASH_REMATCH[3]}"
+  osvendor="${BASH_REMATCH[2]}"
+else
+  ostype="__UNKNOWN__"
+  osvendor="__UNKNOWN__"
+fi
+
+# machine name
+if [[ "${HOSTNAME}" =~ ^([^.]+).(.+)$ ]]
+then
+  machine="${BASH_REMATCH[1]}"
+else
+  machine="`hostname -s 2>/dev/null`"
+fi
+
+# Prompt setting (default)
+PS1='\u@\h \W\$ '
+
+# bash resource configs
+[ -d "${BASH_SOURCE}.d" ] &&
+  bashrcdir="${BASH_SOURCE}.d"
+
+# Load to the 'bash.bashrc.d' scripts
+for bashrc_sh in \
+`ls -1 ${bashrcdir}/[0-9][0-9]*.sh{,.${ostype},.${osvendor},.${machine}} 2>/dev/null`
+do
+  set +u
+  [ -x "$bashrc_sh" ] &&
+    . "$bashrc_sh"
+  set -u
+done
+
+# unset 'u'
+set +u
+
+# cleanup
+unset bashrcdir
+unset bashrc_sh
+
+# *eof*

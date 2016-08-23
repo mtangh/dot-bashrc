@@ -1,0 +1,11 @@
+# ${bashrcdir}/09env.sh.Darwin
+# $Id$
+
+# CF user text encoding (For MacOSX)
+__CF_USER_TEXT_ENCODING=0x1F5:0x8000100:0x8000100
+
+# exports
+export __CF_USER_TEXT_ENCODING
+
+
+# *eof*

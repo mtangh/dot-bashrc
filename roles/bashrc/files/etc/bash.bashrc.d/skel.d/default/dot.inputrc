@@ -1,0 +1,6 @@
+# $HOME/.inputrc
+# $Id$
+
+$include /etc/bash.bashrc.d/inputrc.d/default
+
+#*eof*

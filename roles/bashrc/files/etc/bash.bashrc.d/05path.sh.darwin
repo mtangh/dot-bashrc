@@ -1,0 +1,46 @@
+# ${bashrcdir}/05path.sh.darwin
+# $Id$
+
+# path config command
+pathconf=${bashrcdir}/bin/pathconfig
+
+# Darwin etc
+darwin_etc="/Library/UNIX/etc"
+macosx_etc="${HOME}/.MacOSX/etc"
+
+# path entry
+paths_dirs=""
+
+# lookup paths file(s)
+for path_entry in \
+"${darwin_etc}/paths" \
+`/bin/ls -1 ${darwin_etc}/paths.d/{,${machine}/}* 2>/dev/null` \
+${HOME}${darwin_etc}/paths{,.${machine}} \
+`/bin/ls -1 ${HOME}${darwin_etc}/paths.d/{,${machine}/}* 2>/dev/null` \
+${macosx_etc}/paths{,.${machine}} \
+`/bin/ls -1 ${macosx_etc}/paths.d/{,${machine}/}* 2>/dev/null`
+do
+  [ -f "${path_entry}" ] ||
+    continue
+  [ -x "${path_entry}" ] &&
+    paths_dirs="${paths_dirs} `/bin/bash ${path_entry} 2>/dev/null`"
+  [ -x "${path_entry}" ] ||
+    paths_dirs="${paths_dirs} `/bin/cat ${path_entry} 2>/dev/null`"
+done
+
+# User bin dir
+for path_entry in $HOME/{.MaxOSX,Library/UNIX}/{s,}bin
+do
+  [ -d "${path_entry}" ] &&
+    paths_dirs="${paths_dirs} ${path_entry}"
+done
+
+# export new PATH
+eval `$pathconf PATH -s -a ${paths_dirs}`
+
+# clean up
+unset pathconf
+unset darwin_etc macosx_etc
+unset paths_dirs path_entry
+
+# *eof* 

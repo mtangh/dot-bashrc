@@ -1,0 +1,209 @@
+# .gitignore
+#
+
+# Compiled object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Compiled Dynamic libraries
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Compiled Static libraries
+*.a
+*.la
+*.lai
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Java
+*.class
+
+## Java: Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+## Java: virtual machine crash logs,
+## see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# backup, log
+*~
+~*
+.swp.*
+.cache/
+*.swp
+*.tmp
+*.bak
+*.BAK
+*.old
+*.log
+*.autosave
+*~.nib/
+## MS Office
+~.doc*
+~.xls*
+*.xlk
+## LibraOffice
+.~lock.*#
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+## Windows: Folder config file
+Desktop.ini
+
+## Windows: shortcuts
+*.lnk
+
+## Windows: Recycle Bin used on file shares
+.BIN/
+
+## Windows: Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# MacOSX
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## MacOSX: Thumbnails
+._*
+
+## MacOSX: Icon must ends with two \r.
+Icon\r\r
+
+## MacOSX: Files that might appear on external disk
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.vol
+
+## MacOSX: Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+.apdisk
+Network Trash Folder
+Temporary Items
+
+# Git
+.git/
+*/.git/
+
+## SVN
+.svn/
+*/.svn/
+svn-commit*.tmp
+*.mine
+*.merge-left
+*.merge-right
+
+## CVS
+CVS/
+*/CVS/
+.cvsignore
+*/.cvsignore
+
+## Mercurial
+.hg/
+*/.hg/
+.hgignore
+*/.hgignore
+
+# Vim
+.netrwhist
+*.un~
+Session.vim
+
+## Build dir ##
+build/
+
+# Xcode
+# gitignore contributors: remember to update Global/Xcode.gitignore,
+# Objective-C.gitignore & Swift.gitignore
+*.xcodeproj/*
+*.xcworkspace
+
+## Xcode: Build generated
+DerivedData
+
+## Xcode: Various settings
+*.mode1
+*.mode1v3
+*.mode2
+*.mode2v3
+*.pbxuser
+*.perspective
+*.perspectivev1
+*.perspectivev2
+*.perspectivev3
+!default.pbxuser
+!default.mode1
+!default.mode1v3
+!default.mode2
+!default.mode2v3
+!default.perspectivev1
+!default.perspectivev2
+!default.perspectivev3
+xcuserdata
+
+## Xcode: Other
+*.moved-aside
+*.xccheckout
+*.xcuserstate
+
+## Xcode: Obj-C/Swift specific
+*.hmap
+*.ipa
+
+# Maven
+target/
+**/target/
+
+# Gradle
+.gradle/
+
+# Eclipse
+.metadata
+.settings/
+.project
+.cproject
+.pydevproject
+.classpath
+.buildpath
+.target
+.texlipse
+*.pydevproject
+
+## Eclipse: External tool builders
+.externalToolBuilders/
+
+## Eclipse: Locally stored "Eclipse launch configurations"
+*.launch
+
+## netbeans ##
+nbproject/private/
+nbbuild/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+## intellij idea ##
+.idea/

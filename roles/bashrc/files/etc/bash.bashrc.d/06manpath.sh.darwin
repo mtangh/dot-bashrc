@@ -1,0 +1,36 @@
+# ${bashrcdir}/06manpath.sh.darwin
+# $Id$
+
+# path config command
+pathconf=${bashrcdir}/bin/pathconfig
+
+# Darwin etc
+darwin_etc="/Library/UNIX/etc"
+macosx_etc="${HOME}/.MacOSX/etc"
+
+# lookup paths file(s)
+for manpath_entry in \
+"${darwin_etc}/manpaths" \
+`/bin/ls -1 ${darwin_etc}/manpaths.d/{,${machine}/}* 2>/dev/null` \
+"${HOME}${darwin_etc}/manpaths{,.${machine}}" \
+`/bin/ls -1 ${HOME}${darwin_etc}/manpaths.d/{,${machine}/}* 2>/dev/null` \
+"${macosx_etc}/manpaths{,.${machine}}" \
+`/bin/ls -1 ${macosx_etc}/manpaths.d/{,${machine}/}* 2>/dev/null`
+do
+  [ -f "${manpath_entry}" ] ||
+    continue
+  [ -x "${manpath_entry}" ] &&
+    manpaths_dirs="${manpaths_dirs} `/bin/bash ${manpath_entry} 2>/dev/null`"
+  [ -x "${manpath_entry}" ] ||
+    manpaths_dirs="${manpaths_dirs} `/bin/cat ${manpath_entry} 2>/dev/null`"
+done
+
+# export new PATH
+eval `$pathconf MANPATH -s -a ${manpaths_dirs}`
+
+# clean up
+unset pathconf
+unset darwin_etc macosx_etc
+unset manpaths_dirs manpath_entry
+
+# *eof* 

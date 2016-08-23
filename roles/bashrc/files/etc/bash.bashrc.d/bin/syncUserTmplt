@@ -1,0 +1,68 @@
+#!/bin/bash
+# $Id$
+THIS="${0##*/}"
+CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
+
+# PATH
+PATH=/usr/bin:/bin
+export PATH
+
+# set environment
+profile_d=/etc/bash.bashrc.d
+tmplt_dir="${profile_d}/skel.d"
+skel_dir=/etc/skel
+
+# Template dir
+if [ ! -d "$tmplt_dir" ]
+then
+  echo "$THIS: '$tmplt_dir': no such file or directory." 1>&2
+  exit 1
+fi
+
+# skel dir
+if [ ! -d "$skel_dir" ]
+then
+  echo "$THIS: '$skel_dir': no such file or directory." 1>&2
+  exit 1
+fi
+
+# Backup origin (at first time only)
+if [ ! -e "${skel_dir}" ]
+then
+  skel_bk_dir="${skel_dir%/*}/._${skel_dir##*/}.tgz"
+  tar -zpcvf "${skel_bk_dir}" "${skel_dir}" 1>/dev/null 2>&1 &&
+  echo "${THIS}: backup '${skel_dir}' to '${skel_bk_dir}'"
+fi
+
+# remove file(s) and synchronization
+for _tmplt_ in \
+$(cd "${tmplt_dir}/default" 2>/dev/null && pwd) \
+$(cd "${tmplt_dir}/${ostype}" 2>/dev/null && pwd) ;
+do
+
+  [ -d "${_tmplt_}" ] ||
+    continue
+
+  for _src_ in \
+  $(cd "${_tmplt_}" && find . -type f|sort 2>/dev/null)
+  do
+    _src_="${_src_//\/dot.//.}"
+    _src_="${_src_#*/}"
+    [ -n "$_src_" ] ||
+      continue
+    [ -e "$skel_dir/$_src_" ] && {
+      rm -f "$skel_dir/$_src_" 2>/dev/null &&
+      echo "${THIS}: '$skel_dir/$_src_' removed"
+    }
+  done
+
+  # synchronization
+  [ -x "${profile_d}/bin/mkUserTmplt" ] && {
+    echo "${THIS}: sync '$tmplt_dir' to '$skel_dir'"
+    ${profile_d}/bin/mkUserTmplt "$tmplt_dir" "$skel_dir"
+  }
+
+done
+
+# end of script
+exit $?
