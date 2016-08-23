@@ -38,12 +38,7 @@ do
       echo "${THIS%.*}: no such directory '${1}'." 1>&2
       exit 1
     fi 
-    if [ -z "$basedirs" ]
-    then
-      basedirs="${1}"
-    else
-      basedirs="${basedirs}\n${1}"
-    fi
+    basedirs="${basedirs}${1}\n"
     ;;
   esac
   shift
@@ -67,7 +62,7 @@ basedirs="${basedirs:-.}"
 
 exec 2>/dev/null
 
-echo -e ${basedirs} |
+printf "%b" "${basedirs}" |
 while read base_dir
 do
   echo "${THIS%.*}: Finding '$base_dir'"

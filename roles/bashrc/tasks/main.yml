@@ -3,9 +3,10 @@
 
 - name: bashrc | Set facts
   set_fact:
-    bash_bashrc_path: "{{ bash_bashrc_path|d('etc/bash.bashrc.d') }}"
     bash_bashrc_d_dir: "{{ '%s/%s'|format(prefix_dir|d(''),bash_bashrc_path) }}"
     bash_bashrc_files_path: "{{ bash_bashrc_files_path|d(bash_bashrc_path) }}"
+  vars:
+    bash_bashrc_path: 'etc/bash.bashrc.d'
   tags:
   - always
 
@@ -37,7 +38,8 @@
     - profile
     - bash.bashrc
     - bash.profile
-    when: backup_dir_stat.isdir|d(false) == true
+    when: backup_dir_stat.stat|d(none) is not none
+          and backup_dir_stat.stat.isdir|d(false) == true
 
   vars:
     _bashrc_origin_dir: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}"
@@ -66,7 +68,7 @@
 
 - name: "bashrc | Install '{{ bash_bashrc_d_dir|basename }}' files"
   synchronize:
-    src: "{{ bash_bashrc_files_path }}/
+    src: "{{ bash_bashrc_files_path }}/"
     dest: "{{ bash_bashrc_d_dir }}/"
     checksum: yes
     compress: yes
@@ -74,7 +76,8 @@
     links: yes
     recursive: yes
   register: bash_bashrc_files_installed
-  when: bash_bashrc_d_stat.isdir|d(false) == true
+  when: bash_bashrc_d_stat.stat|d(none) is not none
+        and bash_bashrc_d_stat.stat.isdir|d(false) == true
   tags:
   - install-bash-bashrc-dir
 

@@ -11,7 +11,7 @@
           "{{ _test_expects_dir }}" \
           "{{ _test_actual_dir }}"
       else
-        /bin/true
+        :
       fi
     register: test_teardown_result
     ignore_errors: "{{ test_teardown_ignore_errors|d(false) }}"
