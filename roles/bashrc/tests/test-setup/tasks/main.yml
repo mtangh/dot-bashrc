@@ -5,14 +5,14 @@
 
   - name: "test-setup | create directories for case '{{ test_casename }}"
     file:
-      path: "{{ '%s%s'|format(prefix_dir,(item.path if item.path|d(none) is not none else item)) }}"
+      path: "{{ '%s%s'|format(prefix_dir,item.path|d(item)) }}"
       state: directory
       owner: "{{ item.owner|d(test_owner) }}"
       group: "{{ item.group|d(test_group) }}"
       mode: "{{ item.mode|d('0755') }}"
     with_items: "{{ _test_setup_dirs|d([]) }}"
     when: item|d(none) is not none
-          and item.path|d(none) is not none
+          or item.path|d(none) is not none
 
   vars:
     _test_setup_dirs:
@@ -24,17 +24,22 @@
   tags:
   - '[test-setup]'
 
-- name: "test-setup | create bashrc files for test"
-  file:
-    path: "{{ prefix_dir|d('') }}/etc/{{ item }}"
-    state: touch
-    owner: "{{ test_owner|d('root') }}"
-    group: "{{ test_group|d('root') }}"
-    mode: 0644
-  ignore_errors: true
-  with_items:
+- block:
+
+  - name: "test-setup | create bashrc files for test"
+    copy:
+      src: "{{ '%s/%s'|format(_test_setup_src,item.path|d(item)) }}"
+      dest: "{{ '%s/etc/%s'|format(prefix_dir,item.path|d(item)) }}"
+      owner: "{{ test_owner|d('root') }}"
+      group: "{{ test_group|d('root') }}"
+      mode: "0644"
+    ignore_errors: true
+    with_items: 
     - bashrc
     - profile
+
+  vars:
+    _test_setup_src: "{{ '%s/files/%s/etc'|format(test_setup_dir,test_casename) }}"
   when: test_run|d(none) is not none
         and prefix_dir is defined
   tags:

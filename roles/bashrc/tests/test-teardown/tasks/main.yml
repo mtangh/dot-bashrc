@@ -16,6 +16,14 @@
     register: test_teardown_result
     ignore_errors: "{{ test_teardown_ignore_errors|d(false) }}"
 
+  - name: "test-teardown | {{ test_casename }} | validate"
+    shell: |
+      unset machine ostype osvendor &&
+      [ -r "{{ '%s/etc/bash.bashrc'|format(_test_actual_dir) }}" ] &&
+      .  "{{ '%s/etc/bash.bashrc'|format(_test_actual_dir) }}" &&
+      echo "OK"
+    args:
+      executable: /bin/bash
   vars:
     _test_expects_dir: "{{ '%s/files/expects/%s'|
                        format(test_teardown_dir,test_casename) }}"
