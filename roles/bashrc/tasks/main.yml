@@ -3,10 +3,16 @@
 
 - name: bashrc | Set facts
   set_fact:
-    bash_bashrc_d_dir: "{{ '%s/%s'|format(prefix_dir|d(''),bash_bashrc_path) }}"
-    bash_bashrc_files_path: "{{ bash_bashrc_files_path|d(bash_bashrc_path) }}"
-  vars:
-    bash_bashrc_path: 'etc/bash.bashrc.d'
+    __bashrc_files_path: "{{
+      bash_bashrc_files_path|
+      d(bash_bashrc_path|regexp_replace('^/+','')) }}"
+    __bashrc_d:
+      path: "{{ '%s%s'|format(prefix_dir|d(''),bash_bashrc_path) }}"
+      owner: "{{ bash_bashrc_owner|d('root') }}"
+      group: "{{ bash_bashrc_group|d('root') }}"
+      mode: "{{ bash_bashrc_dir_mode|d('0755') }}"
+    __bashrc_file_mode: "{{ bash_bashrc_file_mode|d('0644') }}"
+    __bashrc_script_mode: "{{ bash_bashrc_script_mode|d('0755') }}"
   tags:
   - always
 
@@ -14,23 +20,23 @@
 
   - name: bashrc | backup | Create a directory for backup.
     file:
-      path: "{{ _bashrc_backup_todir }}"
+      path: "{{ __bashrc_backup_todir }}"
       state: directory
-      owner: "{{ test_owner|d('root') }}"
-      group: "{{ test_group|d('root') }}"
-      mode: 0755
+      owner: "{{ test_owner|d(__bashrc_d.owner) }}"
+      group: "{{ test_group|d(__bashrc_d.group) }}"
+      mode: "{{ __bashrc_d.mode }}"
     register: backup_dir_mkdir
 
   - name: bashrc | backup | Stat backup directory.
     stat:
-      path: "{{ _bashrc_backup_todir }}"
+      path: "{{ __bashrc_backup_todir }}"
     register: backup_dir_stat
     when: backup_dir_mkdir|changed
 
   - name: bashrc | backup | Backup the original files.
     copy:
-      src: "{{ _bashrc_origin_dir }}/{{ item }}"
-      dest: "{{ _bashrc_backup_todir }}/{{ item }}"
+      src: "{{ __bashrc_origin_dir }}/{{ item }}"
+      dest: "{{ __bashrc_backup_todir }}/{{ item }}"
       remote_src: true
     ignore_errors: true
     with_items: 
@@ -42,40 +48,61 @@
           and backup_dir_stat.stat.isdir|d(false) == true
 
   vars:
-    _bashrc_origin_dir: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}"
-    _bashrc_backup_todir: "{{ '%s/%s'|format(_bashrc_origin_dir,'._bashrc-origin') }}"
-  
+    __bashrc_origin_dir: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}"
+    __bashrc_backup_todir: "{{ '%s/%s'|format(__bashrc_origin_dir,'._bashrc-origin') }}"
+  when: '%s/%s'|format(prefix_dir|d(''),'etc') == __bashrc_d.path|dirname
   tags:
   - bashrc-backup-origin
 
-- name: "bashrc | Create a '{{ bash_bashrc_d_dir|basename }}' directory."
+- name: "bashrc | Create a '{{ __bashrc_d.path|basename }}' directory."
   file:
-    path: "{{ bash_bashrc_d_dir }}/"
+    path: "{{ __bashrc_d.path }}/"
     state: directory
-    owner: "{{ test_owner|d(bash_bashrc_d_dir_owner|d('root')) }}"
-    group: "{{ test_group|d(bash_bashrc_d_dir_group|d('root')) }}"
-    mode: "{{ bash_bashrc_d_dir_mode|d('0755') }}"
+    owner: "{{ test_owner|d(__bashrc_d.owner) }}"
+    group: "{{ test_group|d(__bashrc_d.group) }}"
+    mode: "{{ __bashrc_d.mode }}"
   tags:
   - install-bash-bashrc-dir-mkdir
   - install-bash-bashrc-dir
 
-- name: bashrc | Stat '{{ bash_bashrc_d_dir|basename }}' directory.
-  stat: path="{{ bash_bashrc_d_dir }}/"
+- name: bashrc | Stat '{{ __bashrc_d.path|basename }}' directory.
+  stat: path="{{ __bashrc_d.path }}/"
   register: bash_bashrc_d_stat
   tags:
   - install-bash-bashrc-dir-stat
   - install-bash-bashrc-dir
 
-- name: "bashrc | Install '{{ bash_bashrc_d_dir|basename }}' files"
-  synchronize:
-    src: "{{ bash_bashrc_files_path }}/"
-    dest: "{{ bash_bashrc_d_dir }}/"
-    checksum: yes
-    compress: yes
-    delete: yes
-    links: yes
-    recursive: yes
-  register: bash_bashrc_files_installed
+- block:
+
+  - name: "bashrc | Install '{{ __bashrc_d.path|basename }}' files"
+    synchronize:
+      src: "{{ __bashrc_files_path }}/"
+      dest: "{{ __bashrc_d.path }}/"
+      checksum: yes
+      compress: yes
+      delete: yes
+      links: yes
+      recursive: yes
+    register: bash_bashrc_files_installed
+
+  - name: "bashrc | Find files and dirs under the {{ __bashrc_d.path }}/"
+    find:
+      paths: "{{ __bashrc_d.path }}"
+      recurse: yes
+    register: bash_bashrc_find
+
+  - name: "bashrc | Change mode all files and dirs under the {{ __bashrc_d.path }}/"
+    file:
+      path: "{{ item.path }}"
+      state: touch
+      owner: "{{ test_owner|d(__bashrc_d.owner) }}"
+      group: "{{ test_group|d(__bashrc_d.group) }}"
+      mode: "{{ __bashrc_file_mode if item.isdir == false else 
+                __bashrc_dir_mode }}"
+    with_items: "{{ bash_bashrc_find.files|d([]) }}"
+    when: bash_bashrc_find|d(none) is not none
+          and item|d(none) is not none
+   
   when: bash_bashrc_d_stat.stat|d(none) is not none
         and bash_bashrc_d_stat.stat.isdir|d(false) == true
   tags:
@@ -83,27 +110,27 @@
 
 - block:
 
-  - name: "bashrc | Find shell files under the {{ bash_bashrc_d_dir }}/"
+  - name: "bashrc | Find shell files under the {{ __bashrc_d.path }}/"
     find:
-      paths: "{{ bash_bashrc_d_dir }}"
+      paths: "{{ __bashrc_d.path }}"
       patterns: "*.sh*"
       recurse: yes
     register: bash_bashrc_find_sh
 
-  - name: "bashrc | Find shell files under the {{ bash_bashrc_d_dir }}/bin"
+  - name: "bashrc | Find shell files under the {{ __bashrc_d.path }}/bin"
     find:
-      paths: "{{ bash_bashrc_d_dir }}/bin"
+      paths: "{{ __bashrc_d.path }}/bin"
       file_type: file
       recurse: yes
     register: bash_bashrc_find_bin
 
-  - name: bashrc | Change mode all shell files
+  - name: "bashrc | Change mode all shell script files"
     file:
       path: "{{ item.path }}"
       state: touch
-      owner: "{{ test_owner|d(bash_bashrc_script_owner|d('root')) }}"
-      group: "{{ test_group|d(bash_bashrc_script_group|d('root')) }}"
-      mode: "{{ bash_bashrc_script_mode|d('0755') }}"
+      owner: "{{ test_owner|d(__bashrc_d.owner) }}"
+      group: "{{ test_group|d(__bashrc_d.group) }}"
+      mode: "{{ __bashrc_script_mode }}"
     with_flattened:
     - "{{ bash_bashrc_find_sh.files|d([]) }}"
     - "{{ bash_bashrc_find_bin.files|d([]) }}"
@@ -115,18 +142,18 @@
 
 - block:
 
-  - name: bashrc | Install rc files
+  - name: "bashrc | Install rc files"
     template:
       src: "etc/{{ item.src }}.j2"
       dest: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}/{{ item.src }}"
-      owner: "{{ test_owner|d(bash_bashrc_rc_files_owner|d('root')) }}"
-      group: "{{ test_group|d(bash_bashrc_rc_files_group|d('root')) }}"
-      mode: "{{ bash_bashrc_rc_files_mode|d('0644') }}"
+      owner: "{{ test_owner|d(__bashrc_d.owner) }}"
+      group: "{{ test_group|d(__bashrc_d.group) }}"
+      mode: "{{ __bashrc_file_mode }}"
     register: bash_bashrc_install_rc_files
     with_items: "{{ bash_bashrc_rc_files|d([]) }}"
     when: item.src|d(none) is not none
 
-  - name: bashrc | Symlinks rc files
+  - name: "bashrc | Symlinks rc files"
     file:
       src: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}/{{ item.src }}"
       dest: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}/{{ item.dest|d(item.src) }}"

@@ -1,3 +1,18 @@
 ---
 # defaults file for bashrc
 
+bash_bashrc_os_family: "{{ ansible_os_family|d('')|trim|lower }}"
+
+bash_bashrc_path: '/etc/bash.bashrc.d'
+
+bash_bashrc_owner: 'root'
+
+bash_bashrc_group: "{{ 
+  'wheel' if bash_bashrc_os_family|match('^darwin') else
+  'root' }}"
+
+bash_bashrc_dir_mode: '0755'
+
+bash_bashrc_file_mode: '0644'
+
+bash_bashrc_script_mode: '0755'
