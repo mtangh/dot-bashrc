@@ -29,7 +29,7 @@ do
 done
 
 # User bin dir
-for path_entry in $HOME/{.MaxOSX,Library/UNIX}/{s,}bin
+for path_entry in $HOME/{.MacOSX,Library/UNIX}/{s,}bin
 do
   [ -d "${path_entry}" ] &&
     paths_dirs="${paths_dirs} ${path_entry}"
