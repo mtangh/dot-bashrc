@@ -5,7 +5,7 @@
   set_fact:
     __bashrc_files_path: "{{
       bash_bashrc_files_path|
-      d(bash_bashrc_path|regexp_replace('^/+','')) }}"
+      d(bash_bashrc_path|regex_replace('^/+','')) }}"
     __bashrc_d:
       path: "{{ '%s%s'|format(prefix_dir|d(''),bash_bashrc_path) }}"
       owner: "{{ bash_bashrc_owner|d('root') }}"
@@ -50,7 +50,7 @@
   vars:
     __bashrc_origin_dir: "{{ '%s/%s'|format(prefix_dir|d(''),'etc') }}"
     __bashrc_backup_todir: "{{ '%s/%s'|format(__bashrc_origin_dir,'._bashrc-origin') }}"
-  when: '%s/%s'|format(prefix_dir|d(''),'etc') == __bashrc_d.path|dirname
+  when: __bashrc_d.path|dirname == '%s/%s'|format(prefix_dir|d(''),'etc')
   tags:
   - bashrc-backup-origin
 
