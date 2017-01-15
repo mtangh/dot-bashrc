@@ -33,8 +33,8 @@
   - name: bashrc | setup | Set facts install type
     set_fact:
       bash_bashrc_for_user: "{{
-        bash_bashrc_install_path|string|
-        match('^%s/etc$'|format(prefix_dir|d(''))) == false }}"
+        bash_bashrc_install_path|
+        match('^%s$'|format('%s/etc'|format(prefix_dir|d(''))|realpath)) == false }}"
 
   - name: bashrc | setup | Set facts path of bash.bashrc.d
     set_fact:
