@@ -4,7 +4,7 @@
 
 - block:
 
-  - name: "test-setup | create directories for case '{{ test_casename }}"
+  - name: "test-setup | create directories for case '{{ test_casename }}'"
     file:
       path: "{{ '%s%s'|format(prefix_dir,item.path|d(item)) }}"
       state: directory
