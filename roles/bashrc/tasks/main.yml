@@ -12,7 +12,7 @@
     register: bash_bashrc_install_prefix_stat
     when: bashrc_install_prefix|d(none) is not none
 
-  - name: bashrc | setup | Set facts 
+  - name: bashrc | setup | Set facts install path, owner and group
     set_fact:
       bash_bashrc_install_path: "{{
         bash_bashrc_install_prefix_stat.stat.path
@@ -30,15 +30,25 @@
         and bash_bashrc_install_prefix_stat.stat.gr_name|d(none) is not none
         else test_group|d(bash_bashrc_group|d('root')) }}"
 
-  - name: bashrc | setup | Set facts 
+  - name: bashrc | setup | Set facts install type
     set_fact:
       bash_bashrc_for_user: "{{
         bash_bashrc_install_path|string|
         match('^%s/etc$'|format(prefix_dir|d(''))) == false }}"
+
+  - name: bashrc | setup | Set facts path of bash.bashrc.d
+    set_fact:
+      bash_bashrc_dir_path: "{{
+        '%s/%s%s'|format(bash_bashrc_install_path,
+        ('.' if bash_bashrc_for_user else ''),
+        'bash.bashrc.d') }}"
+
   tags:
   - bashrc-backup-origin
   - bash-bashrc-dir
   - bash-bashrc-rcfiles
+  - bash-bashrc-inputrc
+  - bash-bashrc-vimrc
 
 - block:
 
@@ -81,18 +91,18 @@
 
 - block:
 
-  - name: "bashrc | bash.bashrc.d | Create a '{{ __bashrc_dir_path|basename }}' directory."
+  - name: "bashrc | bash.bashrc.d | Create a '{{ bash_bashrc_dir_path|basename }}' directory."
     file:
-      path: "{{ __bashrc_dir_path }}"
+      path: "{{ bash_bashrc_dir_path }}"
       state: directory
       owner: "{{ bash_bashrc_install_owner }}"
       group: "{{ bash_bashrc_install_group }}"
       mode: "{{ bash_bashrc_dir_mode|d('0755') }}"
 
-  - name: "bashrc | bash.bashrc.d | Install '{{ __bashrc_dir_path|basename }}' files"
+  - name: "bashrc | bash.bashrc.d | Install '{{ bash_bashrc_dir_path|basename }}' files"
     synchronize:
       src: 'etc/bash.bashrc.d/'
-      dest: "{{ __bashrc_dir_path }}/"
+      dest: "{{ bash_bashrc_dir_path }}/"
       checksum: yes
       compress: yes
       delete: yes
@@ -100,13 +110,13 @@
       recursive: yes
     register: __bashrc_files_installed
 
-  - name: "bashrc | bash.bashrc.d | Find files and dirs under the {{ __bashrc_dir_path|basename }}/"
+  - name: "bashrc | bash.bashrc.d | Find files and dirs under the {{ bash_bashrc_dir_path|basename }}/"
     find:
-      paths: "{{ __bashrc_dir_path }}"
+      paths: "{{ bash_bashrc_dir_path }}"
       recurse: yes
     register: __bashrc_find
 
-  - name: "bashrc | bash.bashrc.d | Change mode all files and dirs under the {{ __bashrc_dir_path|basename }}/"
+  - name: "bashrc | bash.bashrc.d | Change mode all files and dirs under the {{ bash_bashrc_dir_path|basename }}/"
     file:
       path: "{{ item.path }}"
       state: touch
@@ -118,16 +128,16 @@
     when: __bashrc_find|d(none) is not none
           and item|d(none) is not none
 
-  - name: "bashrc | bash.bashrc.d | Find shell files under the {{ __bashrc_dir_path|basename }}/"
+  - name: "bashrc | bash.bashrc.d | Find shell files under the {{ bash_bashrc_dir_path|basename }}/"
     find:
-      paths: "{{ __bashrc_dir_path }}"
+      paths: "{{ bash_bashrc_dir_path }}"
       patterns: "*.sh*"
       recurse: yes
     register: __bashrc_find_sh
 
-  - name: "bashrc | bash.bashrc.d | Find shell files under the {{ __bashrc_dir_path|basename }}/bin"
+  - name: "bashrc | bash.bashrc.d | Find shell files under the {{ bash_bashrc_dir_path|basename }}/bin"
     find:
-      paths: "{{ __bashrc_dir_path }}/bin"
+      paths: "{{ bash_bashrc_dir_path }}/bin"
       file_type: file
       recurse: yes
     register: __bashrc_find_bin
@@ -144,11 +154,6 @@
     - "{{ __bashrc_find_bin.files|d([]) }}"
     when: item.path|d(none) is not none
 
-  vars:
-    __bashrc_dir_path: "{{
-      '%s/%s%s'|format(bash_bashrc_install_path,
-      ('.' if bash_bashrc_for_user else ''),
-      'bash.bashrc.d') }}"
   tags:
   - bash-bashrc-dir
 
@@ -186,4 +191,38 @@
       dest: "{{ '.bash_profile' if bash_bashrc_for_user else 'profile' }}"
   tags:
   - bash-bashrc-rcfiles
+
+- block:
+
+  - name: "bashrc | rcfile | Symlink inputrc"
+    file:
+      src: "{{ '%s/inputrc.d/default'|format(bash_bashrc_dir_path) }}"
+      dest: "{{ '%s/.inputrc'|format(bash_bashrc_install_path) }}"
+      state: link
+      force: yes
+    when: bash_bashrc_for_user == true
+
+  tags:
+  - bash-bashrc-inputrc
+
+- block:
+
+  - name: "bashrc | rcfile | Install vimrc"
+    template:
+      src: "etc/vim/vimrc.j2"
+      dest: "{{ '%s/vim/vimrc'|format(bash_bashrc_dir_path) }}"
+      owner: "{{ bash_bashrc_install_owner }}"
+      group: "{{ bash_bashrc_install_group }}"
+      mode: "{{ bash_bashrc_file_mode|d('0644') }}"
+
+  - name: "bashrc | vimrc | Symlink vimrc"
+    file:
+      src: "{{ '%s/vim/vimrc'|format(bash_bashrc_dir_path) }}"
+      dest: "{{ '%s/.vimrc'|format(bash_bashrc_install_path) }}"
+      state: link
+      force: yes
+    when: bash_bashrc_for_user == true
+
+  tags:
+  - bash-bashrc-vimrc
 

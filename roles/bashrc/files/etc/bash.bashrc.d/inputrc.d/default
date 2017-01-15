@@ -1,4 +1,4 @@
-# /etc/profile.d/inputrc.d/default
+# ${bashrcdir}/inputrc.d/default
 # System-wide inputrc file for readline library.
 
 ##
