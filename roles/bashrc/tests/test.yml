@@ -1,12 +1,29 @@
 ---
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
 - hosts: localhost
   connection: local
   gather_facts: no
 
   tags:
-    01_default
+  - 01_default
 
   vars:
+
+  roles:
+  - test-setup
+  - { role: ../.. }
+  - test-teardown
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tags:
+  - 02_for-user
+
+  vars:
+    bashrc_install_prefix: "{{ lookup('env','HOME') }}"
 
   roles:
   - test-setup

@@ -1,5 +1,6 @@
 ---
 # test-setup tasks file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 - block:
 
@@ -18,6 +19,7 @@
     _test_setup_dirs:
     - /etc
     - /etc/profile.d
+    - "{{ bashrc_install_prefix|d(none) }}"
     
   when: test_run|d(none) is not none
         and prefix_dir|d('')|length > 0
@@ -30,8 +32,8 @@
     copy:
       src: "{{ '%s/%s'|format(_test_setup_src,item.path|d(item)) }}"
       dest: "{{ '%s/etc/%s'|format(prefix_dir,item.path|d(item)) }}"
-      owner: "{{ test_owner|d('root') }}"
-      group: "{{ test_group|d('root') }}"
+      owner: "{{ item.owner|d(test_owner) }}"
+      group: "{{ item.group|d(test_group) }}"
       mode: "0644"
     ignore_errors: true
     with_items: 
@@ -39,8 +41,9 @@
     - profile
 
   vars:
-    _test_setup_src: "{{ '%s/files/%s/etc'|format(test_setup_dir,test_casename) }}"
+    _test_setup_src: "{{ '%s/files/etc'|format(test_setup_dir) }}"
   when: test_run|d(none) is not none
         and prefix_dir is defined
   tags:
   - '[test-setup]'
+

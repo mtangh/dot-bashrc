@@ -14,7 +14,9 @@
     current_uid: "{{ c_uid|d(lookup('env','UID')) }}"
     user_name: "{{ user_name|d(lookup('env','USER')) }}"
     user_group: "{{ user_group|d(lookup('pipe','id -gn %s'|format(user_name))) }}"
-    home_dir: "{{ home_dir|d(lookup('env','HOME')) }}"
+    user_homedir: "{{ home_dir|d(lookup('env','HOME')) }}"
+
+    bashrc_install_prefix: "{{ user_homedir if system|d(true) == false else none }}"
 
   roles:
   - bashrc

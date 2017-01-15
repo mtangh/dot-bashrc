@@ -1,5 +1,6 @@
 ---
 # test-teardown tasks file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 - block:
 
@@ -16,14 +17,36 @@
     register: test_teardown_result
     ignore_errors: "{{ test_teardown_ignore_errors|d(false) }}"
 
-  - name: "test-teardown | {{ test_casename }} | validate"
+  - name: "test-teardown | {{ test_casename }} | validate rc"
     shell: |
-      unset machine ostype osvendor &&
-      [ -r "{{ '%s/etc/bash.bashrc'|format(_test_actual_dir) }}" ] &&
-      .  "{{ '%s/etc/bash.bashrc'|format(_test_actual_dir) }}" &&
-      echo "OK"
+      [ -z "{{ 'private' if bash_bashrc_for_user else '' }}" ] &&
+      [ -r "{{ '%s/bash.bashrc'|format(bash_bashrc_install_path) }}" ] &&
+      [ -d "{{ '%s/bash.bashrc.d'|format(bash_bashrc_install_path) }}" ] && {
+        echo "OK"; exit 0; }
+      [ -n "{{ 'private' if bash_bashrc_for_user else '' }}" ] &&
+      [ -r "{{ '%s/.bashrc'|format(bash_bashrc_install_path) }}" ] &&
+      [ -r "{{ '%s/.bash_profile'|format(bash_bashrc_install_path) }}" ] &&
+      [ -d "{{ '%s/.bash.bashrc.d'|format(bash_bashrc_install_path) }}" ] && {
+        echo "OK"; exit 0; }
+      echo "NG"; exit 1
     args:
       executable: /bin/bash
+
+  - name: "test-teardown | {{ test_casename }} | validate rc"
+    shell: |
+      unset machine ostype osvendor
+      [ -z "{{ 'private' if bash_bashrc_for_user else '' }}" ] &&
+      [ -r "{{ '%s/bash.bashrc'|format(bash_bashrc_install_path) }}" ] &&
+      . "{{ '%s/bash.bashrc'|format(bash_bashrc_install_path) }}" && {
+        echo "OK"; exit 0; }
+      [ -n "{{ 'private' if bash_bashrc_for_user else '' }}" ] &&
+      [ -r "{{ '%s/.bashrc'|format(bash_bashrc_install_path) }}" ] &&
+      . "{{ '%s/.bashrc'|format(bash_bashrc_install_path) }}" && {
+        echo "OK"; exit 0; }
+      echo "NG"; exit 2
+    args:
+      executable: /bin/bash
+
   vars:
     _test_expects_dir: "{{ '%s/files/expects/%s'|
                        format(test_teardown_dir,test_casename) }}"
