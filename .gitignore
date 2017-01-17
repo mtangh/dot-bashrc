@@ -1,5 +1,4 @@
 # .gitignore
-#
 
 # Compiled object files
 *.o
@@ -37,6 +36,13 @@
 ## see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
+# Python objects
+*.p
+*.pkl
+*.pyc
+*.pyd
+*.pyo
+
 # backup, log
 *~
 ~*
@@ -63,6 +69,7 @@ ehthumbs.db
 
 ## Windows: Folder config file
 Desktop.ini
+desktop.ini
 
 ## Windows: shortcuts
 *.lnk
@@ -207,3 +214,5 @@ nb-configuration.xml
 
 ## intellij idea ##
 .idea/
+
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
