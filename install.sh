@@ -96,16 +96,16 @@ then
     echo "${THIS}: 'dot-bashrc': no such file or directory." 1>&2
     exit 18
   }
-  
+
   echo "#"
   echo "# dot-bashrc/install.sh"
   echo "#"
 
   if [ -x "$dotbashrcplay" ]
   then
-  
+
     ansibleoption=""
-  
+
     [ $GLOBAL_INSTALL -ne 0 ] &&
     ansibleoption="${ansibleoption} -e system=true"
     [ $DRYRUNMODEFLAG -ne 0 ] &&
@@ -119,7 +119,7 @@ then
 
   elif [ -e "./install.sh" ]
   then
-  
+
     installoption=""
     installoption="${installoption} --install"
     installoption="${installoption} --source=${dotbashrcwdir}/dot-bashrc/roles/bashrc"
@@ -129,7 +129,7 @@ then
     installoption="${installoption} --global"
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     installoption="${installoption} --dry-run"
-    
+
     echo "#"
     echo "# run - bash ./install.sh $installoption"
     echo "#"
@@ -140,9 +140,10 @@ then
     echo "${THIS}: Abort(20)" 1>&2
     exit 20
   fi
-  
+
 else
 
+  bashrctagname="dot-bashrc/$THIS, $(date)"
   bashbashrcsrc="files/etc/bash.bashrc.d"
 
   cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
@@ -173,6 +174,7 @@ else
   }
 
   [ $DRYRUNMODEFLAG -ne 0 ] && {
+    bashrcinstall="${dotbashrcwdir}${bashrcinstall}"
     bashbashrcdir="${dotbashrcwdir}${bashbashrcdir}"
   }
 
@@ -189,7 +191,7 @@ else
 #* bash_rc_group="$bash_rc_group"
 #
 _EOF_
-  
+
   [ -d "${bashbashrcdir}" ] || {
     mkdir -p "${bashbashrcdir}"
   }
@@ -200,7 +202,7 @@ _EOF_
     echo "# Create a backup."
 
     mkdir -p "${bashrcinstall}/._bashrc-origin"
-    
+
     ( cd "${bashrcinstall}/._bashrc-origin" &&
       for file in \
           bashrc profile bash.bashrc bash.profile \
@@ -225,7 +227,7 @@ _EOF_
 
   echo
   echo "# Grant and revoke on 'bash.bashrc.d' files."
- 
+
   ( cd "${bashbashrcdir}" &&
     chown -R "${bash_rc_owner}:${bash_rc_group}" . &&
     find . -type d -exec chmod u=rwx,go=rx {} \; &&
@@ -240,13 +242,13 @@ _EOF_
   echo
   echo "# Install the 'bash.profile'."
 
-  sed -r \
+  sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
       -e 's@{{ bash_bashrc_dir[ ]*[^\}]*}}@'"${bashrcinstall}/${bashbashrcdir}"'@g' \
-      <"templates/etc/bash.profile.j2" \
-      >"${bashrcinstall}/${bashrcprofile}" && {
+         <"templates/etc/bash.profile.j2" \
+         >"${bashrcinstall}/${bashrcprofile}" && {
     echo
     diff -u \
-      "templates/etc/bash.bashrc.j2" \
+      "templates/etc/bash.profile.j2" \
       "${bashrcinstall}/${bashrcprofile}"
     echo
   }
@@ -254,10 +256,10 @@ _EOF_
   echo
   echo "# Install the 'bash.bashrc'."
 
-  sed -r \
-      -e 's@{{ bash_bashrc_dir[ ]*[^\}]*}}@'"${bashrcinstall}/${bashbashrcdir}"'@g' \
-      <"templates/etc/bash.bashrc.j2" \
-      >"${bashrcinstall}/${bashrc_rcfile}" && {
+  sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
+      -e 's@{{[ ]*bash_bashrc_dir[ ]*[^\}]*}}@'"${bashrcinstall}/${bashbashrcdir}"'@g' \
+         <"templates/etc/bash.bashrc.j2" \
+         >"${bashrcinstall}/${bashrc_rcfile}" && {
     echo
     diff -u \
       "templates/etc/bash.bashrc.j2" \
@@ -266,7 +268,7 @@ _EOF_
   }
 
   [ $GLOBAL_INSTALL -ne 0 ] && {
-  
+
     echo
     echo "# Create a symlink to '${bashrcinstall}."
 
