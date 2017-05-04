@@ -160,7 +160,7 @@ else
   bashrcinstall="$HOME"
   bashbashrcdir="${bashrcinstall}/.bash.bashrc.d"
   bashrcprofile=".bash_profile"
-  bashrc_rcfile=".bash_bashrc"
+  bashrc_rcfile=".bashrc"
   bash_rc_owner=$(id -un)
   bash_rc_group=$(id -gn "$bash_rc_owner")
 
@@ -177,6 +177,27 @@ else
     bashrcinstall="${dotbashrcwdir}${bashrcinstall}"
     bashbashrcdir="${dotbashrcwdir}${bashbashrcdir}"
   }
+
+  bashtmplfiles=$(
+    : && {
+      cat <<_EOF_
+bash.profile:${bashrcinstall}/${bashrcprofile}
+bash.bashrc:${bashrcinstall}/${bashrc_rcfile}
+vim/vimrc:${bashbashrcdir}/vim/vimrc
+_EOF_
+    } 2>/dev/null )
+
+  bashrcsymlnks=$(
+    [ $GLOBAL_INSTALL -ne 0 ] && {
+      cat <<_EOF_
+${bashrcprofile}:profile
+${bashrc_rcfile}:bashrc
+_EOF_
+    } || {
+      cat <<_EOF_
+${bashbashrcdir##*/}/vim/vimrc:.vimrc
+_EOF_
+    } 2>/dev/null )
 
   cat <<_EOF_
 #-----------------------
@@ -205,11 +226,12 @@ _EOF_
 
     ( cd "${bashrcinstall}/._bashrc-origin" &&
       for file in \
-          bashrc profile bash.bashrc bash.profile \
-          bash_profile baah_logout
+        bashrc profile \
+        bash.bashrc bash.profile \
+        bash_profile bash_logout
       do
-        [ -e "../${file}" ] && cp -prf ../${file} ./
-        [ -e "../.${file}" ] && cp -prf ../.${file} ./
+        [ -e "../${file}" ] && cp -prfv ../${file} ./
+        [ -e "../.${file}" ] && cp -prfv ../.${file} ./
       done )
 
     echo
@@ -230,55 +252,71 @@ _EOF_
 
   ( cd "${bashbashrcdir}" &&
     chown -R "${bash_rc_owner}:${bash_rc_group}" . &&
-    find . -type d -exec chmod u=rwx,go=rx {} \; &&
-    find . -type f -exec chmod u=rw,go=r {} \; &&
-    find . -type f -a -name "*.sh" -exec chmod a+x {} \; &&
-    find ./bin -type f -exec chmod a+x {} \; &&
+    find . -type d -print -exec chmod u=rwx,go=rx {} \; &&
+    find . -type f -print -exec chmod u=rw,go=r {} \; &&
+    find . -type f -a -name "*.sh" -print -exec chmod a+x {} \; &&
+    find ./bin -type f -print -exec chmod a+x {} \; &&
     echo ) || {
     echo "${THIS}: Abort(42)" 1>&2
     exit 42
   }
 
   echo
-  echo "# Install the 'bash.profile'."
+  echo "# Install the templates."
 
-  sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
-      -e 's@{{ bash_bashrc_dir[ ]*[^\}]*}}@'"${bashrcinstall}/${bashbashrcdir}"'@g' \
-         <"templates/etc/bash.profile.j2" \
-         >"${bashrcinstall}/${bashrcprofile}" && {
-    echo
-    diff -u \
-      "templates/etc/bash.profile.j2" \
-      "${bashrcinstall}/${bashrcprofile}"
-    echo
-  }
+  for bashrctmplent in ${bashtmplfiles}
+  do
+
+    : && {
+      bashrctmplsrc="templates/etc/"$(echo "${bashrctmplent}"|cut -d: -f1)".j2"
+      bashrctmpldst=$(echo "${bashrctmplent}"|cut -d: -f2)
+    } 2>/dev/null
+
+    [ -e "${bashrctmplsrc}" ] || continue
+    [ -n "${bashrctmpldst}" ] || continue
+
+    [ -z "${bashrctmpldst%/*}" -o -d "${bashrctmpldst%/*}" ] || {
+      mkdir -p "${bashrctmpldst%/*}"
+    }
+
+    echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
+
+    sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
+        -e 's@{{ bash_bashrc_dir[ ]*[^\}]*}}@'"${bashbashrcdir}"'@g' \
+           <"${bashrctmplsrc}" >"${bashrctmpldst}" && {
+      echo
+      diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
+      echo
+    }
+
+  done
 
   echo
-  echo "# Install the 'bash.bashrc'."
+  echo "# Create symlinks."
 
-  sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_dir[ ]*[^\}]*}}@'"${bashrcinstall}/${bashbashrcdir}"'@g' \
-         <"templates/etc/bash.bashrc.j2" \
-         >"${bashrcinstall}/${bashrc_rcfile}" && {
-    echo
-    diff -u \
-      "templates/etc/bash.bashrc.j2" \
-      "${bashrcinstall}/${bashrc_rcfile}"
-    echo
-  }
+  ( cd "${bashrcinstall}" &&
+    for bashsymlnkent in ${basrcsymlnks}
+    do
 
-  [ $GLOBAL_INSTALL -ne 0 ] && {
+      : && {
+        bashsymlnksrc=$(echo "${bashsymlnkent}"|cut -d: -f1)
+        bashsymlnkdst=$(echo "${bashsymlnkent}"|cut -d: -f2)
+      } 2>/dev/null
 
-    echo
-    echo "# Create a symlink to '${bashrcinstall}."
+      [ -e "${bashsymlnksrc}" ] || continue
+      [ -n "${bashsymlnkdst}" ] || continue
 
-    ln -sf "${bashrcinstall}/${bashrcprofile}" \
-           "${bashrcinstall}/profile"
+      [ "${bashsymlnksrc}" = "${bashsymlnkdst}" ] && continue
 
-    ln -sf "${bashrcinstall}/${bashrc_rcfile}" \
-           "${bashrcinstall}/bashrc"
+      [ -z "${bashsymlnkdst%/*}" -o -d "${bashsymlnkdst%/*}" ] || {
+        mkdir -p "${bashsymlnkdst%/*}"
+      }
 
-  } || :
+      echo "# Symlink '${bashsymlnksrc}' to '${bashsymlnkdst}'."
+
+      ln -sf "${bashsymlnksrc}" "${bashsymlnkdst}"
+
+    done 2>/dev/null )
 
   echo
   echo "Done."
