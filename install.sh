@@ -52,6 +52,12 @@ done
 
 set -u
 
+[ $GLOBAL_INSTALL -ne 0 ] &&
+[ "$(id -u 2>/dev/null)" != "0" ] && {
+  echo "${THIS}: Need SUDO" 1>&2
+  exit 8
+}
+
 [ -d "${dotbashrcwdir}" ] || {
   mkdir -p "${dotbashrcwdir}"
 }
