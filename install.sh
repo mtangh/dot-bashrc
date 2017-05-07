@@ -114,6 +114,8 @@ then
 
     [ $GLOBAL_INSTALL -ne 0 ] &&
     ansibleoption="${ansibleoption} -e system=true"
+    [ $GLOBAL_INSTALL -ne 0 ] ||
+    ansibleoption="${ansibleoption} -e system=false"
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     ansibleoption="${anaibleoption} -D"
 
