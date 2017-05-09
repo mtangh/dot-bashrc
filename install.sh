@@ -229,14 +229,16 @@ _EOF_
 
     mkdir -p "${bashrcinstall}/._bashrc-origin"
 
-    ( cd "${bashrcinstall}/._bashrc-origin" &&
+    ( cd "${bashrcinstall}/._bashrc-origin" && pwd &&
       for file in \
         bashrc profile \
         bash.bashrc bash.profile \
         bash_profile bash_logout
       do
-        [ -e "../${file}" ] && cp -prfv ../${file} ./
-        [ -e "../.${file}" ] && cp -prfv ../.${file} ./
+        [ -e "${bashrcinstall}/${file}" ] &&
+        cp -prfv ${bashrcinstall}/${file} ./
+        [ -e "${bashrcinstall}/.${file}" ] &&
+        cp -prfv ${bashrcinstall}/.${file} ./
       done )
 
     echo
