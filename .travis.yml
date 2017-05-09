@@ -30,7 +30,7 @@ script:
   # Basic role syntax check
   - cd roles/bashrc/tests/ && ansible-playbook -i inventory test.yml --syntax-check
   # Install shell
-  - bash -n install.sh && { export DOT_BASHRC_DEBUG=YES; bash install.sh --install --source=$(pwd); }
+  - bash -n install.sh
 
 #notifications:
 #  webhooks: https://galaxy.ansible.com/api/v1/notifications/
