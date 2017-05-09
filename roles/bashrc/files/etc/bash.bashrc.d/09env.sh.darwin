@@ -1,10 +1,17 @@
 # ${bashrcdir}/09env.sh.Darwin
 # $Id$
 
+# A colon-separated list of suffixes to ignore when performing
+# filename. completion. A file name whose suffix matches one of
+# the entries in FIGNORE is excluded from the list of matched
+# file names.
+FIGNORE="${FIGNORE}:.DS_Store"
+
 # CF user text encoding (For MacOSX)
 __CF_USER_TEXT_ENCODING=0x1F5:0x8000100:0x8000100
 
 # exports
+export FIGNORE
 export __CF_USER_TEXT_ENCODING
 
 

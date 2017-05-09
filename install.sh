@@ -83,8 +83,8 @@ then
   }
 
   [ $DRYRUNMODEFLAG -eq 0 ] && {
-    trap 'test -d '"$dotbashrcwdir"' && rm -rf '"${dotbashrcwdir}/"' 1>/dev/null 2>&1' SIGTERM SIGHUP SIGINT SIGQUIT
-    trap 'test -d '"$dotbashrcwdir"' && rm -rf '"${dotbashrcwdir}/"' 1>/dev/null 2>&1' EXIT
+    trap 'test -d '"$dotbashrcwdir"' && rm -rf '"${dotbashrcwdir}"' 1>/dev/null 2>&1' SIGTERM SIGHUP SIGINT SIGQUIT
+    trap 'test -d '"$dotbashrcwdir"' && rm -rf '"${dotbashrcwdir}"' 1>/dev/null 2>&1' EXIT
   }
 
   if [ -e "${dotbashrc_git}" ]
@@ -203,13 +203,14 @@ ${bashrc_rcfile}:bashrc
 _EOF_
     } || {
       cat <<_EOF_
+${bashbashrcdir##*/}/inputrc.d/default:.inputrc
 ${bashbashrcdir##*/}/vim/vimrc:.vimrc
 _EOF_
     } 2>/dev/null )
 
   cat <<_EOF_
 #-----------------------
-# sot-bashrc/install.sh
+# dot-bashrc/install.sh
 #-----------------------
 #
 #* bashrcinstall="$bashrcinstall"
@@ -220,10 +221,6 @@ _EOF_
 #* bash_rc_group="$bash_rc_group"
 #
 _EOF_
-
-  [ -d "${bashbashrcdir}" ] || {
-    mkdir -p "${bashbashrcdir}"
-  }
 
   [ -d "${bashrcinstall}/._bashrc-origin" ] || {
 
@@ -249,11 +246,32 @@ _EOF_
   echo
   echo "# Install the 'bash.bashrc.d' to '${bashbashrcdir}'."
 
-  ( cd "${bashbashrcsrc}" &&
-    tar -c . |tar -C "${bashbashrcdir}/" -xvf - ) || {
-    echo "${THIS}: Abort(41)" 1>&2
-    exit 41
-  }
+  if [ ! -e "${bashbashrcdir}" ] ||
+     [ -n "$(type -P patch)" ]
+  then
+
+    [ -e "${bashbashrcdir}" ] && {
+      mv -f "${bashbashrcdir}" \
+            "${bashbashrcdir}.$(date +'%Y%m%d_%H%M%S')"
+    }
+
+    mkdir -p "${bashbashrcdir}"
+
+    ( cd "${bashbashrcsrc}" &&
+      tar -c . |tar -C "${bashbashrcdir}/" -xvf - ) || {
+      echo "${THIS}: Abort(41)" 1>&2
+      exit 41
+    }
+
+  else
+
+    ( cd "${bashbashrcdir}" &&
+      diff -Nur . "${bashbashrcsrc}" |patch -p0 ) || {
+      echo "${THIS}: Abort(42)" 1>&2
+      exit 42
+    }
+
+  fi
 
   echo
   echo "# Grant and revoke on 'bash.bashrc.d' files."
@@ -266,7 +284,7 @@ _EOF_
     find ./bin -type f -print -exec chmod a+x {} \; &&
     echo ) || {
     echo "${THIS}: Abort(42)" 1>&2
-    exit 42
+    exit 44
   }
 
   echo

@@ -20,12 +20,17 @@ install:
   # Check ansible version
   - ansible --version
 
+  # Check bash version
+  - bash --version
+
   ## Create ansible.cfg with correct roles_path
   #- printf '[defaults]\nroles_path=../' >ansible.cfg
 
 script:
   # Basic role syntax check
   - cd roles/bashrc/tests/ && ansible-playbook -i inventory test.yml --syntax-check
+  # Install shell
+  - bash -n install.sh && { export DOT_BASHRC_DEBUG=YES; bash install.sh --install --source=$(pwd); }
 
 #notifications:
 #  webhooks: https://galaxy.ansible.com/api/v1/notifications/
