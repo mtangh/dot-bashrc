@@ -167,8 +167,8 @@ else
 
   bashrcinstall="$HOME"
   bashbashrcdir="${bashrcinstall}/.bash.bashrc.d"
-  bashrcprofile=".bash_profile"
-  bashrc_rcfile=".bashrc"
+  bashrcprofile=".bash.profile"
+  bashrc_rcfile=".bash.bashrc"
   bash_rc_owner=$(id -un)
   bash_rc_group=$(id -gn "$bash_rc_owner")
 
@@ -203,6 +203,8 @@ ${bashrc_rcfile}:bashrc
 _EOF_
     } || {
       cat <<_EOF_
+${bashrcprofile}:.bash_profile
+${bashrc_rcfile}:.bashrc
 ${bashbashrcdir##*/}/inputrc.d/default:.inputrc
 ${bashbashrcdir##*/}/vim/vimrc:.vimrc
 _EOF_
