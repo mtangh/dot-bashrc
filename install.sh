@@ -323,7 +323,7 @@ _EOF_
   echo "# Create symlinks."
 
   ( cd "${bashrcinstall}" &&
-    for bashsymlnkent in ${basrcsymlnks}
+    for bashsymlnkent in ${bashrcsymlnks}
     do
 
       : && {
