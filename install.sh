@@ -251,7 +251,7 @@ _EOF_
   echo "# Install the 'bash.bashrc.d' to '${bashbashrcdir}'."
 
   if [ ! -e "${bashbashrcdir}" ] ||
-     [ -n "$(type -P patch)" ]
+     [ -z "$(type -P patch)" ]
   then
 
     [ -e "${bashbashrcdir}" ] && {
