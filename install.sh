@@ -338,9 +338,16 @@ _EOF_
 
       [ "${bashsymlnksrc}" = "${bashsymlnkdst}" ] && continue
 
-      [ -z "${bashsymlnkdst%/*}" -o -d "${bashsymlnkdst%/*}" ] || {
-        mkdir -p "${bashsymlnkdst%/*}"
-      }
+      case "${bashsymlnkdst}" in
+      */*)
+        [ -n "${bashsymlnkdst%/*}" ] &&
+        [ ! -e "${bashsymlnkdst%/*}" ] && {
+          mkdir -p "${bashsymlnkdst%/*}"
+        }
+        ;;
+      *)
+        ;;
+      esac
 
       echo "# Symlink '${bashsymlnksrc}' to '${bashsymlnkdst}'."
 
