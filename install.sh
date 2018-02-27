@@ -17,7 +17,7 @@ GLOBAL_INSTALL=1
 [ -n "$DOT_BASHRC_DEBUG" ] &&
 DRYRUNMODEFLAG=1
 
-dotbashrcwdir="/tmp/.dot-bashrc.$(mktemp -u XXXXXXXX)"
+dotbashrcwdir="${TMPDIR:-/tmp}/.dot-bashrc.$(mktemp -u XXXXXXXX)"
 
 while [ $# -gt 0 ]
 do
@@ -83,15 +83,17 @@ then
   }
 
   [ $DRYRUNMODEFLAG -eq 0 ] && {
-    trap 'test -d '"$dotbashrcwdir"' && rm -rf '"${dotbashrcwdir}"' 1>/dev/null 2>&1' SIGTERM SIGHUP SIGINT SIGQUIT
-    trap 'test -d '"$dotbashrcwdir"' && rm -rf '"${dotbashrcwdir}"' 1>/dev/null 2>&1' EXIT
+    cleanup="test -d ${dotbashrcwdir} && rm -rf ${dotbashrcwdir}"
+    trap $cleanup 1>/dev/null 2>&1' SIGTERM SIGHUP SIGINT SIGQUIT
+    trap $cleanup 1>/dev/null 2>&1' EXIT
+    unset cleanup
   }
 
   if [ -e "${dotbashrc_git}" ]
   then
 
-    ( cd "$dotbashrcwdir" 2>/dev/null &&
-      $dotbashrc_git clone "$DOT_BASHRC_URL" )
+    ( cd "${dotbashrcwdir}" 2>/dev/null &&
+      ${dotbashrc_git} clone "$DOT_BASHRC_URL" )
 
   else
     echo "${THIS}: 'git' command not found." 1>&2
@@ -107,7 +109,7 @@ then
   echo "# dot-bashrc/install.sh"
   echo "#"
 
-  if [ -x "$dotbashrcplay" ]
+  if [ -x "${dotbashrcplay}" ]
   then
 
     ansibleoption=""
@@ -120,10 +122,10 @@ then
     ansibleoption="${anaibleoption} -D"
 
     echo "#"
-    echo "# run - $dotbashrcplay $ansibleoption ansible.yml"
+    echo "# run - ${dotbashrcplay} ${ansibleoption} ansible.yml"
     echo "#"
 
-    $dotbashrcplay $ansibleoption ansible.yml
+    ${dotbashrcplay} ${ansibleoption} ansible.yml
 
   elif [ -e "./install.sh" ]
   then
@@ -231,7 +233,8 @@ _EOF_
 
     mkdir -p "${bashrcinstall}/._bashrc-origin"
 
-    ( cd "${bashrcinstall}/._bashrc-origin" && pwd &&
+    ( cd "${bashrcinstall}/._bashrc-origin" &&
+      pwd &&
       for file in \
         bashrc profile \
         bash.bashrc bash.profile \
