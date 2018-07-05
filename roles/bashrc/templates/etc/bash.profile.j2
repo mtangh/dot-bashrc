@@ -10,15 +10,11 @@
 export USER LOGNAME UID EUID
 
 # bash ?
-if [ -n "$BASH" ]
-then
-  if [ -e "/etc/bash.bashrc" ]
-  then
-    . /etc/bash.bashrc
-  elif [ -e "/etc/bashrc" ]
-  then
-    . /etc/bashrc
-  fi
-fi
+[ -n "$BASH" ] &&
+[ -e "/etc/bash.bashrc" ] &&
+  . /etc/bash.bashrc
+[ -n "$BASH" ] &&
+[ -e "/etc/bashrc" ] &&
+  . /etc/bashrc
 
 # *eof*
