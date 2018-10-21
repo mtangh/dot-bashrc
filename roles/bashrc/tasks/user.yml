@@ -1,0 +1,69 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: bashrc | user | Create a directory for backup.
+    file:
+      path: "{{ _bashrc_backup_todir }}"
+      state: directory
+      owner: "{{ bash_bashrc_install_owner }}"
+      group: "{{ bash_bashrc_install_group }}"
+      mode: "{{ bash_bashrc_dir_mode|d('0755') }}"
+    register: _bashrc_backup_dir_mkdir
+
+  - name: bashrc | user | Stat backup directory.
+    stat:
+      path: "{{ _bashrc_backup_todir }}"
+    register: _bashrc_backup_dir_st
+    when: _bashrc_backup_dir_mkdir|changed
+
+  - name: bashrc | user | Backup the original files.
+    copy:
+      src: "{{ _bashrc_origin_dir }}/{{ item }}"
+      dest: "{{ _bashrc_backup_todir }}/{{ item }}"
+      remote_src: true
+    ignore_errors: true
+    with_items:
+    - .bashrc
+    - .bash_profile
+    - .inputrc
+    - .vimrc
+    when: _bashrc_backup_dir_st.stat|d(none) is not none
+          and _bashrc_backup_dir_st.stat.isdir|d(false) == true
+
+  vars:
+    _bashrc_origin_dir: "{{ user_homedir }}"
+    _bashrc_backup_todir: "{{ '%s/%s'|format(user_homedir,'._bashrc-origin') }}"
+  tags:
+  - bashrc-backup-origin-for-user
+
+- block:
+
+  - name: "bashrc | user | Install the rc files from template"
+    template:
+      src: "{{ item.src }}.j2"
+      dest: "{{ item.dest }}"
+      owner: "{{ bash_bashrc_install_owner }}"
+      group: "{{ bash_bashrc_install_group }}"
+      mode: "{{ bash_bashrc_file_mode|d('0644') }}"
+    with_items: "{{ _bashrc_template_files_for_user|d([]) }}"
+    when: item|d(none) is not none
+          anc item.src|d('')|length > 0
+          and item.dest|d('')|length > 0
+
+  vars:
+    _bashrc_template_files_for_user:
+    - src: "user/bash.bashrc"
+      dest: "{{ '%s/%s'|format(user_homedir,'.bashrc') }}"
+    - src: "user/bash.profile"
+      dest: "{{ '%s/%s'|format(user_homedir,'.bash_profile') }}"
+    - src: "user/inputrc"
+      dest: "{{ '%s/%s'|format(user_homedir,'.inputrc') }}"
+    - src: "user/vimrc"
+      dest: "{{ '%s/%s'|format(user_homedir,'.vimrc') }}"
+  when: bashrc_install_system|d(true) == false
+  tags:
+  - bash-bashrc-template-for-user
+

@@ -1,0 +1,8 @@
+# $HOME/.bash_profile
+# {{ ansible_managed }}
+[ -r "{{ bash_bashrc_root_dir }}/{{ bash_bashrc_profile_name }}" ] &&
+  . "{{ bash_bashrc_root_dir }}/{{ bash_bashrc_profile_name }}"; } || :
+
+
+
+# *eof*

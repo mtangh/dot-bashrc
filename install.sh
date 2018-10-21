@@ -62,6 +62,16 @@ done
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
 
+# Filter func
+bash_template_filter() {
+  sed -e 's@{{[ ]*ansible_managed[ ]*[^\}]*}}@'"${bashrctagname}"'@g' \
+      -e 's@{{[ ]*bash_bashrc_root_dir[ ]*[^\}]*}}@'"${bashrcinstall}"'@g' \
+      -e 's@{{[ ]*bash_bashrc_dir_path[ ]*[^\}]*}}@'"${bashbashrcdir}"'@g' \
+      -e 's@{{[ ]*bash_bashrc_profile_name[ ]*[^\}]*}}@'"${bashrcprofile}"'@g' \
+      -e 's@{{[ ]*bash_bashrc_rc_file_name[ ]*[^\}]*}}@'"${bashrc_rcfile}"'@g'
+  return $?
+}
+
 # Verify the permissions for global installation availability.
 [ $GLOBAL_INSTALL -ne 0 ] &&
 [ "$(id -u 2>|/dev/null)" != "0" ] && {
@@ -227,8 +237,8 @@ fi
 bashtmplfiles=$(
   : && {
     cat <<_EOF_
-bash.profile:${bashrcinstall}/${bashrcprofile}
 bash.bashrc:${bashrcinstall}/${bashrc_rcfile}
+bash.profile:${bashrcinstall}/${bashrcprofile}
 vim/vimrc:${bashbashrcdir}/vim/vimrc
 _EOF_
   } 2>|/dev/null; )
@@ -239,13 +249,6 @@ bashrcsymlnks=$(
     cat <<_EOF_
 ${bashrcprofile}:profile
 ${bashrc_rcfile}:bashrc
-_EOF_
-  } || {
-    cat <<_EOF_
-${bashrcinstall}/${bashrcprofile}:.bash_profile
-${bashrcinstall}/${bashrc_rcfile}:.bashrc
-${bashbashrcdir}/inputrc.d/default:.inputrc
-${bashbashrcdir}/vim/vimrc:.vimrc
 _EOF_
   } 2>|/dev/null; )
 
@@ -362,9 +365,8 @@ do
 
   echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
 
-  sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
-      -e 's@{{ bash_bashrc_dir[ ]*[^\}]*}}@'"${bashbashrcdir}"'@g' \
-           <"${bashrctmplsrc}" >"${bashrctmpldst}" && {
+  cat "${bashrctmplsrc}" |
+  bash_template_filtersed >"${bashrctmpldst}" && {
     echo
     diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
     echo
@@ -372,43 +374,83 @@ do
 
 done
 
-# Print message
-cat <<_EOF_
+# Symlinks
+if [ $GLOBAL_INSTALL -ne 0 ]
+then
+
+  # Print message
+  cat <<_EOF_
 #
 # Create symlinks.
 _EOF_
 
-# Sumlink processing
-( cd "${bashrcinstall}" &&
-  for bashsymlnkent in ${bashrcsymlnks}
+  # Sumlink processing
+  ( cd "${bashrcinstall}" &&
+    for bashsymlnkent in ${bashrcsymlnks}
+    do
+
+      : && {
+        bashsymlnksrc=$(echo "${bashsymlnkent}"|cut -d: -f1)
+        bashsymlnkdst=$(echo "${bashsymlnkent}"|cut -d: -f2)
+      } 2>|/dev/null
+
+      [ -e "${bashsymlnksrc}" ] || continue
+      [ -n "${bashsymlnkdst}" ] || continue
+
+      [ "${bashsymlnksrc}" = "${bashsymlnkdst}" ] && continue
+
+      case "${bashsymlnkdst}" in
+      */*)
+        [ -n "${bashsymlnkdst%/*}" ] &&
+        [ ! -e "${bashsymlnkdst%/*}" ] && {
+          mkdir -p "${bashsymlnkdst%/*}"
+        }
+        ;;
+      *)
+        ;;
+      esac
+
+      echo "# Symlink '${bashsymlnksrc}' to '${bashsymlnkdst}'."
+
+      ln -sf "${bashsymlnksrc}" "${bashsymlnkdst}"
+
+    done 2>|/dev/null; )
+
+fi # if [ $GLOBAL_INSTALL -ne 0 ]
+
+# Template file for user
+if [ $GLOBAL_INSTALL -eq 0 ]
+then
+
+  # Print message
+  cat <<_EOF_
+#
+# Install the templates for user.
+_EOF_
+
+  # Process the template file for user
+  for bashrctmplsrc in templates/user/*.j2
   do
 
     : && {
-      bashsymlnksrc=$(echo "${bashsymlnkent}"|cut -d: -f1)
-      bashsymlnkdst=$(echo "${bashsymlnkent}"|cut -d: -f2)
+      eval bashrctmpldst=$(head -n 1 "${bashrctmplsrc}" |sed -e 's@^.*\($HOME/[^ ][^ ]*\)[ ]*@\1@g')
     } 2>|/dev/null
 
-    [ -e "${bashsymlnksrc}" ] || continue
-    [ -n "${bashsymlnkdst}" ] || continue
+    [ -e "${bashrctmplsrc}" ] || continue
+    [ -n "${bashrctmpldst}" ] || continue
 
-    [ "${bashsymlnksrc}" = "${bashsymlnkdst}" ] && continue
+    echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
 
-    case "${bashsymlnkdst}" in
-    */*)
-      [ -n "${bashsymlnkdst%/*}" ] &&
-      [ ! -e "${bashsymlnkdst%/*}" ] && {
-        mkdir -p "${bashsymlnkdst%/*}"
-      }
-      ;;
-    *)
-      ;;
-    esac
+    cat "${bashrctmplsrc}" |
+    bash_template_filtersed >"${bashrctmpldst}" && {
+      echo
+      diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
+      echo
+    }
 
-    echo "# Symlink '${bashsymlnksrc}' to '${bashsymlnkdst}'."
+  done
 
-    ln -sf "${bashsymlnksrc}" "${bashsymlnkdst}"
-
-  done 2>|/dev/null; )
+fi # if [ $GLOBAL_INSTALL -eq 0 ]
 
 # Finish installation
 cat <<_EOF_

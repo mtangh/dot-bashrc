@@ -2,53 +2,27 @@
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
-- block: 
+- block:
 
-  - name: bashrc | setup | Stat install prefix
-    stat:
-      path: "{{
-        '%s%s'|format(
-        prefix_dir|d(''),bashrc_install_prefix)|realpath }}"
-    register: bash_bashrc_install_prefix_st
-    when: bashrc_install_prefix|d(none) is not none
+  - name: bashrc | setup | System-wide bashrc
+    include: 'setup-system.yml'
+    when: bashrc_install_system|d(true) == true
+
+  - name: bashrc | setup | User local bashrc
+    include: 'setup-user.yml'
+    when: bashrc_install_system|d(true) == false
 
   - name: bashrc | setup | Set facts install path
     set_fact:
-      bash_bashrc_install_path: "{{
-        bash_bashrc_install_prefix_st.stat.path
-        if bash_bashrc_install_prefix_st.stat|d(none) is not none
-        and bash_bashrc_install_prefix_st.stat.path|d(none) is not none
-        else '%s%s'|format(prefix_dir|d(''),bash_bashrc_base_dir)|realpath }}"
-
-  - name: bashrc | setup | Set facts owner and group, etc...
-    set_fact:
-      bash_bashrc_for_user: "{{
-        bash_bashrc_install_path|
-        match('^%s$'|format('%s/etc'|format(
-        prefix_dir|d(''))|realpath)) == false }}"
-      bash_bashrc_need_dot: "{{
-        bash_bashrc_install_path|
-        match('^%s$'|format('%s/etc'|format(
-        prefix_dir|d(''))|realpath)) == false
-        and bash_bashrc_install_path|
-        match('/\..*') == false }}"
-      bash_bashrc_install_owner: "{{
-        bash_bashrc_install_prefix_st.stat.pw_name
-        if bash_bashrc_install_prefix_st.stat|d(none) is not none
-        and bash_bashrc_install_prefix_st.stat.pw_name|d(none) is not none
-        else test_owner|d(bash_bashrc_owner|d('root')) }}"
-      bash_bashrc_install_group: "{{
-        bash_bashrc_install_prefix_st.stat.gr_name
-        if bash_bashrc_install_prefix_st.stat|d(none) is not none
-        and bash_bashrc_install_prefix_st.stat.gr_name|d(none) is not none
-        else test_group|d(bash_bashrc_group|d('root')) }}"
+      bash_bashrc_root_dir: "{{
+        '%s%s'|format(prefix_dir|d(''),bashrc_install_prefix)|realpath
+        if bashrc_install_prefix|d('')|length > 0 else
+        '%s%s'|format(prefix_dir|d(''),bash_bashrc_base_dir)|realpath }}"
 
   - name: bashrc | setup | Set facts path of bash.bashrc.d
     set_fact:
       bash_bashrc_dir_path: "{{
-        '%s/%s%s'|format(bash_bashrc_install_path,
-        ('.' if bash_bashrc_need_dot else ''),
-        'bash.bashrc.d') }}"
+        '%s/%s'|format(bash_bashrc_root_dir,bash_bashrc_bashrc_dir_name) }}"
 
   tags:
   - always
@@ -57,43 +31,36 @@
 
   - name: bashrc | backup | Create a directory for backup.
     file:
-      path: "{{ __bashrc_backup_todir }}"
+      path: "{{ _bashrc_backup_todir }}"
       state: directory
       owner: "{{ bash_bashrc_install_owner }}"
       group: "{{ bash_bashrc_install_group }}"
       mode: "{{ bash_bashrc_dir_mode|d('0755') }}"
-    register: __bashrc_backup_dir_mkdir
+    register: _bashrc_backup_dir_mkdir
 
   - name: bashrc | backup | Stat backup directory.
     stat:
-      path: "{{ __bashrc_backup_todir }}"
-    register: __bashrc_backup_dir_stat
-    when: __bashrc_backup_dir_mkdir|changed
+      path: "{{ _bashrc_backup_todir }}"
+    register: _bashrc_backup_dir_st
+    when: _bashrc_backup_dir_mkdir|changed
 
   - name: bashrc | backup | Backup the original files.
     copy:
-      src: "{{ __bashrc_origin_dir }}/{{ item }}"
-      dest: "{{ __bashrc_backup_todir }}/{{ item }}"
+      src: "{{ _bashrc_origin_dir }}/{{ item }}"
+      dest: "{{ _bashrc_backup_todir }}/{{ item }}"
       remote_src: true
     ignore_errors: true
-    with_items: 
+    with_items:
     - bashrc
     - profile
     - bash.bashrc
     - bash.profile
-    - .bashrc
-    - .bash_profile
-    - .bash_logout
-    - .profile
-    - .inputrc
-    - .vimrc
-    when: __bashrc_backup_dir_stat.stat|d(none) is not none
-          and __bashrc_backup_dir_stat.stat.isdir|d(false) == true
+    when: _bashrc_backup_dir_st.stat|d(none) is not none
+          and _bashrc_backup_dir_st.stat.isdir|d(false) == true
 
   vars:
-    __bashrc_origin_dir: "{{ bash_bashrc_install_path }}"
-    __bashrc_backup_todir: "{{ '%s/%s'|format(__bashrc_origin_dir,'._bashrc-origin') }}"
-
+    _bashrc_origin_dir: "{{ bash_bashrc_root_dir }}"
+    _bashrc_backup_todir: "{{ '%s/%s'|format(_bashrc_origin_dir,'._bashrc-origin') }}"
   tags:
   - bashrc-backup-origin
 
@@ -116,13 +83,13 @@
       delete: yes
       links: yes
       recursive: yes
-    register: __bashrc_files_installed
+    register: _bashrc_files_installed
 
   - name: "bashrc | bash.bashrc.d | Find files and dirs under the {{ bash_bashrc_dir_path|basename }}/"
     find:
       paths: "{{ bash_bashrc_dir_path }}"
       recurse: yes
-    register: __bashrc_find
+    register: _bashrc_find
 
   - name: "bashrc | bash.bashrc.d | Change mode all files and dirs under the {{ bash_bashrc_dir_path|basename }}/"
     file:
@@ -132,8 +99,8 @@
       group: "{{ bash_bashrc_install_group }}"
       mode: "{{ bash_bashrc_file_mode|d('0644')
                 if item.isdir == false else bash_bashrc_dir_mode|d('0755') }}"
-    with_items: "{{ __bashrc_find.files|d([]) }}"
-    when: __bashrc_find|d(none) is not none
+    with_items: "{{ _bashrc_find.files|d([]) }}"
+    when: _bashrc_find|d(none) is not none
           and item|d(none) is not none
 
   - name: "bashrc | bash.bashrc.d | Find shell files under the {{ bash_bashrc_dir_path|basename }}/"
@@ -141,14 +108,14 @@
       paths: "{{ bash_bashrc_dir_path }}"
       patterns: "*.sh*"
       recurse: yes
-    register: __bashrc_find_sh
+    register: _bashrc_find_sh
 
   - name: "bashrc | bash.bashrc.d | Find shell files under the {{ bash_bashrc_dir_path|basename }}/bin"
     find:
       paths: "{{ bash_bashrc_dir_path }}/bin"
       file_type: file
       recurse: yes
-    register: __bashrc_find_bin
+    register: _bashrc_find_bin
 
   - name: "bashrc | bash.bashrc.d | Change mode all shell script files"
     file:
@@ -158,8 +125,8 @@
       group: "{{ bash_bashrc_install_group }}"
       mode: "{{ bash_bashrc_script_mode|d('0755') }}"
     with_flattened:
-    - "{{ __bashrc_find_sh.files|d([]) }}"
-    - "{{ __bashrc_find_bin.files|d([]) }}"
+    - "{{ _bashrc_find_sh.files|d([]) }}"
+    - "{{ _bashrc_find_bin.files|d([]) }}"
     when: item.path|d(none) is not none
 
   tags:
@@ -167,74 +134,61 @@
 
 - block:
 
-  - name: "bashrc | rcfiles | Install the rc files from template"
+  - name: "bashrc | template | Install the rc files from template"
     template:
-      src: "etc/{{ item.src }}.j2"
-      dest: "{{ '%s/%s'|format(bash_bashrc_install_path,item.src) }}"
+      src: "{{ item.src }}.j2"
+      dest: "{{ item.dest }}"
       owner: "{{ bash_bashrc_install_owner }}"
       group: "{{ bash_bashrc_install_group }}"
       mode: "{{ bash_bashrc_file_mode|d('0644') }}"
-    register: __bashrc_installed_rc_files
-    with_items: "{{ __bashrc_rc_files|d([]) }}"
-    when: item.src|d(none) is not none
-
-  - name: "bashrc | rcfiles | Symlinks rc files"
-    file:
-      src: "{{ '%s/%s'|format(bash_bashrc_install_path,item.src) }}"
-      dest: "{{ '%s/%s'|format(bash_bashrc_install_path,item.dest) }}"
-      state: link
-      force: yes
-    with_items: "{{ __bashrc_rc_files|d([]) }}"
-    when: __bashrc_installed_rc_files|changed
-          and item.src|d(none) is not none
-          and item.dest|d(none) is not none
+    register: _bashrc_installed_template_files
+    with_items: "{{ _bashrc_template_files|d([]) }}"
+    when: item|d(none) is not none
+          and item.src|d('')|length > 0
+          and item.dest|d('')|length > 0
 
   vars:
-    __bashrc_rc_files:
-    - src: "{{ '.' if bash_bashrc_need_dot
-                   else '' }}bash.bashrc"
-      dest: "{{ '.' if bash_bashrc_for_user
-                    else '' }}bashrc"
-    - src: "{{ '.' if bash_bashrc_need_dot
-                   else '' }}bash.profile"
-      dest: "{{ '.bash_' if bash_bashrc_for_user
-                         else '' }}profile"
-  tags:
-  - bash-bashrc-rcfiles
-
-- block:
-
-  - name: "bashrc | vimrc | Install the vimrc from template"
-    template:
-      src: "etc/vim/vimrc.j2"
+    _bashrc_template_files:
+    - src: "etc/bash.bashrc"
+      dest: "{{ '%s/%s'|format(
+                bash_bashrc_root_dir,bash_bashrc_profile_name) }}"
+    - src: "etc/bash.profile"
+      dest: "{{ '%s/%s'|format(
+                bash_bashrc_root_dir,bash_bashrc_rc_file_name) }}"
+    - src: "etc/vim/vimrc"
       dest: "{{ '%s/vim/vimrc'|format(bash_bashrc_dir_path) }}"
-      owner: "{{ bash_bashrc_install_owner }}"
-      group: "{{ bash_bashrc_install_group }}"
-      mode: "{{ bash_bashrc_file_mode|d('0644') }}"
-
   tags:
-  - bash-bashrc-vimrc
+  - bash-bashrc-template-files
 
 - block:
 
-  - name: "bashrc | symlinks for user | Create a symlink"
+  - name: "bashrc | symlinks | Symlinks"
     file:
-      src: "{{ '%s/%s'|format(bash_bashrc_dir_path,item.src) }}"
-      dest: "{{ '%s/%s'|format(bash_bashrc_install_path,item.dest) }}"
+      src: "{{ '%s/%s'|format(bash_bashrc_root_dir,item.src) }}"
+      dest: "{{ '%s/%s'|format(bash_bashrc_root_dir,item.dest) }}"
       state: link
       force: yes
-    with_items: "{{ __bashrc_symlinks_for_user|d([]) }}"
+    with_items: "{{ _bashrc_symlinks_files|d([]) }}"
     when: item.src|d(none) is not none
           and item.dest|d(none) is not none
 
   vars:
-    __bashrc_symlinks_for_user:
-    - src: "inputrc.d/default"
-      dest: ".inputrc"
-    - src: "vim/vimrc"
-      dest: ".vimrc"
+    _bashrc_symlinks_files:
+    - src: "bash.bashrc"
+      dest: "bashrc"
+    - src: "bash.profile"
+      dest: "profile"
+  when: bashrc_install_system|d(true) == true
+        and _bashrc_installed_template_files|changed
+  tags:
+  - bash-bashrc-symlinks
 
-  when: bash_bashrc_for_user == true
+- block:
+
+  - name: bashrc | user | User local bashrc
+    include: 'user.yml'
+
+  when: bashrc_install_system|d(true) == false
   tags:
   - bash-bashrc-for-user
 

@@ -11,15 +11,21 @@
   - dot-bashrc
 
   vars:
+    # Current UID
     current_uid: "{{ c_uid|d(lookup('env','UID')) }}"
+    # Current dir.
     current_dir: "{{ c_dir|d(lookup('pipe','pwd -P')) }}"
-    # User specification
-    user_name: "{{ user_name|d(lookup('env','USER')) }}"
-    user_group: "{{ user_group|d(lookup('pipe','id -gn %s'|format(user_name))) }}"
+    # User
+    user_name: "{{ uid|d(lookup('env','USER')) }}"
+    user_group: "{{ gid|d(lookup('pipe','id -gn %s'|format(user_name))) }}"
     user_homedir: "{{ home_dir|d(lookup('env','HOME')) }}"
-    user_configdir: "{{ '%s/.config'|format(user_homedir) }}"
+    user_confdir: "{{ '%s/.config'|format(user_homedir) }}"
+    # bashrc install type
+    bashrc_install_system: "{{ system|d(true) }}"
     # bashrc install prefix
-    bashrc_install_prefix: "{{ user_configdir if system|d(true) == false else none }}"
+    bashrc_install_prefix: "{{
+      prefix if prefix|d('')|length > 0 else
+      user_confdir if system|d(true) == false else none }}"
 
   roles:
   - bashrc

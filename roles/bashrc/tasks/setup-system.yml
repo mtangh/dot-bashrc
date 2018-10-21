@@ -1,0 +1,24 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- name: bashrc | setup-system | Set facts owner and group
+  set_fact:
+    bash_bashrc_install_owner: "{{
+      test_owner|d(
+      user_name
+      if user_name|d('')|length > 0 else
+      bash_bashrc_owner|d('root')) }}"
+    bash_bashrc_install_group: "{{
+      test_group|d(
+      user_group
+      if user_group|d('')|length > 0 else
+      bash_bashrc_group|d('root')) }}"
+    bashrc_install_user_home: false
+
+- name: bashrc | setup-system | Set facts rc-file name.
+  set_fact:
+    bash_bashrc_bashrc_dir_name: "{{ 'bash.bashrc.d' }}"
+    bash_bashrc_profile_name: "{{ 'bash.profile' }}"
+    bash_bashrc_rc_file_name: "{{ 'bash.bashrc' }}"
+
