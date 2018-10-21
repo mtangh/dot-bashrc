@@ -15,9 +15,9 @@
   - name: bashrc | setup | Set facts install path
     set_fact:
       bash_bashrc_root_dir: "{{
-        '%s%s'|format(prefix_dir|d(''),bashrc_install_prefix)|realpath
+        '%s%s'|format(tests_prefix_dir|d(''),bashrc_install_prefix)|realpath
         if bashrc_install_prefix|d('')|length > 0 else
-        '%s%s'|format(prefix_dir|d(''),bash_bashrc_base_dir)|realpath }}"
+        '%s%s'|format(tests_prefix_dir|d(''),bash_bashrc_base_dir)|realpath }}"
 
   - name: bashrc | setup | Set facts path of bash.bashrc.d
     set_fact:
@@ -187,6 +187,10 @@
 
   - name: bashrc | user | User local bashrc
     include: 'user.yml'
+    vars:
+      user_bashrc_homedir: "{{ user_homedir }}"
+      user_bashrc_owner: "{{ bash_bashrc_install_owner }}"
+      user_bashrc_group: "{{ bash_bashrc_install_group }}"
 
   when: bashrc_install_system|d(true) == false
   tags:

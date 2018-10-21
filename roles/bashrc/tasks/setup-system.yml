@@ -5,12 +5,12 @@
 - name: bashrc | setup-system | Set facts owner and group
   set_fact:
     bash_bashrc_install_owner: "{{
-      test_owner|d(
+      tests_owner|d(
       user_name
       if user_name|d('')|length > 0 else
       bash_bashrc_owner|d('root')) }}"
     bash_bashrc_install_group: "{{
-      test_group|d(
+      tests_group|d(
       user_group
       if user_group|d('')|length > 0 else
       bash_bashrc_group|d('root')) }}"

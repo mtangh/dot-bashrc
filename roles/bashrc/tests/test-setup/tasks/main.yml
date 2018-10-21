@@ -4,46 +4,56 @@
 
 - block:
 
-  - name: "test-setup | create directories for case '{{ test_casename }}'"
+  - name: "{{ tests_casename|d('noname') }} | test-setup | Include vars."
+    include_vars:
+      file: "{{ '%s/%s.yml'|format(tests_vars_dir,item) }}"
+    with_items:
+    - main
+    - "{{ tests_casename }}"
+    when: ('%s/%s.yml'|format(tests_vars_dir,item))|is_file
+    no_log: "{{ tests_vars_dir|d('')|is_dir == false }}"
+
+  - name: "{{ tests_casename|d('noname') }} | test-setup | Cleanup."
     file:
-      path: "{{ '%s%s'|format(prefix_dir,item.path|d(item)) }}"
+      path: "{{ tests_prefix_dir }}"
+      state: absent
+      force: yes
+    when: tests_prefix_dir|is_dir == true
+    no_log: "{{ tests_prefix_dir|is_dir == false }}"
+
+  - name: "{{ tests_casename|d('noname') }} | test-setup | Create a prefix directories."
+    file:
+      path: "{{ tests_prefix_dir }}"
       state: directory
-      owner: "{{ item.owner|d(test_owner) }}"
-      group: "{{ item.group|d(test_group) }}"
-      mode: "{{ item.mode|d('0755') }}"
-    with_items: "{{ _test_setup_dirs|d([]) }}"
-    when: item|d(none) is not none
-          or item.path|d(none) is not none
+      owner: "{{ tests_owner }}"
+      group: "{{ tests_group }}"
+      mode: "0755"
 
+  - name: "{{ tests_casename|d('noname') }} | test-setup | Copy files."
+    synchronize:
+      src: "{{ item }}/"
+      dest: "{{ tests_prefix_dir }}"
+      checksum: no
+      compress: yes
+      delete: yes
+      links: yes
+      recursive: yes
+    with_first_found:
+    - files: "{{ tests_files_setup_first_found_dirs|d([]) }}"
+      skip: yes
+    when: tests_files_setup_dir|is_dir == true
+          and tests_prefix_dir|d('')|is_dir == true
+    ignore_errors: yes
+    no_log: "{{ not( tests_files_setup_dir|is_dir == true
+                  or tests_prefix_dir|d('')|is_dir == true ) }}"
+
+  when: tests_run|d(false) == true
+        and tests_casename|d(none) is not none
+        and tests_prefix_dir|d('')|string|trim|length > 0
   vars:
-    _test_setup_dirs:
-    - /etc
-    - /etc/profile.d
-    - "{{ bashrc_install_prefix|d(none) }}"
-    
-  when: test_run|d(none) is not none
-        and prefix_dir|d('')|length > 0
-  tags:
-  - '[test-setup]'
-
-- block:
-
-  - name: "test-setup | create bashrc files for test"
-    copy:
-      src: "{{ '%s/%s'|format(_test_setup_src,item.path|d(item)) }}"
-      dest: "{{ '%s/etc/%s'|format(prefix_dir,item.path|d(item)) }}"
-      owner: "{{ item.owner|d(test_owner) }}"
-      group: "{{ item.group|d(test_group) }}"
-      mode: "0644"
-    ignore_errors: true
-    with_items: 
-    - bashrc
-    - profile
-
-  vars:
-    _test_setup_src: "{{ '%s/files/etc'|format(test_setup_dir) }}"
-  when: test_run|d(none) is not none
-        and prefix_dir is defined
+    tests_files_setup_first_found_dirs:
+    - "{{ '%s/%s'|format(tests_files_setup_dir|d('.'),tests_casename) }}"
+    - "{{ '%s/default'|format(tests_files_setup_dir|d('.')) }}"
   tags:
   - '[test-setup]'
 

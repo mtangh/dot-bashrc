@@ -1,0 +1,65 @@
+---
+# test-setup defaults file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+tests_run: yes
+
+# test case name
+tests_casename: "{{
+        testcase
+        if testcase|d('')|string|trim|length > 0
+        else lookup('pipe','mktemp -u testcase_XXXXXXXX') }}"
+
+# test owner and group
+tests_owner: "{{
+        lookup('pipe','id -un')
+        if tests_run|d(false) == true else none }}"
+tests_group: "{{
+        lookup('pipe','id -gn')
+        if tests_run|d(false) == true else none }}"
+
+# dirs.
+tests_root_dir: "{{
+        playbook_dir|d(lookup('pipe','pwd'))
+        if tests_run|d(false) == true else none }}"
+
+tests_setup_dir: "{{
+        '%s/test-setup'|format(tests_root_dir)
+        if tests_run|d(false) == true else none }}"
+tests_teardown_dir: "{{
+        '%s/test-teardown'|format(tests_root_dir)
+        if tests_run|d(false) == true else none }}"
+
+tests_files_dir: "{{
+        '%s/files'|format(tests_root_dir)
+        if tests_run|d(false) == true else none }}"
+tests_files_setup_dir: "{{
+        '%s/setup'|format(tests_files_dir)
+        if tests_run|d(false) == true else none }}"
+tests_files_expects_dir: "{{
+        '%s/expects'|format(tests_files_dir)
+        if tests_run|d(false) == true else none }}"
+
+tests_tasks_dir: "{{
+        '%s/tasks'|format(tests_root_dir)
+        if tests_run|d(false) == true else none }}"
+
+tests_vars_dir: "{{
+        '%s/vars'|format(tests_root_dir)
+        if tests_run|d(false) == true else none }}"
+
+tests_target_dir: "{{
+        '%s/target'|format(tests_root_dir)
+        if tests_run|d(false) == true else none }}"
+
+# root dir of test case
+tests_prefix_dir: "{{
+        prefix_dir
+        if tests_run|d(false) == true
+        and prefix_dir|d('')|string|trim|length > 0
+        else (
+        '%s/%s'|format(tests_target_dir,tests_casename)
+        if tests_run|d(false) == true
+        and tests_casename|d('')|string|trim|length > 0
+        else none ) }}"
+

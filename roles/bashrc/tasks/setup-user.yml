@@ -2,23 +2,29 @@
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
+- name: bashrc | setup-user | user_homedir
+  fail:
+    msg: "{{ user_homedir }}: not specified."
+  when: user_homedir|d('')|length <= 0
+        or user_homedir|is_dir == false
+
 - name: bashrc | setup-user | Stat user homedir
   stat:
-    path: "{{ '%s%s'|format(prefix_dir|d(''),user_homedir)|realpath }}"
+    path: "{{ '%s%s'|format(tests_prefix_dir|d(''),user_homedir)|realpath }}"
   register: user_homedir_st
   when: user_homedir|d('')|length > 0
 
 - name: bashrc | setup-user | Set facts owner and group
   set_fact:
     bash_bashrc_install_owner: "{{
-      test_owner|d(
+      tests_owner|d(
       user_name
       if user_name|d('')|length > 0 else
       _user_homedir_pw_name
       if _user_homedir_pw_name|d('')|length > 0 else
       bash_bashrc_owner|d('root')) }}"
     bash_bashrc_install_group: "{{
-      test_group|d(
+      tests_group|d(
       user_group
       if user_group|d('')|length > 0 else
       _user_homedir_gr_name

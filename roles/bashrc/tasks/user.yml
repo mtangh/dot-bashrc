@@ -8,8 +8,8 @@
     file:
       path: "{{ _bashrc_backup_todir }}"
       state: directory
-      owner: "{{ bash_bashrc_install_owner }}"
-      group: "{{ bash_bashrc_install_group }}"
+      owner: "{{ tests_owner|d(bash_bashrc_install_owner) }}"
+      group: "{{ tests_group|d(bash_bashrc_install_group) }}"
       mode: "{{ bash_bashrc_dir_mode|d('0755') }}"
     register: _bashrc_backup_dir_mkdir
 
@@ -45,8 +45,8 @@
     template:
       src: "{{ item.src }}.j2"
       dest: "{{ item.dest }}"
-      owner: "{{ bash_bashrc_install_owner }}"
-      group: "{{ bash_bashrc_install_group }}"
+      owner: "{{ tests_owner|d(bash_bashrc_install_owner) }}"
+      group: "{{ tests_group|d(bash_bashrc_install_group) }}"
       mode: "{{ bash_bashrc_file_mode|d('0644') }}"
     with_items: "{{ _bashrc_template_files_for_user|d([]) }}"
     when: item|d(none) is not none
@@ -54,15 +54,17 @@
           and item.dest|d('')|length > 0
 
   vars:
+    _bashrc_user_homedir: "{{
+      %s%s|format(tests_prefix_dir|d(''),user_bashrc_homedir|d(lookup('env','HOME')) }}"
     _bashrc_template_files_for_user:
     - src: "user/bash.bashrc"
-      dest: "{{ '%s/%s'|format(user_homedir,'.bashrc') }}"
+      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.bashrc') }}"
     - src: "user/bash.profile"
-      dest: "{{ '%s/%s'|format(user_homedir,'.bash_profile') }}"
+      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.bash_profile') }}"
     - src: "user/inputrc"
-      dest: "{{ '%s/%s'|format(user_homedir,'.inputrc') }}"
+      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.inputrc') }}"
     - src: "user/vimrc"
-      dest: "{{ '%s/%s'|format(user_homedir,'.vimrc') }}"
+      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.vimrc') }}"
   when: bashrc_install_system|d(true) == false
   tags:
   - bash-bashrc-template-for-user
