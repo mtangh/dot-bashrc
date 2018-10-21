@@ -97,8 +97,8 @@ then
 
   [ $DRYRUNMODEFLAG -eq 0 ] && {
     cleanup="test -d ${dotbashrcwdir} && rm -rf ${dotbashrcwdir}"
-    trap $cleanup 1>|/dev/null 2>&1' SIGTERM SIGHUP SIGINT SIGQUIT
-    trap $cleanup 1>|/dev/null 2>&1' EXIT
+    trap $cleanup 1>|/dev/null 2>&1 SIGTERM SIGHUP SIGINT SIGQUIT
+    trap $cleanup 1>|/dev/null 2>&1 EXIT
     unset cleanup
   }
 
@@ -118,9 +118,11 @@ then
     exit 18
   }
 
-  echo "#"
-  echo "# dot-bashrc/install.sh"
-  echo "#"
+  cat <<_EOF_
+#
+# dot-bashrc/install.sh
+#
+_EOF_
 
   if [ -x "${dotbashrcplay}" ]
   then
@@ -134,9 +136,11 @@ then
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     ansibleoption="${anaibleoption} -D"
 
-    echo "#"
-    echo "# run - ${dotbashrcplay} ${ansibleoption} ansible.yml"
-    echo "#"
+    cat <<_EOF_
+#
+# run - ${dotbashrcplay} ${ansibleoption} ansible.yml
+#
+_EOF_
 
     ${dotbashrcplay} ${ansibleoption} ansible.yml
 
@@ -153,9 +157,11 @@ then
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     installoption="${installoption} --dry-run"
 
-    echo "#"
-    echo "# run - bash ./install.sh $installoption"
-    echo "#"
+    cat <<_EOF_
+#
+# run - bash ./install.sh $installoption
+#
+_EOF_
 
     bash ./install.sh $installoption
 
@@ -258,9 +264,10 @@ _EOF_
 # Backup the original file
 [ -d "${bashrcinstall}/._bashrc-origin" ] || {
 
-  echo
-  echo "# Create a backup."
-
+  cat <<_EOF_
+#
+# Create a backup.
+_EOF_
   mkdir -p "${bashrcinstall}/._bashrc-origin"
 
   ( cd "${bashrcinstall}/._bashrc-origin" &&
@@ -281,8 +288,10 @@ _EOF_
 } 2>|/dev/null
 
 # Print message
-echo
-echo "# Install the 'bash.bashrc.d' to '${bashbashrcdir}'."
+cat <<_EOF_
+#
+# Install the 'bash.bashrc.d' to '${bashbashrcdir}'.
+_EOF_
 
 # Install the file
 if [ ! -e "${bashbashrcdir}" -o -z "$(type -P patch)" ]
@@ -312,8 +321,10 @@ else
 fi # if [ ! -e "${bashbashrcdir}" -o -z "$(type -P patch)" ]
 
 # Print message
-echo
-echo "# Grant and revoke on 'bash.bashrc.d' files."
+cat <<_EOF_
+#
+# Grant and revoke on 'bash.bashrc.d' files.
+_EOF_
 
 # Set installation file permissions
 ( cd "${bashbashrcdir}" &&
@@ -328,8 +339,10 @@ echo "# Grant and revoke on 'bash.bashrc.d' files."
 }
 
 # Print message
-echo
-echo "# Install the templates."
+cat <<_EOF_
+#
+# Install the templates.
+_EOF_
 
 # Process the template file
 for bashrctmplent in ${bashtmplfiles}
@@ -360,8 +373,10 @@ do
 done
 
 # Print message
-echo
-echo "# Create symlinks."
+cat <<_EOF_
+#
+# Create symlinks.
+_EOF_
 
 # Sumlink processing
 ( cd "${bashrcinstall}" &&
@@ -396,8 +411,10 @@ echo "# Create symlinks."
   done 2>|/dev/null; )
 
 # Finish installation
-echo
-echo "Done."
+cat <<_EOF_
+#
+# Done.
+_EOF_
 
 # End
 exit 0

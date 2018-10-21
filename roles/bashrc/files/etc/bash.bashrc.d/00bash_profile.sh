@@ -8,16 +8,17 @@
 # profile.d
 profiledir="${bashrcdir}/profile.d"
 
-# Load '${profiledir}' scripts
+# Load scripts under '${profiledir}' dir
 for profile_sh in \
-`ls -1 ${profiledir}/[0-9][0-9]*.sh{,.${ostype},.${osvendor},.${machine}} 2>/dev/null`
+$(ls -1 ${profiledir}/[0-9][0-9]*.sh{.${ostype},.${osvendor},.${machine},})
 do
   [ -x "${profile_sh}" ] &&
-    . "${profile_sh}" 2>/dev/null
+    . "${profile_sh}"
 done
 
 # cleanup
 unset profiledir 
 unset profile_sh
 
-# *eof*
+# end
+return 0

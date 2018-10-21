@@ -1,13 +1,11 @@
-# ${bashrcdir}/99user_bashrc.sh
+# ${bashrcdir}/99user_bashrc.sh.darwin
 # $Id$
 
 : && {
 
 # User local .bashrc file(s)
 for dot_bashrc_sh in \
-${HOME}/{.bash,}.bashrc{.${ostype},.${osvendor},.${machine},} \
-${HOME}/{.bash,}.bashrc.d/{${ostype},${osvendor},${machine}} \
-${HOME}/.bashrc
+${HOME}/.{macOS,MacOSX}/{bash.,}bashrc{.${ostype},.${osvendor},.${machine},}
 do
   [[ "${BASH_SOURCE[@]}" \
     =~ .*\ ${dot_bashrc_sh}(\ .*|\ *)$ ]] &&
@@ -18,7 +16,7 @@ done
 
 # Load scripts inder the 'bash.bashrc.d' dir
 for bashrc_sh in \
-$(ls -1 ${HOME}/{.bash,}.bashrc.d/[0-9][0-9]*.sh{.${ostype},.${osvendor},.${machine},})
+$(ls -1 ${HOME}/.{macOS,MacOSX}/{etc/,}{bash.,}bashrc.d/[0-9][0-9]*.sh{.${ostype},.${osvendor},.${machine},})
 do
   [ -x "$bashrc_sh" ] &&
   . "$bashrc_sh"

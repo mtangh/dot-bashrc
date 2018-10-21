@@ -9,38 +9,45 @@
       path: "{{
         '%s%s'|format(
         prefix_dir|d(''),bashrc_install_prefix)|realpath }}"
-    register: bash_bashrc_install_prefix_stat
+    register: bash_bashrc_install_prefix_st
     when: bashrc_install_prefix|d(none) is not none
 
-  - name: bashrc | setup | Set facts install path, owner and group
+  - name: bashrc | setup | Set facts install path
     set_fact:
       bash_bashrc_install_path: "{{
-        bash_bashrc_install_prefix_stat.stat.path
-        if bash_bashrc_install_prefix_stat.stat|d(none) is not none
-        and bash_bashrc_install_prefix_stat.stat.path|d(none) is not none
+        bash_bashrc_install_prefix_st.stat.path
+        if bash_bashrc_install_prefix_st.stat|d(none) is not none
+        and bash_bashrc_install_prefix_st.stat.path|d(none) is not none
         else '%s%s'|format(prefix_dir|d(''),bash_bashrc_base_dir)|realpath }}"
-      bash_bashrc_install_owner: "{{
-        bash_bashrc_install_prefix_stat.stat.pw_name
-        if bash_bashrc_install_prefix_stat.stat|d(none) is not none
-        and bash_bashrc_install_prefix_stat.stat.pw_name|d(none) is not none
-        else test_owner|d(bash_bashrc_owner|d('root')) }}"
-      bash_bashrc_install_group: "{{
-        bash_bashrc_install_prefix_stat.stat.gr_name
-        if bash_bashrc_install_prefix_stat.stat|d(none) is not none
-        and bash_bashrc_install_prefix_stat.stat.gr_name|d(none) is not none
-        else test_group|d(bash_bashrc_group|d('root')) }}"
 
-  - name: bashrc | setup | Set facts install type
+  - name: bashrc | setup | Set facts owner and group, etc...
     set_fact:
       bash_bashrc_for_user: "{{
         bash_bashrc_install_path|
-        match('^%s$'|format('%s/etc'|format(prefix_dir|d(''))|realpath)) == false }}"
+        match('^%s$'|format('%s/etc'|format(
+        prefix_dir|d(''))|realpath)) == false }}"
+      bash_bashrc_need_dot: "{{
+        bash_bashrc_install_path|
+        match('^%s$'|format('%s/etc'|format(
+        prefix_dir|d(''))|realpath)) == false
+        and bash_bashrc_install_path|
+        match('/\..*') == false }}"
+      bash_bashrc_install_owner: "{{
+        bash_bashrc_install_prefix_st.stat.pw_name
+        if bash_bashrc_install_prefix_st.stat|d(none) is not none
+        and bash_bashrc_install_prefix_st.stat.pw_name|d(none) is not none
+        else test_owner|d(bash_bashrc_owner|d('root')) }}"
+      bash_bashrc_install_group: "{{
+        bash_bashrc_install_prefix_st.stat.gr_name
+        if bash_bashrc_install_prefix_st.stat|d(none) is not none
+        and bash_bashrc_install_prefix_st.stat.gr_name|d(none) is not none
+        else test_group|d(bash_bashrc_group|d('root')) }}"
 
   - name: bashrc | setup | Set facts path of bash.bashrc.d
     set_fact:
       bash_bashrc_dir_path: "{{
         '%s/%s%s'|format(bash_bashrc_install_path,
-        ('.' if bash_bashrc_for_user else ''),
+        ('.' if bash_bashrc_need_dot else ''),
         'bash.bashrc.d') }}"
 
   tags:
@@ -184,10 +191,14 @@
 
   vars:
     __bashrc_rc_files:
-    - src: "{{ '.' if bash_bashrc_for_user else '' }}bash.bashrc"
-      dest: "{{ '.bashrc' if bash_bashrc_for_user else 'bashrc' }}"
-    - src: "{{ '.' if bash_bashrc_for_user else '' }}bash.profile"
-      dest: "{{ '.bash_profile' if bash_bashrc_for_user else 'profile' }}"
+    - src: "{{ '.' if bash_bashrc_need_dot
+                   else '' }}bash.bashrc"
+      dest: "{{ '.' if bash_bashrc_for_user
+                    else '' }}bashrc"
+    - src: "{{ '.' if bash_bashrc_need_dot
+                   else '' }}bash.profile"
+      dest: "{{ '.bash_' if bash_bashrc_for_user
+                         else '' }}profile"
   tags:
   - bash-bashrc-rcfiles
 

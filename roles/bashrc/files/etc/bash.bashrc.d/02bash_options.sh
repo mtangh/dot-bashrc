@@ -111,4 +111,5 @@ HISTIGNORE='history:hist:exit'
 # from other history lines.
 HISTTIMEFORMAT='%Y-%m-%dT%T%z '
 
-# *eof*
+# end
+return 0

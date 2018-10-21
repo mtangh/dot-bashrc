@@ -1,21 +1,33 @@
 # ${bashrcdir}/04inputrc.sh
 # $Id$
 
-for input_rc in \
-${HOME}/.inputrc.d/${TERM}{.${machine},.${osvendor},.${ostype},} \
-${HOME}/.inputrc.d/default{.${machine},.${osvendor},.${ostype},} \
-${HOME}/.inputrc.${TERM}{.${machine},.${osvendor},.${ostype},} \
-${HOME}/.inputrc{.${machine},.${osvendor},.${ostype},} \
-${bashrcdir}/inputrc.d/${TERM}{.${machine},.${osvendor},.${ostype},} \
-${bashrcdir}/inputrc.d/default
+# Find inputrc file in 
+for input_rc in `
+[ -d "${HOME}/.inputrc.d" ] &&
+echo ${HOME}/.inputrc.d/{${TERM},default};
+echo ${HOME}/.inputrc{.${TERM},};
+echo ${bashrcdir}/inputrc.d/{${TERM},default};
+` 2>/dev/null
 do
-  [ -r "$input_rc" ] &&
-    INPUTRC="$input_rc" &&
-    break
+  # Test with suffix
+  for file_suffix in ${machine} ${osvendor} ${ostype} 
+  do
+    [ -r "${input_rc}.${file_suffix}" ] && {
+      INPUTRC="${input_rc}.${file_suffix}" &&
+      break 2; }
+  done
+  # Test without suffix
+  [ -z "${INPUTRC}" -a -r "${input_rc}" ] && {
+    INPUTRC="${input_rc}" &&
+    break; }
 done
-unset input_rc
 
+# cleanup
+unset input_rc file_suffix
+
+# Export
 [ -n "$INPUTRC" ] &&
   export INPUTRC
 
-# *eof*
+# end
+return 0
