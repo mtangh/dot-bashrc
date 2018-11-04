@@ -6,8 +6,7 @@
 
   - name: "{{ tests_casename|d('noname') }} | test-terdown | validate"
     shell: |
-      diff -Nur \
-        {{ tests_ignore_validation_files|d('') }}\
+      diff -Nur {{ tests_ignore_validation_files|d('') }}\
         -I '^# Ansible managed:.*$' \
         "{{ tests_files_expects_dir_for_case }}" \
         "{{ tests_prefix_dir }}"
@@ -26,14 +25,15 @@
 
   - name: "{{ tests_casename|d('noname') }} | test-teardown | validate rc"
     shell: |
-      [ -z "{{ 'user' if bashrc_install_system|d(true) == false else '' }}" ] &&
-      [ -r "{{ '%s/bash.bashrc'|format(bash_bashrc_install_path) }}" ] &&
-      [ -d "{{ '%s/bash.bashrc.d'|format(bash_bashrc_install_path) }}" ] && {
+      install_for_user="{{ 'yes' if bashrc_install_for|d('system') == 'user' else '' }}"
+      [ -z "$install_for_user" ] &&
+      [ -r "{{ '%s/bash.bashrc'|format(bashrc_install_path) }}" ] &&
+      [ -d "{{ '%s/bash.bashrc.d'|format(bashrc_install_path) }}" ] && {
         echo "OK"; exit 0; }
-      [ -n "{{ 'user' if bashrc_install_system|d(true) == false else '' }}" ] &&
-      [ -r "{{ '%s/.bashrc'|format(bash_bashrc_install_path) }}" ] &&
-      [ -r "{{ '%s/.bash_profile'|format(bash_bashrc_install_path) }}" ] &&
-      [ -d "{{ '%s/.bash.bashrc.d'|format(bash_bashrc_install_path) }}" ] && {
+      [ -n "$install_for_user" ] &&
+      [ -r "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}" ] &&
+      [ -r "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}" ] &&
+      [ -d "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}" ] && {
         echo "OK"; exit 0; }
       echo "NG"; exit 1
     args:
@@ -42,26 +42,27 @@
   - name: "{{ tests_casename|d('noname') }} | test-teardown | validate rc"
     shell: |
       unset machine ostype osvendor
-      [ -z "{{ 'user' if bashrc_install_system|d(true) == false else '' }}" ] &&
-      [ -r "{{ '%s/bash.bashrc'|format(bash_bashrc_install_path) }}" ] &&
-      . "{{ '%s/bash.bashrc'|format(bash_bashrc_install_path) }}" && {
-        echo "OK"; exit 0; }
-      [ -z "{{ 'user' if bashrc_install_system|d(true) == false else '' }}" ] &&
-      [ -r "{{ '%s/.bashrc'|format(bash_bashrc_install_path) }}" ] &&
-      . "{{ '%s/.bashrc'|format(bash_bashrc_install_path) }}" && {
-        echo "OK"; exit 0; }
+      install_for_user="{{ 'yes' if bashrc_install_for|d('system') == 'user' else '' }}"
+      [ -z "$install_for_user" ] &&
+      [ -r "{{ '%s/bash.bashrc'|format(bashrc_install_path|d('-')) }}" ] && {
+        . "{{ '%s/bash.bashrc'|format(bashrc_install_path|d('-')) }}" && {
+          echo "OK"; exit 0; }; }
+      [ -n "$install_for_user" ] &&
+      [ -r "{{ '%s/.bashrc'|format(bashrc_userhomedir_path|d('-')) }}" ] && {
+        . "{{ '%s/.bashrc'|format(bashrc_userhomedir_path|d('-')) }}" && {
+          echo "OK"; exit 0; }; }
       echo "NG"; exit 2
     args:
       executable: "/bin/bash"
 
   vars:
-    _test_expects_dir: "{{ '%s/files/expects/%s'|format(test_teardown_dir,test_casename) }}"
-    _test_actual_dir: "{{ '%s%s'|format(test_prefix_dir,'') }}"
+    _tests_expects_dir: "{{ '%s/files/expects/%s'|format(tests_teardown_dir,tests_casename) }}"
+    _tests_actual_dir: "{{ '%s%s'|format(tests_prefix_dir,'') }}"
 
-  when: test_run|d(none) is not none
-        and test_casename|d(none) is not none
-        and test_teardown_dir|d(none) is not none
-        and test_prefix_dir|d(none) is not none
+  when: tests_run|d(none) is not none
+        and tests_casename|d(none) is not none
+        and tests_teardown_dir|d(none) is not none
+        and tests_prefix_dir|d(none) is not none
   tags:
   - '[test-teardown]'
 
