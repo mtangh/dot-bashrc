@@ -88,6 +88,9 @@ desktop.ini
 .AppleDouble
 .LSOverride
 
+## MacOSX: iCloud temp
+.*.icloud
+
 ## MacOSX: Thumbnails
 ._*
 
