@@ -1,0 +1,61 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name:
+    set_fact:
+      bashrc_install_path: "{{
+        '%s%s'|format(tests_prefix_dir|d(''),(
+        bashrc_install_prefix
+        if bashrc_install_prefix|d('')|length > 0 else
+        bashrc_base_dir|d('/etc')
+        ))|realpath }}"
+      bashrc_install_owner: "{{
+        tests_owner|d(bashrc_owner|d('root')) }}"
+      bashrc_install_group: "{{
+        tests_group|d(bashrc_group|d('root')) }}"
+      bashrc_bashrcdir_name: "{{ 'bash.bashrc.d' }}"
+      bashrc_bashrcdir_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
+      bashrc_profile_name: "{{ 'bash.profile' }}"
+      bashrc_bashrc_name: "{{ 'bash.bashrc' }}"
+
+  tags:
+  - always
+
+- name: "bashrc | system | Installing bashrc. "
+  include: "install.yml"
+  tags:
+  - bashrc-system-bashrcdir-install
+
+- block:
+
+  - name: "bashrc | system | Symlinks"
+    file:
+      src: "{{ '%s/%s'|format(_symlink_src_dir,_symlink.src) }}"
+      dest: "{{ '%s/%s'|format(_symlink_dest_dir,_symlink.dest) }}"
+      state: link
+      force: yes
+    with_items: "{{ _symlink_files|d([]) }}"
+    loop_control:
+      loop_var: _symlink
+    when: _symlink.src|d(none) is not none
+          and _symlink.dest|d(none) is not none
+
+  when: bashrc_install_path|d('')|length > 0
+        and bashrc_install_path|is_dir == true
+        and bashrc_bashrcdir_path|d('')|length > 0
+        and bashrc_bashrcdir_path|is_dir == true
+  vars:
+    _symlink_src_dir: "{{ bashrc_bashrcdir_path }}"
+    _symlink_dest_dir: "{{ bashrc_install_path }}"
+    _symlink_files:
+    - src: "bash.bashrc"
+      dest: "bashrc"
+    - src: "bash.profile"
+      dest: "profile"
+  tags:
+  - bashrc-system-symlinks
+

@@ -1,0 +1,8 @@
+# $HOME/.bash_profile
+# {{ ansible_managed }}
+[ -r "{{ bashrc_skel_profile_path }}" ] &&
+  . "{{ bashrc_skel_profile_path }}"; } || :
+
+
+
+# *eof*

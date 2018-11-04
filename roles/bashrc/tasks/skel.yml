@@ -1,0 +1,145 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: bashrc | skel | Get homedir.
+    include: "user-homedir.yml"
+
+  - name: bashrc | skel | Check the user homedir.
+    fail:
+      mag: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
+    when: ( bashrc_userhomedir_path|d('')|length > 0
+          and bashrc_userhomedir_path|realpath|is_dir == true ) == false
+
+  tags:
+  - always
+
+- block:
+
+  - name: bashrc | skel | Set facts.
+    set_fact:
+      bashrc_skel_install_path: "{{
+        _skel.install_path|realpath
+        if _skel.install_path|d('')|length > 0 else
+        '%s%s'|format(tests_prefix_dir|d(''),bashrc_base_dir) }}"
+      bashrc_skel_bashrcdir_path: "{{
+        _skel.bashrcdir_path|realpath
+        if _skel.bashrcdir_path|d('')|length > 0 else
+        '%s/bash.bashrc.d'|format(bashrc_skel_install_path) }}"
+      bashrc_skel_bashrc_path: "{{
+        _skel.bashrc_path|realpath
+        if _skel.bashrc_path|d('')|length > 0 else
+        '%s/bash.bashrc'|format(bashrc_skel_install_path) }}"
+      bashrc_skel_profile_path: "{{
+        _skel.profile_path|realpath
+        if _skel.profile_path|d('')|length > 0 else
+        '%s/bash.profile'|format(bashrc_skel_install_path) }}"
+      bashrc_skel_owner: "{{
+        tests_owner|d(
+        bashrc_userhomedir_owner
+        if bashrc_userhomedir_owner|d('')|length > 0 else
+        _skel.owner
+        if _skel.owner|d('')|length > 0 else
+        bashrc_bash_user ) }}"
+      bashrc_skel_group: "{{
+        tests_group|d(
+        bashrc_userhomedir_group
+        if bashrc_userhomedir_group|d('')|length > 0 else
+        _skel.group
+        if _skel.group|d('')|length > 0 else
+        bashrc_bash_user ) }}"
+      bashrc_skel_dir_mode: "{{
+        _skel.dir_mode
+        if _skel.dir_mode|d('')|length > 0 else
+        '0755' }}"
+      bashrc_skel_file_mode: "{{
+        _skel.file_mode
+        if _skel.file_mode|d('')|length > 0 else
+        '0644' }}"
+      bashrc_skel_script_mode: "{{
+        _skel.script_mode
+        if _skel.script_mode|d('')|length > 0 else
+        '0755' }}"
+  vars:
+    _skel: "{{ bashrc_skel|d({}) }}"
+  tags:
+  - always
+
+- block:
+
+  - name: bashrc | skel | Create a directory for backup.
+    file:
+      path: "{{ _backup_to_dir }}"
+      state: directory
+      owner: "{{ tests_owner|d(bashrc_skel_owner) }}"
+      group: "{{ tests_group|d(bashrc_skel_group) }}"
+      mode: "{{ bashrc_skel_dir_mode|d('0755') }}"
+    register: _backup_to_dir_mkdir
+    ignore_errors: true
+
+  - name: bashrc | skel | Stat backup directory.
+    stat:
+      path: "{{ _backup_to_dir_ }}"
+    register: _backup_to_dir_st
+    when: _backup_to_dir_mkdir|changed
+
+  - name: bashrc | skel | Backup the original files.
+    copy:
+      src: "{{ 
+        '%s/%s'|format(
+        _backup_from_dir,_skel_backup) }}"
+      dest: "{{ 
+        '%s/%s'|format(
+        _backup_to_dir,_skel_backup) }}"
+      remote_src: true
+    ignore_errors: true
+    with_items:
+    - .bashrc
+    - .bash_profile
+    - .bash_logout
+    - .inputrc
+    - .vimrc
+    loop_control:
+      loop_var: _skel_backup
+    when: _backup_to_dir_st.stat|d(none) is not none
+          and _backup_to_dir_st.stat.isdir|d(false) == true
+
+  vars:
+    _backup_from_dir: "{{ bashrc_userhomedir_path }}"
+    _backup_to_dir: "{{
+      '%s/%s'|format(_backup_fromdir,'._bashrc-origin') }}"
+  tags:
+  - bashrc-skel-backup-origin-files
+
+- block:
+
+  - name: bashrc | skel | Install the rc files from template.
+    template:
+      src: "{{ 'skel/%s.j2'|format(_skel_template.src) }}"
+      dest: "{{
+        '%s/%s'|format(bashrc_userhomedir_path,
+        _skel_template.dest|d(_skel_template.src)) }}"
+      owner: "{{ bashrc_skel_owner }}"
+      group: "{{ bashrc_skel_group }}"
+      mode: "{{ bashrc_skel_file_mode|d('0644') }}"
+    with_items: "{{ _skel_template_files|d([]) }}"
+    loop_control:
+      loop_var: _skel_template
+    when: __skel_template|d(none) is not none
+          anc _skel_template.src|d('')|length > 0
+
+  vars:
+    _skel_template_files:
+    - src: 'bash.bashrc'
+      dest: '.bashrc'
+    - src: 'bash.profile'
+      dest: '.bash_profile'
+    - src: 'inputrc'
+      dest: '.inputrc'
+    - src: 'vimrc'
+      dest: '.vimrc'
+  tags:
+  - bashrc-skel-template-files
+

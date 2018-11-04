@@ -233,25 +233,6 @@ fi
   bashbashrcdir="${dotbashrcwdir}${bashbashrcdir}"
 }
 
-# Template files
-bashtmplfiles=$(
-  : && {
-    cat <<_EOF_
-bash.bashrc:${bashrcinstall}/${bashrc_rcfile}
-bash.profile:${bashrcinstall}/${bashrcprofile}
-vim/vimrc:${bashbashrcdir}/vim/vimrc
-_EOF_
-  } 2>|/dev/null; )
-
-# Symlinks ("from:to" format)
-bashrcsymlnks=$(
-  [ $GLOBAL_INSTALL -ne 0 ] && {
-    cat <<_EOF_
-${bashrcprofile}:profile
-${bashrc_rcfile}:bashrc
-_EOF_
-  } 2>|/dev/null; )
-
 # Print variables
 cat <<_EOF_
 #
@@ -271,6 +252,7 @@ _EOF_
 #
 # Create a backup.
 _EOF_
+
   mkdir -p "${bashrcinstall}/._bashrc-origin"
 
   ( cd "${bashrcinstall}/._bashrc-origin" &&
@@ -341,42 +323,61 @@ _EOF_
   exit 44
 }
 
-# Print message
-cat <<_EOF_
+# bash rc-files setup
+if [ $GLOBAL_INSTALL -ne 0 ]
+then
+
+  # Template files
+  bashtmplfiles=$(
+    : && {
+      cat <<_EOF_
+bash.bashrc:${bashrcinstall}/${bashrc_rcfile}
+bash.profile:${bashrcinstall}/${bashrcprofile}
+vim/vimrc:${bashbashrcdir}/vim/vimrc
+_EOF_
+    } 2>|/dev/null; )
+
+  # Symlinks ("from:to" format)
+  bashrcsymlnks=$(
+    : && {
+      cat <<_EOF_
+${bashrcprofile}:profile
+${bashrc_rcfile}:bashrc
+_EOF_
+    } 2>|/dev/null; )
+
+  # Print message
+  cat <<_EOF_
 #
 # Install the templates.
 _EOF_
 
-# Process the template file
-for bashrctmplent in ${bashtmplfiles}
-do
+  # Process the template file
+  for bashrctmplent in ${bashtmplfiles}
+  do
 
-  : && {
-    bashrctmplsrc="templates/etc/"$(echo "${bashrctmplent}"|cut -d: -f1)".j2"
-    bashrctmpldst=$(echo "${bashrctmplent}"|cut -d: -f2)
-  } 2>|/dev/null
+    : && {
+      bashrctmplsrc="templates/etc/"$(echo "${bashrctmplent}"|cut -d: -f1)".j2"
+      bashrctmpldst=$(echo "${bashrctmplent}"|cut -d: -f2)
+    } 2>|/dev/null
 
-  [ -e "${bashrctmplsrc}" ] || continue
-  [ -n "${bashrctmpldst}" ] || continue
+    [ -e "${bashrctmplsrc}" ] || continue
+    [ -n "${bashrctmpldst}" ] || continue
 
-  [ -z "${bashrctmpldst%/*}" -o -d "${bashrctmpldst%/*}" ] || {
-    mkdir -p "${bashrctmpldst%/*}"
-  }
+    [ -z "${bashrctmpldst%/*}" -o -d "${bashrctmpldst%/*}" ] || {
+      mkdir -p "${bashrctmpldst%/*}"
+    }
 
-  echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
+    echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
 
-  cat "${bashrctmplsrc}" |
-  bash_template_filtersed >"${bashrctmpldst}" && {
-    echo
-    diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
-    echo
-  }
+    cat "${bashrctmplsrc}" |
+    bash_template_filtersed >"${bashrctmpldst}" && {
+      echo
+      diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
+      echo
+    }
 
-done
-
-# Symlinks
-if [ $GLOBAL_INSTALL -ne 0 ]
-then
+  done
 
   # Print message
   cat <<_EOF_
@@ -416,11 +417,7 @@ _EOF_
 
     done 2>|/dev/null; )
 
-fi # if [ $GLOBAL_INSTALL -ne 0 ]
-
-# Template file for user
-if [ $GLOBAL_INSTALL -eq 0 ]
-then
+else # if [ $GLOBAL_INSTALL -ne 0 ]
 
   # Print message
   cat <<_EOF_
@@ -429,6 +426,7 @@ then
 _EOF_
 
   # Process the template file for user
+  [ -d "templates/user" ] &&
   for bashrctmplsrc in templates/user/*.j2
   do
 
@@ -448,9 +446,9 @@ _EOF_
       echo
     }
 
-  done
+  done 2>|/dev/null || :
 
-fi # if [ $GLOBAL_INSTALL -eq 0 ]
+fi # if [ $GLOBAL_INSTALL -ne 0 ]
 
 # Finish installation
 cat <<_EOF_

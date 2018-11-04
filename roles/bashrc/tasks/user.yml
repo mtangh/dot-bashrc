@@ -2,70 +2,71 @@
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
-- block:
+-block:
 
-  - name: bashrc | user | Create a directory for backup.
+  - name: bashrc | user | Get homedir.
+    include: "user-homedir.yml"
+
+  - name: bashrc | user | Check the user homedir.
+    fail:
+      mag: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
+    when: ( bashrc_userhomedir_path|d('')|length > 0
+          and bashrc_userhomedir_path|realpath|is_dir == true ) == false
+
+  - name: bashrc | user | Set facts.
+    set_fact:
+      bashrc_install_path: "{{
+        '%s%s'|format(
+        tests_prefix_dir|d(''),bashrc_install_prefix)|realpath
+        if bashrc_install_prefix|d('')|length > 0 else
+        bashrc_userhomedir_path|d('%s%s'|format(
+        tests_prefix_dir|d(''),bashrc_base_prefix)|realpath) }}"
+      bashrc_install_owner: "{{
+        tests_owner|d(
+        bashrc_bash_user|d(user_name)
+        if bashrc_bash_user|d(user_name|d(''))|length > 0 else
+        bashrc_userhomedir_owner
+        if bashrc_userhomedir_owner|d('')|length > 0 else
+        bashrc_owner|d('root')) }}"
+      bashrc_install_group: "{{
+        tests_group|d(
+        bashrc_userhomedir_group
+        if bashrc_userhomedir_group|d('')|length > 0 else
+        none }}"
+      bashrc_bashrcdir_prefix: "{{
+        '.' if bashrc_install_prefix|d('')|length > 0
+            and bashrc_install_prefix|d('')|realpath == bashrc_userhomedir_path|d('')
+            else '' }}"
+      bashrc_bashrcdir_name: "{{
+        '%s%s'|format(bashrc_bashrcdir_prefix|d(''),'bash.bashrc.d' }}"
+      bashrc_bashrcdir_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
+      bashrc_bashrc_name: "{{
+        '%s%s'|format(bashrc_bashrcdir_prefix,'bash.bashrc') }}"
+      bashrc_profile_name: "{{
+        '%s%s'|format(bashrc_bashrcdir_prefix,'bash.profile') }}"
+
+  - name: bashrc | user | Create a bashrc install prefix.
     file:
-      path: "{{ _bashrc_backup_todir }}"
+      path: "{{ bashrc_install_path }}"
       state: directory
-      owner: "{{ tests_owner|d(bash_bashrc_install_owner) }}"
-      group: "{{ tests_group|d(bash_bashrc_install_group) }}"
-      mode: "{{ bash_bashrc_dir_mode|d('0755') }}"
-    register: _bashrc_backup_dir_mkdir
+      owner: "{{ bashrc_install_owner }}"
+      group: "{{ bashrc_install_group }}"
+      mode: "{{ bashrc_dir_mode|d('0755') }}"
+    when: bashrc_install_path|d('')|length > 0
 
-  - name: bashrc | user | Stat backup directory.
-    stat:
-      path: "{{ _bashrc_backup_todir }}"
-    register: _bashrc_backup_dir_st
-    when: _bashrc_backup_dir_mkdir|changed
-
-  - name: bashrc | user | Backup the original files.
-    copy:
-      src: "{{ _bashrc_origin_dir }}/{{ item }}"
-      dest: "{{ _bashrc_backup_todir }}/{{ item }}"
-      remote_src: true
-    ignore_errors: true
-    with_items:
-    - .bashrc
-    - .bash_profile
-    - .inputrc
-    - .vimrc
-    when: _bashrc_backup_dir_st.stat|d(none) is not none
-          and _bashrc_backup_dir_st.stat.isdir|d(false) == true
-
-  vars:
-    _bashrc_origin_dir: "{{ user_homedir }}"
-    _bashrc_backup_todir: "{{ '%s/%s'|format(user_homedir,'._bashrc-origin') }}"
   tags:
-  - bashrc-backup-origin-for-user
+  - always
 
-- block:
-
-  - name: "bashrc | user | Install the rc files from template"
-    template:
-      src: "{{ item.src }}.j2"
-      dest: "{{ item.dest }}"
-      owner: "{{ tests_owner|d(bash_bashrc_install_owner) }}"
-      group: "{{ tests_group|d(bash_bashrc_install_group) }}"
-      mode: "{{ bash_bashrc_file_mode|d('0644') }}"
-    with_items: "{{ _bashrc_template_files_for_user|d([]) }}"
-    when: item|d(none) is not none
-          anc item.src|d('')|length > 0
-          and item.dest|d('')|length > 0
-
-  vars:
-    _bashrc_user_homedir: "{{
-      %s%s|format(tests_prefix_dir|d(''),user_bashrc_homedir|d(lookup('env','HOME')) }}"
-    _bashrc_template_files_for_user:
-    - src: "user/bash.bashrc"
-      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.bashrc') }}"
-    - src: "user/bash.profile"
-      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.bash_profile') }}"
-    - src: "user/inputrc"
-      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.inputrc') }}"
-    - src: "user/vimrc"
-      dest: "{{ '%s/%s'|format(_bashrc_user_homedir,'.vimrc') }}"
-  when: bashrc_install_system|d(true) == false
+- name: "bashrc | user | Installing bashrc. "
+  include: "install.yml"
   tags:
-  - bash-bashrc-template-for-user
+  - bashrc-user-bashrcdir-install
+
+- name: bashrc | user | Setup bash user.
+  set_fact:
+    bashrc_bash_users:
+    - "{{ bashrc_bash_user|d('') }}"
+  tags:
+  - bashrc-bash-users-set
 
