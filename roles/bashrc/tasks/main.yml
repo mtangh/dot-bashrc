@@ -15,8 +15,8 @@
     when: bashrc_install_for|d('')|length <= 0
 
   - name: "bashrc | Setup bashrc for {{ bashrc_install_for }}. "
-    include: "{{ '%s.yml'|format(bashrc_install_for|d('system') }}"
-    when: bashrc_install_for|d('')|lengh > 0
+    include: "{{ '%s.yml'|format(bashrc_install_for|d('system')) }}"
+    when: bashrc_install_for|d('')|length > 0
 
   tags:
   - always

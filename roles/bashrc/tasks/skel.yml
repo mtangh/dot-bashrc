@@ -18,24 +18,15 @@
 
 - block:
 
-  - name: bashrc | skel | Set facts.
+  - name: "bashrc | skel | Facts - Build a skel installation path."
     set_fact:
       bashrc_skel_install_path: "{{
         _skel.install_path|realpath
         if _skel.install_path|d('')|length > 0 else
         '%s%s'|format(tests_prefix_dir|d(''),bashrc_base_dir) }}"
-      bashrc_skel_bashrcdir_path: "{{
-        _skel.bashrcdir_path|realpath
-        if _skel.bashrcdir_path|d('')|length > 0 else
-        '%s/bash.bashrc.d'|format(bashrc_skel_install_path) }}"
-      bashrc_skel_bashrc_path: "{{
-        _skel.bashrc_path|realpath
-        if _skel.bashrc_path|d('')|length > 0 else
-        '%s/bash.bashrc'|format(bashrc_skel_install_path) }}"
-      bashrc_skel_profile_path: "{{
-        _skel.profile_path|realpath
-        if _skel.profile_path|d('')|length > 0 else
-        '%s/bash.profile'|format(bashrc_skel_install_path) }}"
+
+  - name: "bashrc | skel | Facts - Set owner and group."
+    set_fact:
       bashrc_skel_owner: "{{
         tests_owner|d(
         bashrc_userhomedir_owner
@@ -50,6 +41,24 @@
         _skel.group
         if _skel.group|d('')|length > 0 else
         bashrc_bash_user ) }}"
+
+  - name: "bashrc | skel | Facts - Build a skel source path."
+    set_fact:
+      bashrc_skel_bashrcdir_path: "{{
+        _skel.bashrcdir_path|realpath
+        if _skel.bashrcdir_path|d('')|length > 0 else
+        '%s/bash.bashrc.d'|format(bashrc_skel_install_path) }}"
+      bashrc_skel_bashrc_path: "{{
+        _skel.bashrc_path|realpath
+        if _skel.bashrc_path|d('')|length > 0 else
+        '%s/bash.bashrc'|format(bashrc_skel_install_path) }}"
+      bashrc_skel_profile_path: "{{
+        _skel.profile_path|realpath
+        if _skel.profile_path|d('')|length > 0 else
+        '%s/bash.profile'|format(bashrc_skel_install_path) }}"
+
+  - name: "bashrc | skel | Facts - Set modes."
+    set_fact:
       bashrc_skel_dir_mode: "{{
         _skel.dir_mode
         if _skel.dir_mode|d('')|length > 0 else
@@ -62,6 +71,7 @@
         _skel.script_mode
         if _skel.script_mode|d('')|length > 0 else
         '0755' }}"
+
   vars:
     _skel: "{{ bashrc_skel|d({}) }}"
   tags:
@@ -87,10 +97,10 @@
 
   - name: bashrc | skel | Backup the original files.
     copy:
-      src: "{{ 
+      src: "{{
         '%s/%s'|format(
         _backup_from_dir,_skel_backup) }}"
-      dest: "{{ 
+      dest: "{{
         '%s/%s'|format(
         _backup_to_dir,_skel_backup) }}"
       remote_src: true

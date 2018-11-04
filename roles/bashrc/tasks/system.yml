@@ -4,7 +4,7 @@
 
 - block:
 
-  - name:
+  - name: "bashrc | system | Facts - Build a install path."
     set_fact:
       bashrc_install_path: "{{
         '%s%s'|format(tests_prefix_dir|d(''),(
@@ -12,20 +12,29 @@
         if bashrc_install_prefix|d('')|length > 0 else
         bashrc_base_dir|d('/etc')
         ))|realpath }}"
+
+  - name: "bashrc | system | Facts - Set owner and group."
+    set_fact:
       bashrc_install_owner: "{{
         tests_owner|d(bashrc_owner|d('root')) }}"
       bashrc_install_group: "{{
         tests_group|d(bashrc_group|d('root')) }}"
+
+  - name: "bashrc | system | Facts - File and Dir name."
+    set_fact:
       bashrc_bashrcdir_name: "{{ 'bash.bashrc.d' }}"
-      bashrc_bashrcdir_path: "{{
-        '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
       bashrc_profile_name: "{{ 'bash.profile' }}"
       bashrc_bashrc_name: "{{ 'bash.bashrc' }}"
+
+  - name: "bashrc | system | Facts - Build a path of 'bash.bashrc.d'."
+    set_fact:
+      bashrc_bashrcdir_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
 
   tags:
   - always
 
-- name: "bashrc | system | Installing bashrc. "
+- name: "bashrc | system | Installing bashrc."
   include: "install.yml"
   tags:
   - bashrc-system-bashrcdir-install
