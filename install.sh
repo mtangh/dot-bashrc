@@ -1,6 +1,6 @@
 #!/bin/bash
 THIS="${0##*/}"
-CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>|/dev/null; pwd)
+CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
 
 # Name
 THIS="${THIS:-install.sh}"
@@ -74,7 +74,7 @@ bash_template_filter() {
 
 # Verify the permissions for global installation availability.
 [ $GLOBAL_INSTALL -ne 0 ] &&
-[ "$(id -u 2>|/dev/null)" != "0" ] && {
+[ "$(id -u 2>/dev/null)" != "0" ] && {
   echo "${THIS}: Need SUDO" 1>&2
   exit 8
 }
@@ -102,20 +102,20 @@ then
   }
 
   [ -d "$dotbashrcwdir" ] || {
-    mkdir -p "$dotbashrcwdir" 1>|/dev/null 2>&1
+    mkdir -p "$dotbashrcwdir" 1>/dev/null 2>&1
   }
 
   [ $DRYRUNMODEFLAG -eq 0 ] && {
     cleanup="test -d ${dotbashrcwdir} && rm -rf ${dotbashrcwdir}"
-    trap $cleanup 1>|/dev/null 2>&1 SIGTERM SIGHUP SIGINT SIGQUIT
-    trap $cleanup 1>|/dev/null 2>&1 EXIT
+    trap $cleanup 1>/dev/null 2>&1 SIGTERM SIGHUP SIGINT SIGQUIT
+    trap $cleanup 1>/dev/null 2>&1 EXIT
     unset cleanup
   }
 
   if [ -e "${dotbashrc_git}" ]
   then
 
-    ( cd "${dotbashrcwdir}" 2>|/dev/null &&
+    ( cd "${dotbashrcwdir}" 2>/dev/null &&
       ${dotbashrc_git} clone "$DOT_BASHRC_URL" )
 
   else
@@ -123,7 +123,7 @@ then
     exit 15
   fi
 
-  cd "${dotbashrcwdir}/dot-bashrc/" 2>|/dev/null || {
+  cd "${dotbashrcwdir}/dot-bashrc/" 2>/dev/null || {
     echo "${THIS}: 'dot-bashrc': no such file or directory." 1>&2
     exit 18
   }
@@ -195,7 +195,7 @@ bashrctagname="dot-bashrc/$THIS, $(date)"
 bashbashrcsrc="files/etc/bash.bashrc.d"
 
 # Change the current directory to install-source
-cd "${DOT_BASHRC_SRC}" 2>|/dev/null || {
+cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
   echo "${THIS}: '${DOT_BASHRC_SRC}' no such file or dorectory." 1>&2
   exit 31
 }
@@ -270,7 +270,7 @@ _EOF_
 
   echo
 
-} 2>|/dev/null
+} 2>/dev/null
 
 # Print message
 cat <<_EOF_
@@ -335,7 +335,7 @@ bash.bashrc:${bashrcinstall}/${bashrc_rcfile}
 bash.profile:${bashrcinstall}/${bashrcprofile}
 vim/vimrc:${bashbashrcdir}/vim/vimrc
 _EOF_
-    } 2>|/dev/null; )
+    } 2>/dev/null; )
 
   # Symlinks ("from:to" format)
   bashrcsymlnks=$(
@@ -344,7 +344,7 @@ _EOF_
 ${bashrcprofile}:profile
 ${bashrc_rcfile}:bashrc
 _EOF_
-    } 2>|/dev/null; )
+    } 2>/dev/null; )
 
   # Print message
   cat <<_EOF_
@@ -359,7 +359,7 @@ _EOF_
     : && {
       bashrctmplsrc="templates/etc/"$(echo "${bashrctmplent}"|cut -d: -f1)".j2"
       bashrctmpldst=$(echo "${bashrctmplent}"|cut -d: -f2)
-    } 2>|/dev/null
+    } 2>/dev/null
 
     [ -e "${bashrctmplsrc}" ] || continue
     [ -n "${bashrctmpldst}" ] || continue
@@ -393,7 +393,7 @@ _EOF_
       : && {
         bashsymlnksrc=$(echo "${bashsymlnkent}"|cut -d: -f1)
         bashsymlnkdst=$(echo "${bashsymlnkent}"|cut -d: -f2)
-      } 2>|/dev/null
+      } 2>/dev/null
 
       [ -e "${bashsymlnksrc}" ] || continue
       [ -n "${bashsymlnkdst}" ] || continue
@@ -415,7 +415,7 @@ _EOF_
 
       ln -sf "${bashsymlnksrc}" "${bashsymlnkdst}"
 
-    done 2>|/dev/null; )
+    done 2>/dev/null; )
 
 else # if [ $GLOBAL_INSTALL -ne 0 ]
 
@@ -432,7 +432,7 @@ _EOF_
 
     : && {
       eval bashrctmpldst=$(head -n 1 "${bashrctmplsrc}" |sed -e 's@^.*\($HOME/[^ ][^ ]*\)[ ]*@\1@g')
-    } 2>|/dev/null
+    } 2>/dev/null
 
     [ -e "${bashrctmplsrc}" ] || continue
     [ -n "${bashrctmpldst}" ] || continue
@@ -446,7 +446,7 @@ _EOF_
       echo
     }
 
-  done 2>|/dev/null || :
+  done 2>/dev/null || :
 
 fi # if [ $GLOBAL_INSTALL -ne 0 ]
 
