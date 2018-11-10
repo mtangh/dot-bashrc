@@ -23,11 +23,14 @@
 
 - block:
 
-  - name: "{{ tests_casename|d('noname') }} | test-teardown | validate rc"
+  - name: "{{ tests_casename|d('noname') }} | test-teardown | validate '{{ bashrc_install_for|d('system') }}' rc"
     shell: |
-      install_for_user="{{ 'yes' if bashrc_install_for|d('system') == 'user' else '' }}"
+      install_for_user="{{ 'yes' if bashrc_install_for|d('system') != 'system' else '' }}";
       [ -z "$install_for_user" ] &&
       [ -r "{{ '%s/bash.bashrc'|format(bashrc_install_path) }}" ] &&
+      [ -r "{{ '%s/bash.profile'|format(bashrc_install_path) }}" ] &&
+      [ -r "{{ '%s/bashrc'|format(bashrc_install_path) }}" ] &&
+      [ -r "{{ '%s/profile'|format(bashrc_install_path) }}" ] &&
       [ -d "{{ '%s/bash.bashrc.d'|format(bashrc_install_path) }}" ] && {
         echo "OK"; exit 0; }
       [ -n "$install_for_user" ] &&
@@ -39,10 +42,10 @@
     args:
       executable: "/bin/bash"
 
-  - name: "{{ tests_casename|d('noname') }} | test-teardown | validate rc"
+  - name: "{{ tests_casename|d('noname') }} | test-teardown | load '{{ bashrc_install_for|d('system') }}' rc"
     shell: |
       unset machine ostype osvendor
-      install_for_user="{{ 'yes' if bashrc_install_for|d('system') == 'user' else '' }}"
+      install_for_user="{{ 'yes' if bashrc_install_for|d('system') != 'system' else '' }}";
       [ -z "$install_for_user" ] &&
       [ -r "{{ '%s/bash.bashrc'|format(bashrc_install_path|d('-')) }}" ] && {
         . "{{ '%s/bash.bashrc'|format(bashrc_install_path|d('-')) }}" && {

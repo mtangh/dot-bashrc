@@ -23,8 +23,8 @@
   - name: "bashrc | system | Facts - File and Dir name."
     set_fact:
       bashrc_bashrcdir_name: "{{ 'bash.bashrc.d' }}"
-      bashrc_profile_name: "{{ 'bash.profile' }}"
       bashrc_bashrc_name: "{{ 'bash.bashrc' }}"
+      bashrc_profile_name: "{{ 'bash.profile' }}"
 
   - name: "bashrc | system | Facts - Build a path of 'bash.bashrc.d'."
     set_fact:
@@ -43,28 +43,27 @@
 
   - name: "bashrc | system | Symlinks"
     file:
-      src: "{{ '%s/%s'|format(_symlink_src_dir,_symlink.src) }}"
-      dest: "{{ '%s/%s'|format(_symlink_dest_dir,_symlink.dest) }}"
+      src: "{{ _symlink.src }}"
+      dest: "{{ _symlink.dest }}"
       state: link
       force: yes
     with_items: "{{ _symlink_files|d([]) }}"
     loop_control:
       loop_var: _symlink
-    when: _symlink.src|d(none) is not none
-          and _symlink.dest|d(none) is not none
+    when: _symlink is not none
+          and (_symlink.src is not none and _symlink.src|d('')|length > 0)
+          and (_symlink.dest is not none and _symlink.dest|d('')|length > 0)
 
   when: bashrc_install_path|d('')|length > 0
         and bashrc_install_path|is_dir == true
         and bashrc_bashrcdir_path|d('')|length > 0
         and bashrc_bashrcdir_path|is_dir == true
   vars:
-    _symlink_src_dir: "{{ bashrc_bashrcdir_path }}"
-    _symlink_dest_dir: "{{ bashrc_install_path }}"
     _symlink_files:
-    - src: "bash.bashrc"
-      dest: "bashrc"
-    - src: "bash.profile"
-      dest: "profile"
+    - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
+      dest: "{{ '%s/bashrc'|format(bashrc_install_path) }}"
+    - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
+      dest: "{{ '%s/profile'|format(bashrc_install_path) }}"
   tags:
   - bashrc-system-symlinks
 

@@ -2,6 +2,19 @@
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
+
+- block:
+
+  - name: "bashrc | install | Facts - Build a source path."
+    set_fact:
+      bashrc_bashrc_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
+      bashrc_profile_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
+
+  tags:
+  - always
+
 - block:
 
   - name: bashrc | install | backup | Create a directory for backup.
@@ -121,8 +134,7 @@
   - name: "bashrc | install | template | Install the rc files from template"
     template:
       src: "{{ 'etc/%s.j2'|format(_bashrc_template.src) }}"
-      dest: "{{ '%s/%s'|format(bash_install_path,
-                _bashrc_template.dest|d(_bashrc_template.src)) }}"
+      dest: "{{ _bashrc_template.dest }}"
       owner: "{{ bashrc_install_owner }}"
       group: "{{ bashrc_install_group }}"
       mode: "{{ bashrc_file_mode|d('0644') }}"
@@ -130,16 +142,17 @@
     loop_control:
       loop_var: _bashrc_template
     when: _bashrc_template|d(none) is not none
-          and _bashrc_template.src|d('')|length > 0
+          and (_bashrc_template.src is not none and _bashrc_template.src|d('')|length > 0)
+          and (_bashrc_template.dest is not none and _bashrc_template.dest|d('')|length > 0)
 
   vars:
     _bashrc_template_files:
     - src: 'bash.bashrc'
-      dest: "{{ bashrc_bashrc_name }}"
+      dest: "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
     - src: 'bash.profile'
-      dest: "{{ bashrc_prodile_name }}"
+      dest: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
     - src: 'vim/vimrc'
-      dest: none
+      dest: "{{ '%s/vim/vimrc'|format(bashrc_bashrcdir_path) }}"
   tags:
   - bashrc-install-template-files
 
