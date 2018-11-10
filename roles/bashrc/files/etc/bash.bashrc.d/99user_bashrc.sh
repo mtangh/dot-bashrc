@@ -16,7 +16,7 @@ do
     . "${dot_bashrc_sh}"
 done
 
-# Load scripts inder the 'bash.bashrc.d' dir
+# Load scripts under the 'bash.bashrc.d' dir
 for bashrc_sh in \
 $(ls -1 ${HOME}/{.bash,}.bashrc.d/[0-9][0-9]*.sh{.${ostype},.${osvendor},.${machine},})
 do

@@ -19,7 +19,7 @@
 set -u
 
 # bash resource configs default
-bashrcdir="{{ bash_bashrcdir_path|d('/etc/bash.bashrc.d') }}"
+bashrcdir="{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d') }}"
 
 # platform and vendor
 if [[ "${MACHTYPE}" =~ ^([^-]+)-([^-]+)-([_A-Za-z]+).*$ ]]

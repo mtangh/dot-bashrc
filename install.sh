@@ -11,21 +11,24 @@ PARH=/usr/bin:/bin; export PATH
 
 # dot-bashrc URL
 DOT_BASHRC_URL="${DOT_BASHRC_URL:-https://github.com/mtangh/dot-bashrc.git}"
+# dot-bashrc Installation source
 DOT_BASHRC_SRC=""
+# dot-bashrc Working dir
+DOT_BASHRCWDIR=""
 
 # Flags
 BASHRC_INSTALL=0
-GLOBAL_INSTALL=0
+SYSTEM_INSTALL=0
+SETUP_SKELETON=0
 DRYRUNMODEFLAG=0
 
 # Set flags from environment variables
-[ -n "$DOT_BASHRC_GLOBAL" ] &&
-GLOBAL_INSTALL=1
+[ -n "$DOT_BASHRC_SYSTEM" ] &&
+SYSTEM_INSTALL=1
+[ -n "$DOT_BASHRC_SKEL" ] &&
+SETUP_SKELETON=1
 [ -n "$DOT_BASHRC_DEBUG" ] &&
 DRYRUNMODEFLAG=1
-
-# Working dir
-dotbashrcwdir="${TMPDIR:-/tmp}/.dot-bashrc.$(mktemp -u XXXXXXXX)"
 
 # Parsing command line options
 while [ $# -gt 0 ]
@@ -41,14 +44,20 @@ do
     ;;
   --workdir=*)
     [ -n "${1##*--workdir=}" ] && {
-      dotbashrcwdir="${1##*--workdir=}"
+      DOT_BASHRCWDIR="${1##*--workdir=}"
     }
     ;;
-  --global*|-g)
-    GLOBAL_INSTALL=1
+  --system*|-S)
+    SYSTEM_INSTALL=1
+    SETUP_SKELETON=0
     ;;
-  --local*|-l)
-    GLOBAL_INSTALL=0
+  --user*|-u)
+    SYSTEM_INSTALL=0
+    SETUP_SKELETON=0
+    ;;
+  --skel*)
+    SYSTEM_INSTALL=0
+    SETUP_SKELETON=1
     ;;
   --dry-run*|--debug*|-d)
     DRYRUNMODEFLAG=1
@@ -59,29 +68,44 @@ do
   shift
 done
 
+# Working dir
+[ -n "${DOT_BASHRCWDIR}" ] ||
+DOT_BASHRCWDIR="${TMPDIR:-/tmp}/.dot-bashrc.$(mktemp -u XXXXXXXX)"
+
+# Working dir
+[ -n "${DOT_BASHRCWDIR}" ] ||
+DOT_BASHRC_SRC="${DOT_BASHRCWDIR}/dot-bashrc/roles/bashrc"
+
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
 
 # Filter func
-bash_template_filter() {
+dot_bashrc_template_filter() {
   sed -e 's@{{[ ]*ansible_managed[ ]*[^\}]*}}@'"${bashrctagname}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_root_dir[ ]*[^\}]*}}@'"${bashrcinstall}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_dir_path[ ]*[^\}]*}}@'"${bashbashrcdir}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_profile_name[ ]*[^\}]*}}@'"${bashrcprofile}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_rc_file_name[ ]*[^\}]*}}@'"${bashrc_rcfile}"'@g'
+      -e 's@{{[ ]*bashrc(_|_skel_)install_path[ ]*[^\}]*}}@'"${bashrcinstall}"'@g' \
+      -e 's@{{[ ]*bashrc(_|_skel_)bashrcdir_path[ ]*[^\}]*}}@'"${bashbashrcdir}"'@g' \
+      -e 's@{{[ ]*bashrc(_|_skel_)bashrc_name[ ]*[^\}]*}}@'"${bashrc_rcfile}"'@g' \
+      -e 's@{{[ ]*bashrc(_|_skel_)profile_name[ ]*[^\}]*}}@'"${bashrcprofile}"'@g' \
+      -e 's@{{[ ]*bashrc(_|_skel_)bashrc_path[ ]*[^\}]*}}@'"${pathof_bashrc}"'@g' \
+      -e 's@{{[ ]*bashrc(_|_skel_)profile_path[ ]*[^\}]*}}@'"${pathofprofile}"'@g'
   return $?
 }
 
+dot_bashrc_abort() {
+  dot_bashrc_abort=$1; shift
+  echo "${THIS}: $@ ($baah_abort)" 1>$2
+  exit $dot_bashrc_abort
+}
+
 # Verify the permissions for global installation availability.
-[ $GLOBAL_INSTALL -ne 0 ] &&
+[ $SYSTEM_INSTALL -ne 0 ] &&
 [ "$(id -u 2>/dev/null)" != "0" ] && {
-  echo "${THIS}: Need SUDO" 1>&2
-  exit 8
+  dot_bashrc_abort 8 "Need SUDO"
 }
 
 # Create a working directory if does not exist.
-[ -d "${dotbashrcwdir}" ] || {
-  mkdir -p "${dotbashrcwdir}"
+[ -d "${DOT_BASHRCWDIR}" ] || {
+  mkdir -p "${DOT_BASHRCWDIR}"
 }
 
 # Run
@@ -92,21 +116,19 @@ then
   dotbashrcplay="$(type -P ansible-playbook)"
 
   [ -n "$DOT_BASHRC_URL" ] || {
-    echo "${THIS}: 'DOT_BASHRC_URL' is empty." 1>&2
-    exit 11
+    dot_bashrc_abort 11 "'DOT_BASHRC_URL' is empty."
   }
 
   [ -n "$dotbashrc_git" ] || {
-    echo "${THIS}: Can not find the 'git'." 1>&2
-    exit 12
+    dot_bashrc_abort 12 "Can not find the 'git'."
   }
 
-  [ -d "$dotbashrcwdir" ] || {
-    mkdir -p "$dotbashrcwdir" 1>/dev/null 2>&1
+  [ -d "$DOT_BASHRCWDIR" ] || {
+    mkdir -p "$DOT_BASHRCWDIR" 1>/dev/null 2>&1
   }
 
   [ $DRYRUNMODEFLAG -eq 0 ] && {
-    cleanup="test -d ${dotbashrcwdir} && rm -rf ${dotbashrcwdir}"
+    cleanup="test -d ${DOT_BASHRCWDIR} && rm -rf ${DOT_BASHRCWDIR}"
     trap $cleanup 1>/dev/null 2>&1 SIGTERM SIGHUP SIGINT SIGQUIT
     trap $cleanup 1>/dev/null 2>&1 EXIT
     unset cleanup
@@ -115,17 +137,19 @@ then
   if [ -e "${dotbashrc_git}" ]
   then
 
-    ( cd "${dotbashrcwdir}" 2>/dev/null &&
+    ( cd "${DOT_BASHRCWDIR}" 2>/dev/null &&
       ${dotbashrc_git} clone "$DOT_BASHRC_URL" )
 
   else
-    echo "${THIS}: 'git' command not found." 1>&2
-    exit 15
+    dot_bashrc_abort 15 "'git' command not found."
   fi
 
-  cd "${dotbashrcwdir}/dot-bashrc/" 2>/dev/null || {
-    echo "${THIS}: 'dot-bashrc': no such file or directory." 1>&2
-    exit 18
+  cd "${DOT_BASHRCWDIR}/dot-bashrc/" 2>/dev/null || {
+    dot_bashrc_abort 18 "'dot-bashrc': no such file or directory."
+  }
+
+  [ ! -x "${dotbashrcplay}" -a ! -e "./install.sh" ] && {
+    dot_bashrc_abort 20 "Abort."
   }
 
   cat <<_EOF_
@@ -139,10 +163,16 @@ _EOF_
 
     ansibleoption=""
 
-    [ $GLOBAL_INSTALL -ne 0 ] &&
-    ansibleoption="${ansibleoption} -e system=true"
-    [ $GLOBAL_INSTALL -ne 0 ] ||
-    ansibleoption="${ansibleoption} -e system=false"
+    if [ $SYSTEM_INSTALL -ne 0 ]
+    then
+      ansibleoption="${ansibleoption:+$ansibleoption }-e system=true"
+    elif [ $SETUP_SKELETON -eq 0 ]
+    then
+      ansibleoption="${ansibleoption:+$ansibleoption }-e system=false"
+    else
+      ansibleoption="${ansibleoption:+$ansibleoption }-e skel=true"
+    fi
+
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     ansibleoption="${anaibleoption} -D"
 
@@ -153,19 +183,22 @@ _EOF_
 _EOF_
 
     ${dotbashrcplay} ${ansibleoption} ansible.yml
+    exit $?
 
-  elif [ -e "./install.sh" ]
-  then
+  else
 
     installoption=""
-    installoption="${installoption} --install"
-    installoption="${installoption} --source=${dotbashrcwdir}/dot-bashrc/roles/bashrc"
-    installoption="${installoption} --workdir=${dotbashrcwdir}"
+    installoption="${installoption:+$installoption }--install"
+    installoption="${installoption:+$installoption }--source=${DOT_BASHRC_SRC}"
+    installoption="${installoption:+$installoption }--workdir=${DOT_BASHRCWDIR}"
 
-    [ $GLOBAL_INSTALL -ne 0 ] &&
-    installoption="${installoption} --global"
+    [ $SYSTEM_INSTALL -ne 0 ] &&
+    installoption="${installoption:+$installoption }--system"
+    [ $SETUP_SKELETON -ne 0 ] &&
+    installoption="${installoption:+$installoption }--skel"
+
     [ $DRYRUNMODEFLAG -ne 0 ] &&
-    installoption="${installoption} --dry-run"
+    installoption="${installoption:+$installoption }--dry-run"
 
     cat <<_EOF_
 #
@@ -174,10 +207,8 @@ _EOF_
 _EOF_
 
     bash ./install.sh $installoption
+    exit $?
 
-  else
-    echo "${THIS}: Abort(20)" 1>&2
-    exit 20
   fi
 
 fi # if [ $BASHRC_INSTALL -eq 0 ]
@@ -191,47 +222,53 @@ _EOF_
 
 # Installation Tag
 bashrctagname="dot-bashrc/$THIS, $(date)"
+
 # Installation source path
 bashbashrcsrc="files/etc/bash.bashrc.d"
 
-# Change the current directory to install-source
-cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
-  echo "${THIS}: '${DOT_BASHRC_SRC}' no such file or dorectory." 1>&2
-  exit 31
+[ -n "${DOT_BASHRC_SRC}" ] || {
+  dot_bashrc_abort 31 "'DOT_BASHRC_SRC' not set."
 }
 
 # Confirm existence of source to be installed
-[ -n "${DOT_BASHRC_SRC}" \
-  -a -d "${DOT_BASHRC_SRC}/${bashbashrcsrc}" ] || {
-  echo "${THIS}: 'DOT_BASHRC_SRC/${bashbashrcsrc:-???}' no such file or dorectory." 1>&2
-  exit 32
+[ -d "${DOT_BASHRC_SRC}/${bashbashrcsrc}" ] || {
+  dot_bashrc_abort 32 "'DOT_BASHRC_SRC/${bashbashrcsrc:-???}' no such file or dorectory."
+}
+
+# Change the current directory to install-source
+cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
+  dot_bashrc_abort 33 "'${DOT_BASHRC_SRC}' no such file or dorectory."
 }
 
 # Installation settings
-if [ $GLOBAL_INSTALL -ne 0 ]
+if [ $SYSTEM_INSTALL -ne 0 ]
 then
   # System install
   bashrcinstall=/etc
   bashbashrcdir="${bashrcinstall}/bash.bashrc.d"
-  bashrcprofile="bash.profile"
   bashrc_rcfile="bash.bashrc"
+  bashrcprofile="bash.profile"
   bash_rc_owner="root"
   bash_rc_group=$(id -gn "$bash_rc_owner")
 else
   # User local install
   bashrcinstall="$HOME/.config"
   bashbashrcdir="${bashrcinstall}/bash.bashrc.d"
-  bashrcprofile="bash.profile"
   bashrc_rcfile="bash.bashrc"
+  bashrcprofile="bash.profile"
   bash_rc_owner=$(id -un)
   bash_rc_group=$(id -gn "$bash_rc_owner")
 fi
 
 # Change to the installation setting for dry-run mode
 [ $DRYRUNMODEFLAG -ne 0 ] && {
-  bashrcinstall="${dotbashrcwdir}${bashrcinstall}"
-  bashbashrcdir="${dotbashrcwdir}${bashbashrcdir}"
+  bashrcinstall="${DOT_BASHRCWDIR}${bashrcinstall}"
+  bashbashrcdir="${DOT_BASHRCWDIR}${bashbashrcdir}"
 }
+
+# bash.bashrc, bash.profile
+pathof_bashrc="${bashbashrcdir}/${bashrc_rcfile}"
+pathofprofile="${bashrcinstall}/${bashrcprofile}"
 
 # Print variables
 cat <<_EOF_
@@ -291,16 +328,14 @@ then
 
   ( cd "${bashbashrcsrc}" &&
     tar -c . |tar -C "${bashbashrcdir}/" -xvf - ) || {
-    echo "${THIS}: Abort(41)" 1>&2
-    exit 41
+    dot_bashrc_abort 41 "Abort."
   }
 
 else
 
   ( cd "${bashbashrcdir}" &&
     diff -Nur . "${bashbashrcsrc}" |patch -p0 ) || {
-    echo "${THIS}: Abort(42)" 1>&2
-    exit 42
+    dot_bashrc_abort 42 "Abort."
   }
 
 fi # if [ ! -e "${bashbashrcdir}" -o -z "$(type -P patch)" ]
@@ -319,12 +354,11 @@ _EOF_
   find . -type f -a -name "*.sh" -print -exec chmod a+x {} \; &&
   find ./bin -type f -print -exec chmod a+x {} \; &&
   echo ) || {
-  echo "${THIS}: Abort(42)" 1>&2
-  exit 44
+  dot_bashrc_abort 43 "Abort."
 }
 
 # bash rc-files setup
-if [ $GLOBAL_INSTALL -ne 0 ]
+if [ $SYSTEM_INSTALL -ne 0 ]
 then
 
   # Template files
@@ -371,13 +405,13 @@ _EOF_
     echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
 
     cat "${bashrctmplsrc}" |
-    bash_template_filtersed >"${bashrctmpldst}" && {
+    dot_bashrc_template_filter 1>|"${bashrctmpldst}" && {
       echo
       diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
       echo
     }
 
-  done
+  done 2>/dev/null || :
 
   # Print message
   cat <<_EOF_
@@ -417,7 +451,11 @@ _EOF_
 
     done 2>/dev/null; )
 
-else # if [ $GLOBAL_INSTALL -ne 0 ]
+fi # if [ $SYSTEM_INSTALL -ne 0 ]
+
+# bash rc-files setup from skeleton
+if [ $SETUP_SKELETON -ne 0 ]
+then
 
   # Print message
   cat <<_EOF_
@@ -426,12 +464,19 @@ else # if [ $GLOBAL_INSTALL -ne 0 ]
 _EOF_
 
   # Process the template file for user
-  [ -d "templates/user" ] &&
-  for bashrctmplsrc in templates/user/*.j2
+  [ -d "templates/skel" ] &&
+  for bashrctmplsrc in $(
+  find templates/skel -name "*.j2"|sort)
   do
 
     : && {
-      eval bashrctmpldst=$(head -n 1 "${bashrctmplsrc}" |sed -e 's@^.*\($HOME/[^ ][^ ]*\)[ ]*@\1@g')
+    
+      bashrctmpldst=$(
+        head -n 1 "${bashrctmplsrc}" |
+        sed -ne 's@^.*\($HOME/[^ ][^ ]*\)[ ]*@\1@gp'; )
+
+      eval 'bashrctmpldst="${bashrctmpldst}"'
+
     } 2>/dev/null
 
     [ -e "${bashrctmplsrc}" ] || continue
@@ -440,7 +485,7 @@ _EOF_
     echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
 
     cat "${bashrctmplsrc}" |
-    bash_template_filtersed >"${bashrctmpldst}" && {
+    dot_bashrc_template_filter 1>|"${bashrctmpldst}" && {
       echo
       diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
       echo
@@ -448,7 +493,7 @@ _EOF_
 
   done 2>/dev/null || :
 
-fi # if [ $GLOBAL_INSTALL -ne 0 ]
+fi # if [ $SETUP_SKELETON -ne 0 ]
 
 # Finish installation
 cat <<_EOF_
