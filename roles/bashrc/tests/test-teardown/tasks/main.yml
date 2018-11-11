@@ -31,6 +31,7 @@
       [ -r "{{ '%s/bash.profile'|format(bashrc_install_path) }}" ] &&
       [ -r "{{ '%s/bashrc'|format(bashrc_install_path) }}" ] &&
       [ -r "{{ '%s/profile'|format(bashrc_install_path) }}" ] &&
+      [ -r "{{ '%s/vim/vimrc'|format(bashrc_bashrcdir_path) }}" ] &&
       [ -d "{{ '%s/bash.bashrc.d'|format(bashrc_install_path) }}" ] && {
         echo "OK"; exit 0; }
       [ -n "$install_for_user" ] &&

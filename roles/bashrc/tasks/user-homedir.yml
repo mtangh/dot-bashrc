@@ -3,20 +3,20 @@
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 - block:
- 
+
   - name: "bashrc | user-homedir | Username."
     set_fact:
       bashrc_bash_user: "{{ tests_owner|d(user_name) }}"
     when: bashrc_bash_user|d('')|length <= 0
 
-  - name: "bashrc | user-homedir | Get user '{{ bashrc_bash_user|d('???') }' state."
+  - name: "bashrc | user-homedir | Get user '{{ bashrc_bash_user|d('???') }}' state."
     user:
       name: "{{ bashrc_bash_user }}"
       state: present
     register: bashrc_userhomedir_user_state
     ignore_errors: true
     when: bashrc_bash_user|d('')|length > 0
- 
+
   - name: "bashrc | user-homedir | Stat user homedir."
     stat:
       path: "{{ bashrc_userhomedir_user_state.home
@@ -30,7 +30,7 @@
 
   - name: "bashrc | user-homedir | Set fact user homedir."
     set_fact:
-      bashrc_userhomedir_path: "{{ 
+      bashrc_userhomedir_path: "{{
         bashrc_userhomedir_st.path|realpath }}"
       bashrc_userhomedir_owner: "{{
         tests_owner|d(bashrc_userhomedir_st.stat.pw_name) }}"

@@ -6,11 +6,13 @@
 
   - name: "{{ tests_casename|d('noname') }} | test-setup | Include vars."
     include_vars:
-      file: "{{ '%s/%s.yml'|format(tests_vars_dir,item) }}"
+      file: "{{ '%s/%s.yml'|format(tests_vars_dir,tests_vars_for_testcase) }}"
     with_items:
     - main
     - "{{ tests_casename }}"
-    when: ('%s/%s.yml'|format(tests_vars_dir,item))|is_file
+    loop_control:
+      loop_var: tests_vars_for_testcase
+    when: ('%s/%s.yml'|format(tests_vars_dir,tests_vars_for_testcase))|is_file
     no_log: "{{ tests_vars_dir|d('')|is_dir == false }}"
 
   - name: "{{ tests_casename|d('noname') }} | test-setup | Cleanup."
@@ -31,7 +33,7 @@
 
   - name: "{{ tests_casename|d('noname') }} | test-setup | Copy files."
     synchronize:
-      src: "{{ item }}/"
+      src: "{{ tests_copy_source_file }}/"
       dest: "{{ tests_prefix_dir }}"
       checksum: no
       compress: yes
@@ -41,10 +43,20 @@
     with_first_found:
     - files: "{{ tests_files_setup_first_found_dirs|d([]) }}"
       skip: yes
+    loop_control:
+      loop_var: tests_copy_source_file
     when: tests_files_setup_dir|is_dir == true
           and tests_prefix_dir|d('')|is_dir == true
     ignore_errors: yes
     no_log: "{{ not( tests_files_setup_dir|is_dir == true
+                  or tests_prefix_dir|d('')|is_dir == true ) }}"
+
+  - name: "{{ tests_casename|d('noname') }} | test-setup | Task for case."
+    include: "{{ '%s/%s.yml'|format(tests_tasks_dir,tests_casename) }}"
+    when: tests_tasks_dir|is_dir == true
+          and ('%s/%s.yml'|format(tests_tasks_dir,tests_casename))|is_file == true
+    ignore_errors: yes
+    no_log: "{{ not( tests_tasks_dir|is_dir == true
                   or tests_prefix_dir|d('')|is_dir == true ) }}"
 
   when: tests_run|d(false) == true

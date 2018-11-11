@@ -1,0 +1,20 @@
+---
+# '02_for-user' tasks file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: "{{ tests_casename|d('noname') }} | test-setup | Create a test user-homedir."
+    file:
+      path: "{{ '%s%s'|format(tests_prefix_dir,lookup('env','HOME')) }}"
+      state: directory
+      owner: "{{ tests_owner }}"
+      group: "{{ tests_group }}"
+      mode: "0755"
+
+  when: tests_run|d(false) == true
+        and tests_casename|d(none) is not none
+        and tests_prefix_dir|d('')|string|trim|length > 0
+  tags:
+  - '[test-setup]'
+

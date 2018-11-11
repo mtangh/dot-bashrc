@@ -9,7 +9,7 @@
 
   - name: "bashrc | user | Check the user homedir."
     fail:
-      mag: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
+      msg: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
     when: ( bashrc_userhomedir_path|d('')|length > 0
           and bashrc_userhomedir_path|realpath|is_dir == true ) == false
 

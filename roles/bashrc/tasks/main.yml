@@ -8,22 +8,22 @@
     set_fact:
       bashrc_install_for: "{{
         dot_bashrc_install_for
-        if dot_bashrc_install_for|d('')|length > 0 else
+        if dot_bashrc_install_for is not none
+        and dot_bashrc_install_for|d('')|trim|length > 0 else
         'system'
-        if bashrc_install_system|d(true) else
+        if system|d(true) else
         'user' }}"
-    when: bashrc_install_for|d('')|length <= 0
 
-  - name: "bashrc | Setup bashrc for {{ bashrc_install_for }}. "
+  - name: "bashrc | Setup bashrc for {{ bashrc_install_for }}."
     include: "{{ '%s.yml'|format(bashrc_install_for|d('system')) }}"
     when: bashrc_install_for|d('')|length > 0
 
   tags:
-  - always
+  - bashrc-install-for
 
 - block:
 
-  - name: "bashrc | Set up user's environment "
+  - name: "bashrc | Set up user's environment."
     include: "skel.yml"
     with_items: "{{ bashrc_bash_users|d([]) }}"
     loop_control:
