@@ -30,6 +30,13 @@ SETUP_SKELETON=1
 [ -n "$DOT_BASHRC_DEBUG" ] &&
 DRYRUNMODEFLAG=1
 
+# Functions
+dot_bashrc_abort() {
+  dot_bashrc_abort=$1; shift
+  echo "${THIS}: $@ ($baah_abort)" 1>$2
+  exit $dot_bashrc_abort
+}
+
 # Parsing command line options
 while [ $# -gt 0 ]
 do
