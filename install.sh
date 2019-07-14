@@ -7,7 +7,7 @@ THIS="${THIS:-install.sh}"
 BASE="${THIS%%.*}"
 
 # Path
-PARH=/usr/bin:/bin; export PATH
+PATH=/usr/bin:/bin; export PATH
 
 # dot-bashrc URL
 DOT_BASHRC_URL="${DOT_BASHRC_URL:-https://github.com/mtangh/dot-bashrc.git}"
@@ -79,6 +79,7 @@ DOT_BASHRC_SRC="${DOT_BASHRCWDIR}/dot-bashrc/roles/bashrc"
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
 
+<<<<<<< Updated upstream
 # Filter func
 dot_bashrc_template_filter() {
   sed -e 's@{{[ ]*ansible_managed[ ]*[^\}]*}}@'"${bashrctagname}"'@g' \
@@ -101,6 +102,19 @@ dot_bashrc_abort() {
 [ $SYSTEM_INSTALL -ne 0 ] &&
 [ "$(id -u 2>/dev/null)" != "0" ] && {
   dot_bashrc_abort 8 "Need SUDO"
+=======
+# "/bin/bash" ?
+[ -x "/bin/bash" ] || {
+  echo "${THIS}: '/bin/bash' not installed." 1>&2
+  exit 127
+}
+
+# Verify the permissions for global installation availability.
+[ $GLOBAL_INSTALL -ne 0 ] &&
+[ "$(id -u 2>/dev/null)" != "0" ] && {
+  echo "${THIS}: Need SUDO." 1>&2
+  exit 8
+>>>>>>> Stashed changes
 }
 
 # Create a working directory if does not exist.
@@ -123,6 +137,7 @@ then
     dot_bashrc_abort 12 "Can not find the 'git'."
   }
 
+<<<<<<< Updated upstream
   [ -d "$DOT_BASHRCWDIR" ] || {
     mkdir -p "$DOT_BASHRCWDIR" 1>/dev/null 2>&1
   }
@@ -131,19 +146,34 @@ then
     cleanup="test -d ${DOT_BASHRCWDIR} && rm -rf ${DOT_BASHRCWDIR}"
     trap $cleanup 1>/dev/null 2>&1 SIGTERM SIGHUP SIGINT SIGQUIT
     trap $cleanup 1>/dev/null 2>&1 EXIT
+=======
+  [ -d "$dotbashrcwdir" ] || {
+    mkdir -p "$dotbashrcwdir" 1>/dev/null 2>&1
+  }
+
+  [ $DRYRUNMODEFLAG -eq 0 ] && {
+    cleanup="test -d ${dotbashrcwdir} && rm -rf ${dotbashrcwdir}"
+    trap "$cleanup 1>/dev/null 2>&1" SIGTERM SIGHUP SIGINT SIGQUIT
+    trap "$cleanup 1>/dev/null 2>&1" EXIT
+>>>>>>> Stashed changes
     unset cleanup
   }
 
   if [ -e "${dotbashrc_git}" ]
   then
 
+<<<<<<< Updated upstream
     ( cd "${DOT_BASHRCWDIR}" 2>/dev/null &&
+=======
+    ( cd "${dotbashrcwdir}" 2>/dev/null &&
+>>>>>>> Stashed changes
       ${dotbashrc_git} clone "$DOT_BASHRC_URL" )
 
   else
     dot_bashrc_abort 15 "'git' command not found."
   fi
 
+<<<<<<< Updated upstream
   cd "${DOT_BASHRCWDIR}/dot-bashrc/" 2>/dev/null || {
     dot_bashrc_abort 18 "'dot-bashrc': no such file or directory."
   }
@@ -157,6 +187,18 @@ then
 # dot-bashrc/install.sh
 #
 _EOF_
+=======
+  cd "${dotbashrcwdir}/dot-bashrc/" 2>/dev/null || {
+    echo "${THIS}: 'dot-bashrc': no such file or directory." 1>&2
+    exit 18
+  }
+
+  cat <<_MSG_
+#
+# dot-bashrc/install.sh
+#
+_MSG_
+>>>>>>> Stashed changes
 
   if [ -x "${dotbashrcplay}" ]
   then
@@ -176,11 +218,19 @@ _EOF_
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     ansibleoption="${anaibleoption} -D"
 
+<<<<<<< Updated upstream
     cat <<_EOF_
 #
 # run - ${dotbashrcplay} ${ansibleoption} ansible.yml
 #
 _EOF_
+=======
+    cat <<_MSG_
+#
+# run - ${dotbashrcplay} ${ansibleoption} ansible.yml
+#
+_MSG_
+>>>>>>> Stashed changes
 
     ${dotbashrcplay} ${ansibleoption} ansible.yml
     exit $?
@@ -200,11 +250,19 @@ _EOF_
     [ $DRYRUNMODEFLAG -ne 0 ] &&
     installoption="${installoption:+$installoption }--dry-run"
 
+<<<<<<< Updated upstream
     cat <<_EOF_
 #
 # run - bash ./install.sh $installoption
 #
 _EOF_
+=======
+    cat <<_MSG_
+#
+# run - bash ./install.sh $installoption
+#
+_MSG_
+>>>>>>> Stashed changes
 
     bash ./install.sh $installoption
     exit $?
@@ -214,11 +272,11 @@ _EOF_
 fi # if [ $BASHRC_INSTALL -eq 0 ]
 
 # Installation will start.
-cat <<_EOF_
+cat <<_MSG_
 #---------------------------------------
 # dot-bashrc/install.sh
 #---------------------------------------
-_EOF_
+_MSG_
 
 # Installation Tag
 bashrctagname="dot-bashrc/$THIS, $(date)"
@@ -226,8 +284,15 @@ bashrctagname="dot-bashrc/$THIS, $(date)"
 # Installation source path
 bashbashrcsrc="files/etc/bash.bashrc.d"
 
+<<<<<<< Updated upstream
 [ -n "${DOT_BASHRC_SRC}" ] || {
   dot_bashrc_abort 31 "'DOT_BASHRC_SRC' not set."
+=======
+# Change the current directory to install-source
+cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
+  echo "${THIS}: '${DOT_BASHRC_SRC}' no such file or dorectory." 1>&2
+  exit 31
+>>>>>>> Stashed changes
 }
 
 # Confirm existence of source to be installed
@@ -266,12 +331,30 @@ fi
   bashbashrcdir="${DOT_BASHRCWDIR}${bashbashrcdir}"
 }
 
+<<<<<<< Updated upstream
 # bash.bashrc, bash.profile
 pathof_bashrc="${bashbashrcdir}/${bashrc_rcfile}"
 pathofprofile="${bashrcinstall}/${bashrcprofile}"
+=======
+# Template files
+bashtmplfiles=$(
+  : && {
+    cd "${DOT_BASHRC_SRC}/templates" &&
+    find etc -type f -a -name "*.j2" |sort
+  } 2>/dev/null; )
+
+# Symlinks ("from:to" format)
+bashrcsymlnks=$(
+  : && {
+    cat <<_EOF_
+${bashrcprofile}:profile
+${bashrc_rcfile}:bashrc
+_EOF_
+  } 2>/dev/null; )
+>>>>>>> Stashed changes
 
 # Print variables
-cat <<_EOF_
+cat <<_MSG_
 #
 #* bashrcinstall="$bashrcinstall"
 #* bashbashrcdir="$bashbashrcdir"
@@ -280,17 +363,24 @@ cat <<_EOF_
 #* bash_rc_owner="$bash_rc_owner"
 #* bash_rc_group="$bash_rc_group"
 #
-_EOF_
+_MSG_
 
 # Backup the original file
 [ -d "${bashrcinstall}/._bashrc-origin" ] || {
 
+<<<<<<< Updated upstream
   cat <<_EOF_
 #
 # Create a backup.
 _EOF_
+=======
+cat <<_MSG_
 
-  mkdir -p "${bashrcinstall}/._bashrc-origin"
+# Create a backup.
+_MSG_
+>>>>>>> Stashed changes
+
+  mkdir -p "${bashrcinstall}/._bashrc-origin" 2>/dev/null || :
 
   ( cd "${bashrcinstall}/._bashrc-origin" &&
     pwd &&
@@ -310,10 +400,17 @@ _EOF_
 } 2>/dev/null
 
 # Print message
+<<<<<<< Updated upstream
 cat <<_EOF_
 #
 # Install the 'bash.bashrc.d' to '${bashbashrcdir}'.
 _EOF_
+=======
+cat <<_MSG_
+
+# Install the 'bash.bashrc.d' to '${bashbashrcdir}'.
+_MSG_
+>>>>>>> Stashed changes
 
 # Install the file
 if [ ! -e "${bashbashrcdir}" -o -z "$(type -P patch)" ]
@@ -341,10 +438,61 @@ else
 fi # if [ ! -e "${bashbashrcdir}" -o -z "$(type -P patch)" ]
 
 # Print message
+<<<<<<< Updated upstream
 cat <<_EOF_
 #
 # Grant and revoke on 'bash.bashrc.d' files.
 _EOF_
+=======
+cat <<_MSG_
+
+# Install the templates.
+_MSG_
+
+# Process the template file
+( cd "${bashrcinstall}" &&
+  for bashrctmplent in ${bashtmplfiles}
+  do
+
+    bashrctmplsrc="${DOT_BASHRC_SRC}/templates/"$(echo "${bashrctmplent}")".j2"
+    bashrctmpldst="${bashrctmplent##*etc/}"
+    bashrctmpldst="${bashrctmpldst%.j2*}"
+
+    [ -e "${bashrctmplsrc}" ] || continue
+    [ -n "${bashrctmpldst}" ] || continue
+
+    case "${bashrctmpldst}" in
+    */*)
+      [ -z "${bashrctmpldst%/*}" -o -d "${bashrctmpldst%/*}" ] || {
+        mkdir -p "${bashrctmpldst%/*}"; }
+      ;;
+    *)
+      ;;
+    esac
+
+    cat <<_MSG_
+# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'.
+_MSG_
+
+    cat "${bashrctmplsrc}" |
+    sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${bashrctagname}"'@g' \
+        -e 's@{{[ ]*bash_bashrc_dir[ ]*[^\}]*}}@'"${bashbashrcdir}"'@g' \
+        -e 's@{{[ ]*bash_bashrc_profile[ ]*[^\}]*}}@'"${bashrcinstall}/${bashrcprofile}"'@g' \
+        -e 's@{{[ ]*bash_bashrc_rcfile[ ]*[^\}]*}}@'"${bashrcinstall}/${bashrc_rcfile}"'@g' \
+             1>"${bashrctmpldst}" 2>/dev/null && {
+      echo
+      diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
+      echo
+    }
+
+  done 2>/dev/null; )
+
+# Print message
+cat <<_MSG_
+
+# Grant and revoke on 'bash.bashrc.d' files.
+_MSG_
+>>>>>>> Stashed changes
 
 # Set installation file permissions
 ( cd "${bashbashrcdir}" &&
@@ -357,6 +505,7 @@ _EOF_
   dot_bashrc_abort 43 "Abort."
 }
 
+<<<<<<< Updated upstream
 # bash rc-files setup
 if [ $SYSTEM_INSTALL -ne 0 ]
 then
@@ -403,6 +552,13 @@ _EOF_
     }
 
     echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
+=======
+# Print message
+cat <<_MSG_
+
+# Create symlinks.
+_MSG_
+>>>>>>> Stashed changes
 
     cat "${bashrctmplsrc}" |
     dot_bashrc_template_filter 1>|"${bashrctmpldst}" && {
@@ -469,6 +625,7 @@ _EOF_
   find templates/skel -name "*.j2"|sort)
   do
 
+<<<<<<< Updated upstream
     : && {
     
       bashrctmpldst=$(
@@ -476,12 +633,17 @@ _EOF_
         sed -ne 's@^.*\($HOME/[^ ][^ ]*\)[ ]*@\1@gp'; )
 
       eval 'bashrctmpldst="${bashrctmpldst}"'
+=======
+    bashsymlnksrc="${bashsymlnkent%:*}"
+    bashsymlnkdst="${bashsymlnkent##*:}"
+>>>>>>> Stashed changes
 
     } 2>/dev/null
 
     [ -e "${bashrctmplsrc}" ] || continue
     [ -n "${bashrctmpldst}" ] || continue
 
+<<<<<<< Updated upstream
     echo "# Templates '${bashrctmplsrc}' to '${bashrctmpldst}'."
 
     cat "${bashrctmplsrc}" |
@@ -490,9 +652,24 @@ _EOF_
       diff -u "${bashrctmplsrc}" "${bashrctmpldst}"
       echo
     }
+=======
+    case "${bashsymlnkdst}" in
+    */*)
+      [ -z "${bashsymlnkdst%/*}" -o -d "${bashsymlnkdst%/*}" ] && {
+        mkdir -p "${bashsymlnkdst%/*}"; }
+      ;;
+    *)
+      ;;
+    esac
+
+    cat <<_MSG_
+# Symlink '${bashsymlnksrc}' to '${bashsymlnkdst}'.
+_MSG_
+>>>>>>> Stashed changes
 
   done 2>/dev/null || :
 
+<<<<<<< Updated upstream
 fi # if [ $SETUP_SKELETON -ne 0 ]
 
 # Finish installation
@@ -500,6 +677,31 @@ cat <<_EOF_
 #
 # Done.
 _EOF_
+=======
+  done 2>/dev/null; )
+
+#
+if [ $GLOBAL_INSTALL -eq 0 ]
+then
+
+  # Finish installation
+  cat <<_MSG_
+
+# Update USER-HOME.
+_MSG_
+
+  [ -x "${bashbashrcdir}/bin/update-user-home" ] && {
+    "${bashbashrcdir}/bin/update-user-home"
+  }
+
+fi
+
+# Finish installation
+cat <<_MSG_
+
+Done.
+_MSG_
+>>>>>>> Stashed changes
 
 # End
 exit 0

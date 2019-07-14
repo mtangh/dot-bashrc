@@ -1,0 +1,12 @@
+# $HOME/.bashrc
+# {{ ansible_managed }}
+# User local .bashrc file
+
+[ -e "{{ bash_bashrc_rcfile|d('/etc/bash.bashrc') }}" ] && {
+  . "{{ bash_bashrc_rcfile|d('/etc/bash.bashrc') }}"; }
+
+# Aliases
+
+
+
+# *eof*
