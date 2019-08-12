@@ -1,4 +1,3 @@
-
 #!/bin/bash
 THIS="${0##*/}"
 CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
@@ -12,92 +11,89 @@ PATH=/usr/bin:/bin
 export PATH
 
 # Run user
-run_user_id="$(id -u)"
+declare -r run_username="$(id -un 2>/dev/null)"
+declare -r run_user_uid="$(id -u 2>/dev/null)"
 
 # OS Type
-ostyoe_name=$(uname -s |tr 'A-Z' 'a-z' 2>/dev/null)
+declare -r os_type_name="$(uname -s |tr 'A-Z' 'a-z' 2>/dev/null)"
 
-# Skel dir base
-usertmpltdir="$(cd ${CDIR}/../ 2>/dev/null pwd)/skel.d"
+# Skel template dir
+declare -r def_tmpl_dir="$(cd ${CDIR}/../ 2>/dev/null pwd)/skel.d"
 
-# Check skel.d
-[ -d "${usertmpltdir}" ] || {
-  echo "$THIS: '${usertmpltdir}': no such directory." 1>&2
-  exit 126
-}
-
-# default
-case "${ostype_name}" in
-darwin)
-  default_skel="/Library/User Templates"
-  [ -d "${default_skel}" ]
-  default_skel="/etc/skel"
+# user homedir template (skel)
+case "${os_type_name}" in
+darwin*)
+  if [ ! -d "/etc/skel" ]
+  then def_skel_dir="${SKEL_DIR:-$def_tmpl_dir}"
+  else def_skel_dir="${SKEL_DIR:-/etc/skel}"
+  fi
   ;;
 *)
-  default_skel="/etc/skel"
+  def_skel_dir="${SKEL_DIR:-/etc/skel}"
   ;;
 esac
+declare -r def_skel_dir
 
-# Update skel
-updatesystem=0
-
-# User
+# Users
 usernamelist=""
 
-# User template
-usertmpltdir="${default_skel}"
+# Skel template
+skeltmpltdir="${def_tmpl_dir}"
 
-# Force update
-forceupdate=0
+# User homedir template
+skel_userdir="${def_skel_dir}"
 
-# Dry run
-mode_dryrun=0
+# Flags: Update skel
+updatesystem=0
+# Flags: Force update
+force_update=0
+# Flags: Dry run
+mode_dry_run=0
+# Flags: Debug on
+dehugrun_flg=0
 
-# Parse options
-while [ $# -gt 0 ]
-do
-  case "$1" in
-  -skel*|--skel*)
-    updatesystem=1
-    usernamelist=""
-    echo "$1" |egrep "skel=" 1>/dev/null 2>&1 && {
-      usertmpltdir="${1##:*skel=}"
-    }
-    ;;
-  --force)
-    forceupdate=1
-    ;;
-  -D|-dry*|--dry*)
-    mode_dryrun=1
-    ;;
-  -h|-help*|--help*)
-    usage; exit 0
-    ;;
-  -*)
-    ;;
-  *)
-    [ $updatesystem -eq 0 ] && {
-      echo "${usernamelist}" |
-      egrep '^([^ ]+ *| *)'${1}'( *[^ ]+.+| *)$' 1>/dev/null 2>&1 || {
-        usernamelist="${usernamelist}${usernamelist:+ }${1}"
-      }
-    }
-    ;;
-  esac
-  shift
-done
+# Term opts
+opts_end_flg=0
 
 # Functions
-usage() {
+_usage() {
   cat <<_USAGE_
 Usage: $THIS [OPTIONS] [username ...]
+
+OPTIONS:
+--skel[=/path/to/skel], --update, --force
 
 _USAGE_
   return 0
 }
 
+_echo() {
+  local row_data=""
+  if [ -n "$@" ]
+  then printf "$THIS: %s" "$@"; echo
+  else
+    cat 2>/dev/null |
+    while read row_data
+    do printf "$THIS: %s" "$row_data"; echo
+    done
+  fi
+  return 0
+}
+
+_abort() {
+  local exitcode=1
+  case "$1" in
+  [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
+    exitcode="$1"; shift ;;
+  *)
+    ;;
+  esac
+  _echo "ERROR: $@ (${exitcode:-1})" 1>&2
+  exit ${exitcode:-1}
+}
+
 command_run() {
-  if [ $mode_dryrun -eq 0 ]
+  if [ $dry_run_mode -eq 0 ]
   then $@
   else echo "$THIS: $@" || :
   fi
@@ -105,78 +101,110 @@ command_run() {
 }
 
 getuserhomedir() {
-  local _usrname="$1"
-  if [ $updatesystem -eq 0 ]
-  then
-    if [ $run_user_id -eq 0 ]
-    then su - "$_usrname" -c 'cd; pwd'
-    else echo "$HOME"
-    fi 2>/dev/null
-  else echo "${usertmpltdir}"
-  fi
-  return 0
+  local _usr="$1"; shift
+  local _ret=0
+  case "${updatesystem}::$_usr" in
+  1::SKEL*)
+    echo "${skel_userdir}"
+    ;;
+  *)
+    if [ "$run_user_uid" = "0" ]
+    then
+      [ -n "$(id -n $_usr 2>/dev/null)" ] &&
+      su - "$_usr" -c 'cd; pwd' 2>/dev/null
+      _ret=$?
+    else
+      echo "$HOME"
+    fi
+  esac
+  return $_ret
 }
 
 skel_get_ents() {
-  local _skeldir="$1"; shift
-  cd "${_skeldir}/" && {
-    [ -d "./default" ] &&
-    find default -type d |sort
-    [ -d "./${ostype_name}" ] &&
-    find "${ostype_name}" -type d |sort || :
-  } 2>/dev/null |
-  egrep -v '^(default|'"$ostype_name"')$'
-  return 0
+  ( cd "${1:-$skel_userdir}/" 2>/dev/null &&
+    case "$(pwd)/" in
+    ${skeltmpltdir}/)
+      find . -type f 2>/dev/null |
+      egrep -v '^([ ]*|[.]+|[.]+/)$' 2>/dev/null |
+      egrep '^[.]/(default|'"${os_type_name}"')/.+$' 2>/dev/null |
+      sort -u
+      ;;
+    *)
+      find . -type f 2>/dev/null |
+      egrep -v '^([ ]*|[.]+|[.]+/)$' 2>/dev/null |
+      sort -u
+      ;;
+    esac; )
+  return $?
 }
 
 skel_get_populate_path() {
-  local _skelent="$1"; shift
-  local _skelout="${_skelent}"
-  case "${_skelent}" in
+  local _ent="$1"; shift
+  case "${_ent}" in
   *default/*)
-    _skelout="${_skelent#*default/}"
+    _ent="${_ent#*default/}"
     ;;
-  *${ostype_name}/*)
-    _skelout="${_skelent#*${ostype_name}/}"
+  *${os_type_name}/*)
+    _ent="${_ent#*${os_type_name}/}"
     ;;
-  *)
-    _skelout="${_skelent}"
+  ./*)
+    _ent="${_ent#*/}"      
     ;;
-  esac;
-  _skelout="${_skelout//\/dot.//.}"
-  [ -n "$_skelout" ] && {
-    echo "$_skelout"
+  esac
+  case "${_ent}" in
+  */dot.*)
+    _ent="${_ent//\/dot.//.}"
+    ;;
+  esac
+  [ -z "${_ent}" ] || {
+    echo "${_ent}"
   }
   return $?
 }
 
 skel_get_dirpath() {
   local _dir="$1"; shift
-  _dir="./${_dir}"
-  _dir="${_dir%/*}"
-  [ -n "$_dir" -a "$_dir" != "." ] &&
+  case "${_dir}" in
+  */*) _dir="${_dir%/*}" ;;
+  *)   _dir="" ;;
+  esac
+  [ -n "$_dir" -a "$_dir" != "." ] && {
     echo "$_dir"
+  }
   return $?
 }
 
 skel_mkdir() {
   local _usr="$1"; shift
   local _dir="$1"; shift
-  [ -z "$_usr" ] &&
-    return 101
-  [ -z "$_dir" ] &&
-    return 102
-  if [ ! -d "$_dir" ]
-  then command_run mkdir -p "$_dir"
-  else :
-  fi && {
-    if [ $run_user_id -eq 0 ]
-    then
-      _grp="$(id -gn $_usr)"
-      command_run chown "${_usr}:${_grp}" "$_dir"
-    else :
-    fi 2>/dev/null || :
+
+  case "${_usr}" in
+  SKEL)
+    ;;
+  *)
+    [ -n "$(id -n $_usr 2>/dev/null)" ] || {
+      return 1
+    }
+    ;;
+  esac
+
+  [ -n "$_dir" ] || {
+    return 1
   }
+
+  if [ ! -d "$_dir" ]
+  then 
+    command_run mkdir -p "$_dir" && {
+      if [ $run_user_uid -eq 0 ]
+      then
+        _grp="$(id -gn $_usr) 2>/dev/null)"
+        command_run chown "${_usr}:${_grp}" "$_dir" 2>/dev/null
+      else :
+      fi || :
+    }
+  else :
+  fi
+
   return $?
 }
 
@@ -184,89 +212,218 @@ skel_copy() {
   local _usr="$1"; shift
   local _src="$1"; shift
   local _dst="$1"; shift
-  [ -z "$_usr" ] &&
-    return 101
-  [ -z "$_src" ] &&
-    return 102
-  [ -z "$_dir" ] &&
-    return 103
-  if [ $forceupdate -ne 0 -o ! -e "$_dst" ]
-  then command_run cp -f "$_src" "$_dst"
+
+  case "${_usr}" in
+  SKEL)
+    ;;
+  *)
+    [ -n "$(id -n $_usr 2>/dev/null)" ] || {
+      return 1
+    }
+    ;;
+  esac
+
+  [ -n "$_src" -a -r "$_src" ] ||
+    return 2
+  [ -n "$_dst" ] ||
+    return 22
+
+  if [ $force_update -ne 0 -o ! -e "$_dst" ]
+  then
+    command_run cp -f "$_src" "$_dst" 2>/dev/null
   else :
   fi && {
-    if [ $run_user_id -eq 0 ]
+    if [ "${run_user_uid}" = "0" ]
     then
-      _grp="$(id -gn $_usr)"
-      command_run chown "${_usr}:${_grp}" "$_dst"
+      _grp="$(id -gn $_usr 2>/dev/null)"
+      command_run chown "${_usr}:${_grp}" "$_dst" 2>/dev/null
     else :
-    fi 2>/dev/null || :
+    fi || :
   }
+
   return $?
 }
 
-# Default user
-if [ $updateskel -ne 0 -o -n "${usernamelist}" ]
-then
-  usernamelist="$(id -un)"
-fi
+skel_update() {
+  local _usr="$1"; shift
+  local _row=""
+  local _src=""
+  local _dst=""
+  local _dir=""
+  local _ret=0
 
-# Check user
-if [ "${usernamelist}" != "$(id -un 2>/dev/null)" ]
+  case "${_usr}" in
+  SKEL)
+    ;;
+  *)
+    [ -n "$(id -n $_usr 2>/dev/null)" ] || {
+      return 1
+    }
+    ;;
+  esac
+
+  # Print
+  _echo "$_usr: to-dir='$(getuserhomedir $_usr 2>/dev/null)'."
+
+  # Each files
+  cat |
+  while read _row
+  do
+
+    _src="${_row}"
+    _dst=$(skel_get_populate_path "$_src" 2>/dev/null)
+    _dir=$(
+      if [ ! -d "$_src" ]
+      then skel_get_dirpath "$_dst" 2>/dev/null
+      else echo "${_dst}"
+      fi; )
+
+    [ -n "$_dir" -a ! -d "$_dir" ] &&
+    skel_mkdir "$_usr" "$_dir" 2>/dev/null && {
+      _echo "$_usr: Mkdir '$_dir'."
+    } || :
+
+    [ ! -d "$_src" ] &&
+    skel_copy "$_usr" "$_src" "$_dst" 2>/dev/null && {
+      _echo "$_usr: Copying '$_src' to '$_dst'."
+    } || :
+
+  done
+  
+  # Print
+  _echo "$_usr: done."
+
+  # end
+  return $_ret
+}
+
+# Parse options
+while [ $# -gt 0 ]
+do
+  case "${opts_end_flg}::${1}" in
+  0::-skel*|0::--skel*)
+    usernamelist=""
+    skel_userdir=""
+    case "${1}" in
+    *=*)
+      [ -n "${1##*skel=}" ] && {
+        skel_userdir="${1##*skel=}"
+      } || :
+      ;;
+    *)
+      ;;
+    esac
+    [ -n "${skel_userdir}"] || {
+      skel_userdir="${def_skel_dir}"
+    }
+    ;;
+  0::-update*|0::--update*)
+    case "${os_type_name}" in
+    darwin*)
+      _abort 1 "not supported '$1'."
+      ;;
+    *)
+      updatesystem=1
+      ;;
+    esac
+    ;;
+  0::-force*|0::--force*)
+    force_update=1
+    ;;
+  0::-D*|0::-debug*|0::--debug*)
+    dehugrun_flg=1
+    ;;
+  0::-n*|0::-dry-run*|0::--dry-run*)
+    dry_run_mode=1
+    ;;
+  0::-h|0::-help*|0::--help*)
+    _usage; exit 0
+    ;;
+  *::--)
+    opts_end_flg=$(
+      if [ $opts_end_flg -eq 0 ]
+      then echo 1
+      else echo 0
+      fi; )
+    ;;
+  0::-*)
+    ;;
+  *)
+    echo "${usernamelist}" |
+    egrep '^([^ ]+ *| *)'${1}'( *[^ ]+.+| *)$' 1>/dev/null 2>&1 || {
+      if [ -n "$(id -un ${1} 2>/dev/null)" ] 
+      then
+        usernamelist="${usernamelist}${usernamelist:+ }${1}"
+      else
+        _abort 13 "'${1}': no such user."
+      fi
+    }
+    ;;
+  esac
+  shift
+done
+
+# For OS
+case "${os_type_name}" in
+darwin*)
+  [ -d "${skeltmpltdir}" ] || {
+    _abort 2 "'${skeltmpltdir}': no such directory."
+  }
+  ;;
+*)
+  [ -d "${skel_userdir}" ] || {
+    _abort 2 "'${skel_userdir}': no such directory."
+  }
+  ;;
+esac
+
+# Check skel-template
+if [ $updatesystem -ne 0 ]
 then
-  [ $run_user_id -ne 0 ] || {
-    echo "$THIS: Need SUDO." 1>&2
-    exit 1
+  [ -d "${skeltmpltdir}" ] || {
+    _abort 2 "'${skeltmpltdir}': no such directory."
   }
 fi
 
-# Each username
-for username in ${usernamelist}
-do
+# Prohibits overwriting by redirect and use of undefined variables.
+set -Cu
 
-  user_grpname=$(id -gn "$username")
-  user_homedir=$(getuserhomedir "$username")
+# Enable trace, verbose
+[ $dehugrun_flg -eq 0 ] || {
+  PS4='>(${BASH_SOURCE:-$THIS}:${LINENO:-0})${FUNCNAME:+:$FUNCNAME()}: '
+  export PS4
+  set -xv
+}
 
-  # User home dir ?
-  [ -n "${user_homedir}" ] || {
-    echo "$THIS: '${username}': no such user." 1>&2
-    continue
-  } || :
+# Default user
+if [ $updatesystem -ne 0 ]
+then
+  usernamelist="${run_username}"
+fi
 
-  # Print
-  echo "$THIS: $username: homedir=${user_homedir}"
+# Check user
+if [ "${usernamelist}" != "${run_username}" ] &&
+   [ "${run_user_uid}" != "0" ] 
+then
+  _abort 1 "Need SUDO."
+fi
+
+# Update akel
+[ $updatesyatem -eq 0 ] || {
 
   # Setup skelton file(s)
-  ( skel_get_ents "${usertmpltdir}/" |
-    while read row_data
-    do
+  skel_get_ents "${skeltmpltdir}" |
+  skel_update "SKEL"
 
-      _src="${row_data}"
-      _dst=$(skel_get_populate_path "${_src}") || continue
+}
 
-      if [ -d "$_src" ]
-      then
+# Each username
+for _usr in ${usernamelist}
+do
 
-        [ -n "$_dst" -a -d "${user_homedir}/$_dst" ] &&
-        skel_mkdir "${username}" "${user_homedir}/$_dst" && {
-          echo "$THIS: $username: Mkdir '$_dst'."
-        } || :
-
-      else
-
-        _dir=$(skel_get_dirpath "${_dst}")
-
-        [ -n "$_dir" -a -d "$_dir" ] &&
-        skel_mkdir "${username}" "${user_homedir}/$_dir" && {
-          echo "$THIS: $username: Mkdir '$_dir'."
-        } || :
-
-        skel_copy "${username}" "$_src" "${user_homedir}/$_dst"  && {
-          echo "$THIS: $username: Copying '$_src' to '$_dst'."
-        } || :
-
-      fi
-
-    done 2>/dev/null; )
+  # Setup skelton file(s)
+  skel_get_ents |
+  skel_update "$_usr"
 
 done
 
