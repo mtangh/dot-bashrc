@@ -68,13 +68,13 @@ _USAGE_
 }
 
 _echo() {
-  local row_data=""
+  local _row=""
   if [ -n "$@" ]
   then printf "$THIS: %s" "$@"; echo
   else
     cat 2>/dev/null |
-    while read row_data
-    do printf "$THIS: %s" "$row_data"; echo
+    while read _row
+    do printf "$THIS: %s" "$_row"; echo
     done
   fi
   return 0
@@ -148,7 +148,7 @@ skel_get_populate_path() {
     _ent="${_ent#*${os_type_name}/}"
     ;;
   ./*)
-    _ent="${_ent#*/}"      
+    _ent="${_ent#*/}"
     ;;
   esac
   case "${_ent}" in
@@ -178,22 +178,13 @@ skel_mkdir() {
   local _usr="$1"; shift
   local _dir="$1"; shift
 
-  case "${_usr}" in
-  SKEL)
-    ;;
-  *)
-    [ -n "$(id -n $_usr 2>/dev/null)" ] || {
-      return 1
-    }
-    ;;
-  esac
-
-  [ -n "$_dir" ] || {
+  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
     return 1
-  }
+  [ -n "$_dir" ] ||
+    return 1
 
   if [ ! -d "$_dir" ]
-  then 
+  then
     command_run mkdir -p "$_dir" && {
       if [ $run_user_uid -eq 0 ]
       then
@@ -213,16 +204,8 @@ skel_copy() {
   local _src="$1"; shift
   local _dst="$1"; shift
 
-  case "${_usr}" in
-  SKEL)
-    ;;
-  *)
-    [ -n "$(id -n $_usr 2>/dev/null)" ] || {
-      return 1
-    }
-    ;;
-  esac
-
+  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
+    return 1
   [ -n "$_src" -a -r "$_src" ] ||
     return 2
   [ -n "$_dst" ] ||
@@ -244,8 +227,9 @@ skel_copy() {
   return $?
 }
 
-skel_update() {
+skel_files_update() {
   local _usr="$1"; shift
+  local _uhd=""
   local _row=""
   local _src=""
   local _dst=""
@@ -254,42 +238,48 @@ skel_update() {
 
   case "${_usr}" in
   SKEL)
+    _usr="root"
+    _uhd="${skel_userdir}"
     ;;
   *)
-    [ -n "$(id -n $_usr 2>/dev/null)" ] || {
+    if [ -n "$(id -n $_usr 2>/dev/null)" ]
+    then
+      _uhd="$(getuserhomedir $_usr 2>/dev/null)"
+    else
       return 1
-    }
+    fi
     ;;
   esac
 
   # Print
-  _echo "$_usr: to-dir='$(getuserhomedir $_usr 2>/dev/null)'."
+  _echo "$_usr: to-dir='$_uhd'."
 
   # Each files
-  cat |
-  while read _row
-  do
+  ( cd "$_uhd" 2>/dev/null &&
+    cat |
+    while read _row
+    do
 
-    _src="${_row}"
-    _dst=$(skel_get_populate_path "$_src" 2>/dev/null)
-    _dir=$(
-      if [ ! -d "$_src" ]
-      then skel_get_dirpath "$_dst" 2>/dev/null
-      else echo "${_dst}"
-      fi; )
+      _src="$_row"
+      _dst=$(skel_get_populate_path "$_src" 2>/dev/null)
+      _dir=$(
+        if [ ! -d "$_src" ]
+        then skel_get_dirpath "$_dst" 2>/dev/null
+        else echo "${_dst}"
+        fi; )
 
-    [ -n "$_dir" -a ! -d "$_dir" ] &&
-    skel_mkdir "$_usr" "$_dir" 2>/dev/null && {
-      _echo "$_usr: Mkdir '$_dir'."
-    } || :
+      [ -n "$_dir" -a ! -d "$_dir" ] &&
+      skel_mkdir "$_usr" "$_dir" 2>/dev/null && {
+        _echo "$_usr: Mkdir '$_dir'."
+      } || :
 
-    [ ! -d "$_src" ] &&
-    skel_copy "$_usr" "$_src" "$_dst" 2>/dev/null && {
-      _echo "$_usr: Copying '$_src' to '$_dst'."
-    } || :
+      [ ! -d "$_src" ] &&
+      skel_copy "$_usr" "$_src" "$_dst" 2>/dev/null && {
+        _echo "$_usr: Copying '$_src' to '$_dst'."
+      } || :
 
-  done
-  
+    done; )
+
   # Print
   _echo "$_usr: done."
 
@@ -351,7 +341,7 @@ do
   *)
     echo "${usernamelist}" |
     egrep '^([^ ]+ *| *)'${1}'( *[^ ]+.+| *)$' 1>/dev/null 2>&1 || {
-      if [ -n "$(id -un ${1} 2>/dev/null)" ] 
+      if [ -n "$(id -un ${1} 2>/dev/null)" ]
       then
         usernamelist="${usernamelist}${usernamelist:+ }${1}"
       else
@@ -366,24 +356,19 @@ done
 # For OS
 case "${os_type_name}" in
 darwin*)
-  [ -d "${skeltmpltdir}" ] || {
-    _abort 2 "'${skeltmpltdir}': no such directory."
-  }
+  [ -d "${skeltmpltdir}" ] ||
+  _abort 2 "'${skeltmpltdir}': no such directory."
   ;;
 *)
-  [ -d "${skel_userdir}" ] || {
-    _abort 2 "'${skel_userdir}': no such directory."
-  }
+  [ -d "${skel_userdir}" ] ||
+  _abort 2 "'${skel_userdir}': no such directory."
+  [ -d "${skeltmpltdir}" -o $updatesystem -eq 0 ] ||
+  _abort 2 "'${skeltmpltdir}': no such directory."
+  [ $updatesystem -eq 0 -o \
+    "${skeltmpltdir}" != "${skel_userdir}" ] ||
+  _abort 1 "Same '${skeltmpltdir}' and '${skel_userdir}'."
   ;;
 esac
-
-# Check skel-template
-if [ $updatesystem -ne 0 ]
-then
-  [ -d "${skeltmpltdir}" ] || {
-    _abort 2 "'${skeltmpltdir}': no such directory."
-  }
-fi
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
@@ -395,36 +380,25 @@ set -Cu
   set -xv
 }
 
-# Default user
-if [ $updatesystem -ne 0 ]
+# Check permissions
+if [ "${run_user_uid}" != "0" -a $updatesystem -ne 0 ]
 then
-  usernamelist="${run_username}"
-fi
-
-# Check user
-if [ "${usernamelist}" != "${run_username}" ] &&
-   [ "${run_user_uid}" != "0" ] 
+  _abort 1 "Need SUDO."
+elif [ "${run_user_uid}" != "0" -a "${usernamelist}" != "${run_username}" ]
 then
   _abort 1 "Need SUDO."
 fi
 
-# Update akel
+# Setup skelton file(s)
 [ $updatesyatem -eq 0 ] || {
-
-  # Setup skelton file(s)
-  skel_get_ents "${skeltmpltdir}" |
-  skel_update "SKEL"
-
+  skel_get_ents "${skeltmpltdir}" |skel_files_update "SKEL"
 }
 
 # Each username
 for _usr in ${usernamelist}
 do
-
-  # Setup skelton file(s)
-  skel_get_ents |
-  skel_update "$_usr"
-
+   # Setup skelton file(s)
+  skel_get_ents |skel_files_update "$_usr"
 done
 
 # End
