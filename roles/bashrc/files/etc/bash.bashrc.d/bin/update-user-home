@@ -17,31 +17,14 @@ declare -r run_user_uid="$(id -u 2>/dev/null)"
 # OS Type
 declare -r os_type_name="$(uname -s |tr 'A-Z' 'a-z' 2>/dev/null)"
 
-# Skel template dir
-declare -r def_tmpl_dir="$(cd ${CDIR}/../ 2>/dev/null pwd)/skel.d"
-
-# user homedir template (skel)
-case "${os_type_name}" in
-darwin*)
-  if [ ! -d "/etc/skel" ]
-  then def_skel_dir="${SKEL_DIR:-$def_tmpl_dir}"
-  else def_skel_dir="${SKEL_DIR:-/etc/skel}"
-  fi
-  ;;
-*)
-  def_skel_dir="${SKEL_DIR:-/etc/skel}"
-  ;;
-esac
-declare -r def_skel_dir
-
 # Users
 usernamelist=""
 
 # Skel template
-skeltmpltdir="${def_tmpl_dir}"
+skeltmpltdir=""
 
 # User homedir template
-skel_userdir="${def_skel_dir}"
+skel_userdir=""
 
 # Flags: Update skel
 updatesystem=0
@@ -229,6 +212,7 @@ skel_copy() {
 
 skel_files_update() {
   local _usr="$1"; shift
+  local _tag="$_usr"
   local _uhd=""
   local _row=""
   local _src=""
@@ -252,7 +236,7 @@ skel_files_update() {
   esac
 
   # Print
-  _echo "$_usr: to-dir='$_uhd'."
+  _echo "$_tag: to-dir='$_uhd'."
 
   # Each files
   ( cd "$_uhd" 2>/dev/null &&
@@ -270,18 +254,18 @@ skel_files_update() {
 
       [ -n "$_dir" -a ! -d "$_dir" ] &&
       skel_mkdir "$_usr" "$_dir" 2>/dev/null && {
-        _echo "$_usr: Mkdir '$_dir'."
+        _echo "$_tag: Mkdir '$_dir'."
       } || :
 
       [ ! -d "$_src" ] &&
       skel_copy "$_usr" "$_src" "$_dst" 2>/dev/null && {
-        _echo "$_usr: Copying '$_src' to '$_dst'."
+        _echo "$_tag: Copying '$_src' to '$_dst'."
       } || :
 
     done; )
 
   # Print
-  _echo "$_usr: done."
+  _echo "$_tag: done."
 
   # end
   return $_ret
@@ -292,7 +276,6 @@ while [ $# -gt 0 ]
 do
   case "${opts_end_flg}::${1}" in
   0::-skel*|0::--skel*)
-    usernamelist=""
     skel_userdir=""
     case "${1}" in
     *=*)
@@ -303,19 +286,9 @@ do
     *)
       ;;
     esac
-    [ -n "${skel_userdir}"] || {
-      skel_userdir="${def_skel_dir}"
-    }
     ;;
   0::-update*|0::--update*)
-    case "${os_type_name}" in
-    darwin*)
-      _abort 1 "not supported '$1'."
-      ;;
-    *)
-      updatesystem=1
-      ;;
-    esac
+    updatesystem=1
     ;;
   0::-force*|0::--force*)
     force_update=1
@@ -345,30 +318,13 @@ do
       then
         usernamelist="${usernamelist}${usernamelist:+ }${1}"
       else
-        _abort 13 "'${1}': no such user."
+        _abort 13 "no such user: '${1}'."
       fi
     }
     ;;
   esac
   shift
 done
-
-# For OS
-case "${os_type_name}" in
-darwin*)
-  [ -d "${skeltmpltdir}" ] ||
-  _abort 2 "'${skeltmpltdir}': no such directory."
-  ;;
-*)
-  [ -d "${skel_userdir}" ] ||
-  _abort 2 "'${skel_userdir}': no such directory."
-  [ -d "${skeltmpltdir}" -o $updatesystem -eq 0 ] ||
-  _abort 2 "'${skeltmpltdir}': no such directory."
-  [ $updatesystem -eq 0 -o \
-    "${skeltmpltdir}" != "${skel_userdir}" ] ||
-  _abort 1 "Same '${skeltmpltdir}' and '${skel_userdir}'."
-  ;;
-esac
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
@@ -388,6 +344,54 @@ elif [ "${run_user_uid}" != "0" -a "${usernamelist}" != "${run_username}" ]
 then
   _abort 1 "Need SUDO."
 fi
+
+# Skel template dir
+[ -n "${skeltmpltdir}" ] || {
+  skeltmpltdir="$(cd ${CDIR}/../ 2>/dev/null pwd)/skel.d"
+}
+declare -r skeltmpltdir
+
+# User homedir template (skel)
+[ -n "${skel_userdir}" ] || {
+  case "${os_type_name}" in
+  darwin*)
+    if [ "${run_user_uid}" = "0" ]
+    then skel_userdir="/System/Library/User Template/Non_localized"
+    else skel_userdir="${skeltmpltdir}"
+    fi
+    ;;
+  *)
+    skel_userdir="/etc/skel"
+    ;;
+  esac
+}
+declare -r skel_userdir
+
+# For OS
+case "${os_type_name}" in
+darwin*)
+  [ -d "${skel_userdir}" ] ||
+  _abort 2 "no such directory: '${skel_userdir}'."
+  if [ "${run_user_uid}" = "0" ]
+  then
+    [ -d "${skeltmpltdir}" -o $updatesystem -eq 0 ] ||
+    _abort 2 "no such directory: '${skeltmpltdir}'."
+    [ $updatesystem -eq 0 -o \
+      "${skeltmpltdir}" != "${skel_userdir}" ] ||
+    _abort 1 "Same '${skeltmpltdir}' and '${skel_userdir}'."
+  else :
+  fi
+  ;;
+*)
+  [ -d "${skel_userdir}" ] ||
+  _abort 2 "no such directory: '${skel_userdir}'."
+  [ -d "${skeltmpltdir}" -o $updatesystem -eq 0 ] ||
+  _abort 2 "no such directory: '${skeltmpltdir}'."
+  [ $updatesystem -eq 0 -o \
+    "${skeltmpltdir}" != "${skel_userdir}" ] ||
+  _abort 1 "Same '${skeltmpltdir}' and '${skel_userdir}'."
+  ;;
+esac || :
 
 # Setup skelton file(s)
 [ $updatesyatem -eq 0 ] || {
