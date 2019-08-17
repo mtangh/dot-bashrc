@@ -119,15 +119,17 @@ do
     ;;
   -G*|--global*|--system*)
     INSTALL_GLOBAL=1
-    SETUP_SKELETON=0
+    SETUP_SKELETON=1
     ;;
   -U*|--user*|--local*)
     INSTALL_GLOBAL=0
     SETUP_SKELETON=0
     ;;
   -skel|--skel|--with-skel)
-    INSTALL_GLOBAL=0
     SETUP_SKELETON=1
+    ;;
+  -without-skel|--without-skel)
+    SETUP_SKELETON=0
     ;;
   -D*|-debug*|--debug*)
     ENABLE_X_TRACE=1
@@ -506,12 +508,13 @@ fi |_echo
 if [ $SETUP_SKELETON -ne 0 ]
 then
 
-  # Update user-home
-  _echo "Update USER-HOME."
-
-  [ -x "${dotbasedir}/bin/update-user-home" ] && {
-    "${dotbasedir}/bin/update-user-home"
-  }
+  # print
+  _echo "Update USER-HOME Template."
+  # Update SKEL
+  ( cd "${dotbasedir}" 2>/dev/null &&
+    [ -x "./bin/update-user-home" ] && (
+      "./bin/update-user-home" --update-skel
+    }; )
 
 fi # if [ $SETUP_SKELETON -ne 0 ]
 
@@ -519,12 +522,13 @@ fi # if [ $SETUP_SKELETON -ne 0 ]
 if [ $INSTALL_GLOBAL -eq 0 ]
 then
 
-  # Update user-home
+  # print
   _echo "Update USER-HOME."
-
-  [ -x "${dotbasedir}/bin/update-user-home" ] && {
-    "${dotbasedir}/bin/update-user-home"
-  }
+  # Update user-home
+  ( cd "${dotbasedir}" 2>/dev/null &&
+    [ -x "./bin/update-user-home" ] && (
+      "./bin/update-user-home" --skel=./skel.d
+    }; )
 
 fi # if [ $INSTALL_GLOBAL -eq 0 ]
 

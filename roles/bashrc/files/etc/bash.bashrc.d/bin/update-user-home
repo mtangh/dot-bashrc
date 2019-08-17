@@ -157,59 +157,6 @@ skel_get_dirpath() {
   return $?
 }
 
-skel_mkdir() {
-  local _usr="$1"; shift
-  local _dir="$1"; shift
-
-  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
-    return 1
-  [ -n "$_dir" ] ||
-    return 1
-
-  if [ ! -d "$_dir" ]
-  then
-    command_run mkdir -p "$_dir" && {
-      if [ $run_user_uid -eq 0 ]
-      then
-        _grp="$(id -gn $_usr) 2>/dev/null)"
-        command_run chown "${_usr}:${_grp}" "$_dir" 2>/dev/null
-      else :
-      fi || :
-    }
-  else :
-  fi
-
-  return $?
-}
-
-skel_copy() {
-  local _usr="$1"; shift
-  local _src="$1"; shift
-  local _dst="$1"; shift
-
-  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
-    return 1
-  [ -n "$_src" -a -r "$_src" ] ||
-    return 2
-  [ -n "$_dst" ] ||
-    return 22
-
-  if [ $force_update -ne 0 -o ! -e "$_dst" ]
-  then
-    command_run cp -f "$_src" "$_dst" 2>/dev/null
-  else :
-  fi && {
-    if [ "${run_user_uid}" = "0" ]
-    then
-      _grp="$(id -gn $_usr 2>/dev/null)"
-      command_run chown "${_usr}:${_grp}" "$_dst" 2>/dev/null
-    else :
-    fi || :
-  }
-
-  return $?
-}
-
 skel_files_update() {
   local _usr="$1"; shift
   local _tag="$_usr"
@@ -271,6 +218,59 @@ skel_files_update() {
   return $_ret
 }
 
+skel_mkdir() {
+  local _usr="$1"; shift
+  local _dir="$1"; shift
+
+  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
+    return 1
+  [ -n "$_dir" ] ||
+    return 1
+
+  if [ ! -d "$_dir" ]
+  then
+    command_run mkdir -p "$_dir" && {
+      if [ $run_user_uid -eq 0 ]
+      then
+        _grp="$(id -gn $_usr) 2>/dev/null)"
+        command_run chown "${_usr}:${_grp}" "$_dir" 2>/dev/null
+      else :
+      fi || :
+    }
+  else :
+  fi
+
+  return $?
+}
+
+skel_copy() {
+  local _usr="$1"; shift
+  local _src="$1"; shift
+  local _dst="$1"; shift
+
+  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
+    return 1
+  [ -n "$_src" -a -r "$_src" ] ||
+    return 2
+  [ -n "$_dst" ] ||
+    return 22
+
+  if [ $force_update -ne 0 -o ! -e "$_dst" ]
+  then
+    command_run cp -f "$_src" "$_dst" 2>/dev/null
+  else :
+  fi && {
+    if [ "${run_user_uid}" = "0" ]
+    then
+      _grp="$(id -gn $_usr 2>/dev/null)"
+      command_run chown "${_usr}:${_grp}" "$_dst" 2>/dev/null
+    else :
+    fi || :
+  }
+
+  return $?
+}
+
 # Parse options
 while [ $# -gt 0 ]
 do
@@ -287,7 +287,7 @@ do
       ;;
     esac
     ;;
-  0::-update*|0::--update*)
+  0::-update-skel*|0::--update-skel*)
     updatesystem=1
     ;;
   0::-force*|0::--force*)
@@ -374,7 +374,7 @@ darwin*)
   _abort 2 "no such directory: '${skel_userdir}'."
   if [ "${run_user_uid}" = "0" ]
   then
-    [ -d "${skeltmpltdir}" -o $updatesystem -eq 0 ] ||
+    [ $updatesystem -eq 0 -o -d "${skeltmpltdir}" ] ||
     _abort 2 "no such directory: '${skeltmpltdir}'."
     [ $updatesystem -eq 0 -o \
       "${skeltmpltdir}" != "${skel_userdir}" ] ||
@@ -385,13 +385,18 @@ darwin*)
 *)
   [ -d "${skel_userdir}" ] ||
   _abort 2 "no such directory: '${skel_userdir}'."
-  [ -d "${skeltmpltdir}" -o $updatesystem -eq 0 ] ||
+  [ $updatesystem -eq 0 -o -d "${skeltmpltdir}" ] ||
   _abort 2 "no such directory: '${skeltmpltdir}'."
   [ $updatesystem -eq 0 -o \
     "${skeltmpltdir}" != "${skel_userdir}" ] ||
   _abort 1 "Same '${skeltmpltdir}' and '${skel_userdir}'."
   ;;
 esac || :
+
+# Set user name if list is empty
+[ updatesyatem -eq 0 -a -z "${usernamelist}" ] && {
+  usernamelist="${run_username}"
+}
 
 # Setup skelton file(s)
 [ $updatesyatem -eq 0 ] || {

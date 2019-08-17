@@ -19,49 +19,46 @@ BUFF=
 
 # check exist path string
 _path_exist() {
-  _IFS="$IFS"
+  local _IFS="$IFS"
+  local _ent=""
+  local _ret=1
   IFS=":"
-  for _ent in $1; do
+  for _ent in $1
+  do
     _ent="${_ent%/}"
-    if [ -z "${2//$_ent}" ]
-    then
-      IFS="$_IFS"
-      unset _IFS _ent
-      return 0
-    fi
+    [ -z "${2//$_ent}" ] && {
+      _ret=$?; break
+    }
   done
   IFS="$_IFS"
-  unset _IFS _ent
-  return 1
+  return $_ret
 }
 
 # path remove
 _path_remove() {
-  _newp="$1"; shift
+  local _newp="$1"; shift
   _newp=${_newp#$1:}
   _newp=${_newp//:$1:/:}
   _newp=${_newp%:$1}
   echo "$_newp"
-  unset _newp
   return $?
 }
 
 # add path string
 add_path() {
-  newp="$1"; shift
+  loca newp="$1"; shift
   while [ $# -gt 0 ]
   do
     [ -e "${1%/}" ] ||
       { shift; continue; }
     [ $FRCE -ne 0 ] &&
-      newp=`_path_remove "$newp" "${1%/}"`
+      newp=$(_path_remove "$newp" "${1%/}")
     _path_exist "$newp" "${1%/}" &&
       { shift; continue; }
     newp="$newp"`[ -n "$newp" ] && echo ":"`"${1%/}"
     shift
   done
   echo "$newp"
-  unset newp
   return 0
 }
 
