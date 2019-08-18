@@ -500,3 +500,16 @@ typings/
 ## Node: Serverless directories
 .serverless
 
+
+#
+# .gitignore.proj
+#
+
+# bashrc
+roles/bashrc/files/etc/bash.bashrc
+roles/bashrc/files/etc/bash.profile
+roles/bashrc/files/etc/bashrc
+roles/bashrc/files/etc/profile
+# vimrc
+roles/bashrc/files/etc/bash.bashrc.d/vim/vimrc
+
