@@ -1,6 +1,7 @@
 # ${bashrcdir}/85less.sh
 # $Id$
 
+# less installed ?
 [ -x "`type -p less`" ] ||
   return 0
 
@@ -9,9 +10,9 @@ LESSCHARSET=utf-8
 export LESSCHARSET
 
 # less initialization script (sh)
-if [ -x "`type -p lesspipe.sh`" ]
+if [ -x "$(type -p lesspipe.sh)" ]
 then
-  LESSOPEN="|`type -p lesspipe.sh` %s"
+  LESSOPEN="|$(type -p lesspipe.sh) %s"
   export LESSOPEN
 fi
 

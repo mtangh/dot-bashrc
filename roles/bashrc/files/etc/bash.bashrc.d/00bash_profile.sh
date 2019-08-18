@@ -9,16 +9,16 @@
 profiledir="${bashrcdir}/profile.d"
 
 # Load scripts under '${profiledir}' dir
-for profile_sh in \
-$(ls -1 ${profiledir}/[0-9][0-9]*.sh{.${ostype},.${osvendor},.${machine},})
+for profile_sh in $(
+/bin/ls -1 "${profiledir}"/[0-9][0-9]*.sh{.${ostype},.${osvendor},.${machine},} \
+2>/dev/null; )
 do
   [ -x "${profile_sh}" ] &&
     . "${profile_sh}"
 done
 
-# cleanup
-unset profiledir 
-unset profile_sh
+# Cleanup
+unset profiledir profile_sh
 
 # end
 return 0

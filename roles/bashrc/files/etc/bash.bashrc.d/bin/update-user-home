@@ -122,18 +122,10 @@ skel_get_ents() {
 }
 
 skel_get_populate_path() {
-  local _ent="$1"; shift
-  case "${_ent}" in
-  *default/*)
-    _ent="${_ent#*default/}"
-    ;;
-  *${os_type_name}/*)
-    _ent="${_ent#*${os_type_name}/}"
-    ;;
-  ./*)
-    _ent="${_ent#*/}"
-    ;;
-  esac
+  local _ent="${1}"; shift
+  _ent="${_ent#./}"
+  _ent="${_ent#default/}"
+  _ent="${_ent#${os_type_name}/}"
   case "${_ent}" in
   */dot.*)
     _ent="${_ent//\/dot.//.}"
@@ -347,7 +339,7 @@ fi
 
 # Skel template dir
 [ -n "${skeltmpltdir}" ] || {
-  skeltmpltdir="$(cd ${CDIR}/../ 2>/dev/null pwd)/skel.d"
+  skeltmpltdir="$(cd ${CDIR}/../ 2>/dev/null; pwd)/skel.d"
 }
 declare -r skeltmpltdir
 

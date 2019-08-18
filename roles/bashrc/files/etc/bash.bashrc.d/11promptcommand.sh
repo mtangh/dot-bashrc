@@ -8,13 +8,15 @@ set +u
 PROMPT_COMMAND=""
 
 # PROMPT_COMMAND
-for prompt_command_sh in \
-${bashrcdir}/prompt.d/{$TERM/,}[0-9][0-9]*.sh \
-$HOME/.bash_prompt.d/{$TERM/,}*.sh ;
+for prompt_command_sh in $(
+/bin/ls -1 \
+"${bashrcdir}/prompt.d"/{$TERM/,}[0-9][0-9]*.sh \
+"${HOME}/.bash_prompt.d"/{$TERM/,}*.sh \
+2>/dev/null; )
 do
   if [ -x "$prompt_command_sh" ]
   then
-    . "$prompt_command_sh" 1>/dev/null 2>&1
+    . "$prompt_command_sh" 1>/dev/null
   fi
   if [ -n "$PROMPT_COMMAND" ]
   then
@@ -27,17 +29,15 @@ then
   for prompt_command in $(declare -F|grep ' _pc_'|cut -d' ' -f3 2>/dev/null)
   do
     if [ -z "${PROMPT_COMMAND}" ]
-    then
-      PROMPT_COMMAND="${prompt_command}"
-    else
-      PROMPT_COMMAND="${PROMPT_COMMAND};${prompt_command}"
+    then PROMPT_COMMAND="${prompt_command}"
+    else PROMPT_COMMAND="${PROMPT_COMMAND};${prompt_command}"
     fi
   done
 fi
 
 if [ -z "$PROMPT_COMMAND" ]
 then
-  case $TERM in
+  case "$TERM" in
   xterm*)
     PROMPT_COMMAND='printf "\033]0;%s@%s:%s\007" "${USER}" "${HOSTNAME%%.*}" "${PWD/#$HOME/~}"'
     ;;
@@ -49,7 +49,7 @@ then
   esac
 fi
 
-# unset
+# Cleanup
 unset prompt_command_sh prompt_command
 
 # To an undefined variable in error

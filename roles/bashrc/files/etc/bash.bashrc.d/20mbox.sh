@@ -5,31 +5,32 @@
   return 0
 
 mbox_conf_file="${HOME}/.mailbox"
-mail_spool_dir="/var/spool/mail"
+mail_spool_dir=""
 
-for mail_spool_dir in \
-/var/spool/mail \
-/var/mail
+# Mail spool dir
+for mail_spool_dir in /var/spool/mail /var/mail
 do
-  [ -d "${mail_spool_dir}" ] &&
-    break
+  [ -d "${mail_spool_dir}" ] && break || :
 done
 
-if [ -f "${mbox_conf_file}" ]
-then
+# Mail box config
+[ -f "${mbox_conf_file}" ] && {
   . "${mbox_conf_file}" 2>/dev/null
-fi
+} || :
 
+# Disable the 'u' option.
 set +u
 
-[ -z "${MBOX}" ] && MBOX=.mbox
+# Env
+[ -z "${MBOX}" ] && MBOX=".mbox"
 [ -z "${MBOX}" ] || export MBOX
 [ -z "${MAIL}" ] && MAIL="${mail_spool_dir}/${USER}"
 [ -z "${MAIL}" ] || export MAIL
 
+# Enable the 'u' option again.
 set -u
 
-unset mbox_conf_file
-unset mail_spool_dir
+# Cleanup
+unset mbox_conf_file mail_spool_dir
 
 # *eof*

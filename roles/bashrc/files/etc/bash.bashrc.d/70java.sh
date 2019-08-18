@@ -6,15 +6,13 @@
   [ -x "/usr/libexec/java_home" ] &&
     JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null)"
 
-}
+} || :
 
 [ -z "$JAVA_HOME" ] && {
 
   java_cmd=`type -p java`
 
-  for java_home_path in \
-  /usr/java/{default,latest} \
-  "${java_cmd%/bin/java}"
+  for java_home_path in /usr/java/{default,latest} "${java_cmd%/bin/java}"
   do
     [ -x "${java_home_path}/bin/java" ] ||
       continue
@@ -35,9 +33,9 @@
   unset java_home_path
   unset java_cmd
 
-}
+} || :
 
 [ -n "$JAVA_HOME" ] &&
-  export JAVA_HOME
+  export JAVA_HOME || :
 
 # *eof*

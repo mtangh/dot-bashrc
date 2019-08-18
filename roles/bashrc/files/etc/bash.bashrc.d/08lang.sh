@@ -1,30 +1,37 @@
 # ${bashrcdir}/08lang.sh
 # $Id$
 
+# Disable the 'u' option.
 set +u
 
-i18ndir="${bashrcdir}/i18n.d"
+# I18N Paths
+sys_i18n_path="${bashrcdir}/i18n.d"
+usr_i18n_path="${HOME}/.i18n"
+xdg_i18n_path="${XDG_CONFIG_HOME:-${HOME}/.config}/i18n"
 
 # $sysxkbmap means we're running under Xinit;
 # we want to re-read settings in case we're running in CJKI and
 # have been defaulted to English on the console.
-for i18n in \
-${HOME}/.i18n.d/${machine}{.${TERM},} \
-${HOME}/.i18n.d/{${osvendor},${ostype}}{.${TERM},} \
-${HOME}/.i18n.d/{${TERM},default} \
-${HOME}/.i18n{.${TERM},} \
-${i18ndir}/${machine}{.${TERM},} \
-${i18ndir}/{${osvendor},${ostype}}{.${TERM},} \
-${i18ndir}/default
-do
-  if [ -f "${i18n}" ]
-  then
-    . "${i18n}" 2>/dev/null &&
-    break
-  fi
-done
-unset i18n    
 
+# Finding the i18n config.
+for i18n in $(
+/bin/ls -1 \
+{${usr_i18n_path},${xdg_i18n_path}}.d/${machine}{.${TERM},} \
+{${usr_i18n_path},${xdg_i18n_path}}.d/{${osvendor},${ostype}}{.${TERM},} \
+{${usr_i18n_path},${xdg_i18n_path}}.d/{${TERM},default} \
+{${usr_i18n_path},${xdg_i18n_path}}{.${TERM},} \
+"${sys_i18n_path}/${machine}"{.${TERM},} \
+"${sys_i18n_path}"/{${osvendor},${ostype}}{.${TERM},} \
+"${sys_i18n_path}/default" \
+2>/dev/null; )
+do
+  [ -f "${i18n}" ] && {
+    . "${i18n}" && break
+  } 2>/dev/null || :
+done
+unset i18n
+
+# GDM Lang
 if [ -n "$GDM_LANG" ]
 then
   LANG="$GDM_LANG"
@@ -36,30 +43,29 @@ then
   fi
 fi
 
-if [ -n "$LANG" ] &&
-   [ "${TERM}" = "linux" ]
-then
-  case $LANG in
-  *.utf8*|*.UTF-8*)
-    case $LANG in 
-    ja*|ko*|si*|zh*)
-      LANG=en_US.UTF-8
-      ;;
-    en_IN*)
-      ;;
-    *_IN*)
-      LANG=en_US.UTF-8
-      ;;
-    esac
+# Term "linux"
+case "${TERM}::${LANG}" in
+linux::*.utf8*|linux::*.utf-8*|linux::*.UTF8*|linux::*.UTF-8*)
+  case "${LANG}" in
+  ja*|ko*|si*|zh*)
+    LANG=en_US.UTF-8
     ;;
-  *)
+  en_IN*)
+    ;;
+  *_IN*)
+    LANG=en_US.UTF-8
     ;;
   esac
-fi
+  ;;
+*)
+  ;;
+esac
 
-[ -n "$LANG" ]              && export LANG
-[ -n "$LANG" ]              || unset LANG
+# LANG
+[ -n "$LANG" ] && export LANG
+[ -n "$LANG" ] || unset LANG
 
+# LC_*
 [ -n "$LC_ADDRESS" ]        && export LC_ADDRESS
 [ -n "$LC_ADDRESS" ]        || unset LC_ADDRESS
 [ -n "$LC_CTYPE" ]          && export LC_CTYPE
@@ -80,29 +86,31 @@ fi
 [ -n "$LC_NUMERIC" ]        || unset LC_NUMERIC
 [ -n "$LC_PAPER" ]          && export LC_PAPER
 [ -n "$LC_PAPER" ]          || unset LC_PAPER
-[ -n "$LC_TELEPHONE" ]      && export LC_TELEPHONE 
+[ -n "$LC_TELEPHONE" ]      && export LC_TELEPHONE
 [ -n "$LC_TELEPHONE" ]      || unset LC_TELEPHONE
 [ -n "$LC_TIME" ]           && export LC_TIME
 [ -n "$LC_TIME" ]           || unset LC_TIME
 
+# Language and Linguas
 [ -n "$LANGUAGE" ]          && export LANGUAGE
 [ -n "$LANGUAGE" ]          || unset LANGUAGE
 [ -n "$LINGUAS" ]           && export LINGUAS
 [ -n "$LINGUAS" ]           || unset LINGUAS
 
+# XKB Charset
 [ -n "$_XKB_CHARSET" ]      && export _XKB_CHARSET
 [ -n "$_XKB_CHARSET" ]      || unset _XKB_CHARSET
-    
-if [ -n "$LC_ALL" ] &&
-   [ "$LC_ALL" != "$LANG" ]
-then
-  export LC_ALL
-else
-  unset LC_ALL
+
+# LC_ALL
+if [ -n "$LC_ALL" -a "$LC_ALL" != "$LANG" ]
+then export LC_ALL
+else unset LC_ALL
 fi
 
-unset i18ndir
-
+# Enable the 'u' option again.
 set -u
+
+# Cleanup
+unset sys_i18n_path usr_i18n_path xdg_i18n_path
 
 # *eof*

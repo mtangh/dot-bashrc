@@ -11,15 +11,15 @@ sys_colors_dir="${bashrcdir}/colors.d"
 # load color ls settings
 for lscolors_sh in \
 "${sys_colors_dir}/${ostype}/colorls.sh" \
-"${sys_colors_dir}/colorls.sh" 
+"${sys_colors_dir}/colorls.sh"
 do
-  [ -e "${lscolors_sh}" ] &&
+  [ -e "${lscolors_sh}" ] && {
     .  "${lscolors_sh}" 2>/dev/null &&
     break
+  } || :
 done
 
-# cleanup
-unset lscolors_sh
-unset sys_colors_dir
+# Cleanup
+unset lscolors_sh sys_colors_dir
 
 # *eof*

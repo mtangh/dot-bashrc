@@ -5,14 +5,13 @@
   return 0
 
 # load the /etc/profiled.*.sh
-for profile_sh in \
-$(/bin/ls -1 /etc/profile.d/*.sh)
+for profile_sh in $(/bin/ls -1 /etc/profile.d/*.sh 2>/dev/null)
 do
   [ -x "$profile_sh" ] &&
     . "$profile_sh"
 done
 
-# cleanup
+# Cleanup
 unset profile_sh
 
 # end
