@@ -7,22 +7,22 @@ set +u
 # Initialize PROMPT_COMMAND
 PROMPT_COMMAND=""
 
+# Prompt dir
+usr_prompt_dir="${HOME}/.bash_prompt.d"
+xdg_prompt_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/bash_prompt.d"
+
 # PROMPT_COMMAND
 for prompt_command_sh in $(
 /bin/ls -1 \
 "${bashrcdir}/prompt.d"/{$TERM/,}[0-9][0-9]*.sh \
-"${HOME}/.bash_prompt.d"/{$TERM/,}*.sh \
+{${usr_prompt_dir},${xdg_prompt_dir}}/{$TERM/,}*.sh \
 2>/dev/null; )
 do
-  if [ -x "$prompt_command_sh" ]
-  then
-    . "$prompt_command_sh" 1>/dev/null
-  fi
-  if [ -n "$PROMPT_COMMAND" ]
-  then
-    break
-  fi
-done 2>/dev/null
+  [ -x "$prompt_command_sh" ] && {
+    . "$prompt_command_sh"; }
+  [ -n "$PROMPT_COMMAND" ] && {
+    break; }
+done 1>/dev/null 2>&1
 
 if [ -z "$PROMPT_COMMAND" ]
 then
@@ -51,6 +51,7 @@ fi
 
 # Cleanup
 unset prompt_command_sh prompt_command
+unset usr_prompt_dir xdg_prompt_dir
 
 # To an undefined variable in error
 set -u

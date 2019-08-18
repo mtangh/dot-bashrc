@@ -14,7 +14,7 @@ for lscolors_sh in \
 "${sys_colors_dir}/colorls.sh"
 do
   [ -e "${lscolors_sh}" ] && {
-    .  "${lscolors_sh}" 2>/dev/null &&
+    . "${lscolors_sh}" 2>/dev/null &&
     break
   } || :
 done
