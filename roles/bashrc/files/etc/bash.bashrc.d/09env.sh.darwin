@@ -11,19 +11,21 @@ export FIGNORE
 
 # Hex UID
 _hex_uid="0x$(printf "%X" "$UID")"
+# ".CFUserTextEncoding"
 _cf_file="${HOME}/.CFUserTextEncoding"
 
 # CF user text encoding (For MacOSX)
 if [ ! -e "${_cf_file}" ]
-then
-  touch "${_cf_file}"
+then touch "${_cf_file}"
 fi 2>/dev/null
 if [ -s "${_cf_file}" ]
 then
   __CF_USER_TEXT_ENCODING="${_hex_uid}:$(cat ${_cf_file} 2>/dev/null)"
 else
+
   cf_charset=""
   cf_country=""
+
   case "${LANG//utf/UTF}" in
   *.UTF*8) cf_charset="0x8000100" ;;
   ja*)     cf_charset="1"  ;;
@@ -37,6 +39,7 @@ else
   ro*)     cf_charset="38" ;;
   *)       cf_charset="0"  ;;
   esac
+
   case "${LANG}" in
   en_GB*) cf_country="2"  ;;
   de*)    cf_country="3"  ;;
@@ -68,10 +71,13 @@ else
   vi*)    cf_country="97" ;;
   *)      cf_country="0"  ;;
   esac
+
   # Set '__CF_USER_TEXT_ENCODING'
   __CF_USER_TEXT_ENCODING="${_hex_uid}:${cf_charset}:${cf_country}"
+
   # Cleanup
   unset cf_charset cf_country
+
 fi
 
 # exports
@@ -79,8 +85,7 @@ export __CF_USER_TEXT_ENCODING
 
 # Create a .CFUserTextEncoding, if not exists.
 if [ ! -s "${_cf_file}" ]
-then
-  printf "${__CF_USER_TEXT_ENCODING%%*:}" >"${_cf_file}"
+then printf "${__CF_USER_TEXT_ENCODING%%*:}" 1>"${_cf_file}"
 fi 2>/dev/null || :
 
 # Cleanup

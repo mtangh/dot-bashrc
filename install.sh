@@ -512,7 +512,7 @@ then
   _echo "Update USER-HOME Template."
   # Update SKEL
   ( cd "${dotbasedir}" 2>/dev/null &&
-    [ -x "./bin/update-user-home" ] && (
+    [ -x "./bin/update-user-home" ] && {
       "./bin/update-user-home" --update-skel
     }; )
 
@@ -526,7 +526,7 @@ then
   _echo "Update USER-HOME."
   # Update user-home
   ( cd "${dotbasedir}" 2>/dev/null &&
-    [ -x "./bin/update-user-home" ] && (
+    [ -x "./bin/update-user-home" ] && {
       "./bin/update-user-home" --skel=./skel.d
     }; )
 

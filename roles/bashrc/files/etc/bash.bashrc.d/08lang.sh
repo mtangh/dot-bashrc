@@ -92,14 +92,14 @@ esac
 [ -n "$LC_TIME" ]           || unset LC_TIME
 
 # Language and Linguas
-[ -n "$LANGUAGE" ]          && export LANGUAGE
-[ -n "$LANGUAGE" ]          || unset LANGUAGE
-[ -n "$LINGUAS" ]           && export LINGUAS
-[ -n "$LINGUAS" ]           || unset LINGUAS
+[ -n "$LANGUAGE" ] && export LANGUAGE
+[ -n "$LANGUAGE" ] || unset LANGUAGE
+[ -n "$LINGUAS" ]  && export LINGUAS
+[ -n "$LINGUAS" ]  || unset LINGUAS
 
 # XKB Charset
-[ -n "$_XKB_CHARSET" ]      && export _XKB_CHARSET
-[ -n "$_XKB_CHARSET" ]      || unset _XKB_CHARSET
+[ -n "$_XKB_CHARSET" ] && export _XKB_CHARSET
+[ -n "$_XKB_CHARSET" ] || unset _XKB_CHARSET
 
 # LC_ALL
 if [ -n "$LC_ALL" -a "$LC_ALL" != "$LANG" ]
