@@ -1,19 +1,19 @@
-# ${bashrcdir}/04inputrc.sh
+# ${bashrcdir}/04inputrc.sh.darwin
 # $Id$
 
 inputrc_file=""
 fname_suffix=""
 
 # inputrc path
-usr_inputrc_path="${HOME}/.inputrc"
-xdg_inputrc_path="${XDG_CONFIG_HOME:-${HOME}/.config}/inputrc"
+mac_os_inputrc_path="${HOME}/.macOS/etc/inputrc"
+macosx_inputrc_path="${HOME}/.MacOSX/etc/inputrc"
+darwin_inputrc_path="${HOME}/Library/UNIX/etc/inputrc"
 
 # Find inputrc file in
 for inputrc_file in $(
 /bin/ls -1 \
-{${usr_inputrc_path},${xdg_inputrc_path}}.d/{${TERM},default} \
-{${usr_inputrc_path},${xdg_inputrc_path}}{.${TERM},} \
-"${bashrcdir}/inputrc.d"/{${TERM},default} \
+{${mac_os_inputrc_path},${macosx_inputrc_path},${darwin_inputrc_path}}.d/{${TERM},default} \
+{${mac_os_inputrc_path},${macosx_inputrc_path},${darwin_inputrc_path}}{.${TERM},} \
 2>/dev/null; )
 do
   # Test with suffix
@@ -31,7 +31,7 @@ done
 
 # Cleanup
 unset inputrc_file fname_suffix
-unset usr_inputrc_path xdg_inputrc_path
+unset mac_os_inputrc_path macosx_inputrc_path
 
 # Export
 [ -n "$INPUTRC" ] && {
