@@ -267,17 +267,16 @@ skel_copy() {
 while [ $# -gt 0 ]
 do
   case "${opts_end_flg}::${1}" in
-  0::-skel*|0::--skel*)
-    skel_userdir=""
-    case "${1}" in
-    *=*)
-      [ -n "${1##*skel=}" ] && {
-        skel_userdir="${1##*skel=}"
-      } || :
-      ;;
-    *)
-      ;;
-    esac
+  0::-skel=*|0::--skel=*)
+    if [ ! -d "${1##*skel=}" ]
+    then
+      _abort 2 "no such file or directory: '${1}'."
+    elif [ -n "${skel_userdir}" ]
+    then
+      _abort 1 "Multiple Dirs were specified: '${1}'."
+    else
+      skel_userdir="${1##*skel=}"
+    fi
     ;;
   0::-update-skel*|0::--update-skel*)
     updatesystem=1

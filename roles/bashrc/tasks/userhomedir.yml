@@ -1,0 +1,59 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: "bashrc | user-homedir | Username."
+    set_fact:
+      bashrc_userhomedir_user: "{{
+        tests_owner|d(
+        bashrc_bash_user
+        if bashrc_bash_user|d('')|trim|length > 0 else
+        user_name
+        if user_name|d('')|trim|length > 0 else
+        none) }}"
+
+  - name: "bashrc | user-homedir | {{ bashrc_userhomedir_user|d('???') }} - Stat user."
+    user
+      name: "{{ bashrc_userhomedir_user }}"
+      state: present
+    register: bashrc_userhomedir_user_st
+    ignore_errors: true
+
+  - name: "bashrc | user-homedir | {{ bashrc_userhomedir_user|d('???') }} - Stat user homedir."
+    stat:
+      path: "{{
+        bashrc_userhomedir_user_st.home
+        if tests_run|d(false) == false
+        and bashrc_userhomedir_user_st.home|d('')|length > 0
+        and bashrc_userhomedir_user_st.home|is_dir|d(false) == true
+        else '%s/home/%s'|format(tests_prefix_dir,tests_owner) }}"
+    register: bashrc_userhomedir_st
+    ignore_errors: true
+    when: bashrc_userhomedir_user_st|d(none) is not none
+
+  - name: "bashrc | user-homedir | {{ bashrc_userhomedir_user|d('???') }} - Set fact user homedir."
+    set_fact:
+      bashrc_userhomedir_path: "{{
+        bashrc_userhomedir_st.path|realpath
+        if bashrc_userhomedir_st|d(none) is not none
+        and bashrc_userhomedir_st.stat|d(none) is not none
+        and bashrc_userhomedir_st.stat.isdir|d(false) == true else
+        none }}"
+      bashrc_userhomedir_owner: "{{
+        tests_owner|d(bashrc_userhomedir_st.stat.pw_name)
+        if bashrc_userhomedir_st|d(none) is not none
+        and bashrc_userhomedir_st.stat|d(none) is not none
+        and bashrc_userhomedir_st.stat.isdir|d(false) == true else
+        none }}"
+      bashrc_userhomedir_group: "{{
+        tests_group|d(bashrc_userhomedir_st.stat.gr_name)
+        if bashrc_userhomedir_st|d(none) is not none
+        and bashrc_userhomedir_st.stat|d(none) is not none
+        and bashrc_userhomedir_st.stat.isdir|d(false) == true else
+        none }}"
+
+  tags:
+  - always
+

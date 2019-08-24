@@ -4,7 +4,7 @@
 
 - block:
 
-  - name: "bashrc | system | Facts - Build a install path."
+  - name: "bashrc | global | Facts - Build a install path."
     set_fact:
       bashrc_install_path: "{{
         '%s%s'|format(tests_prefix_dir|d(''),(
@@ -13,20 +13,20 @@
         bashrc_base_dir|d('/etc')
         ))|realpath }}"
 
-  - name: "bashrc | system | Facts - Set owner and group."
+  - name: "bashrc | global | Facts - Set owner and group."
     set_fact:
       bashrc_install_owner: "{{
         tests_owner|d(bashrc_owner|d('root')) }}"
       bashrc_install_group: "{{
         tests_group|d(bashrc_group|d('root')) }}"
 
-  - name: "bashrc | system | Facts - File and Dir name."
+  - name: "bashrc | global | Facts - File and Dir name."
     set_fact:
       bashrc_bashrcdir_name: "{{ 'bash.bashrc.d' }}"
       bashrc_bashrc_name: "{{ 'bash.bashrc' }}"
       bashrc_profile_name: "{{ 'bash.profile' }}"
 
-  - name: "bashrc | system | Facts - Build a path of 'bash.bashrc.d'."
+  - name: "bashrc | global | Facts - Build a path of 'bash.bashrc.d'."
     set_fact:
       bashrc_bashrcdir_path: "{{
         '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
@@ -34,30 +34,26 @@
   tags:
   - always
 
-- name: "bashrc | system | Installing bashrc."
-  include: "install.yml"
-  tags:
-  - bashrc-system-bashrcdir-install
-
 - block:
 
-  - name: "bashrc | system | Symlinks"
+  - name: "bashrc | global | Installing bashrc."
+    include: "install.yml"
+
+  - name: "bashrc | global | Symlinks"
     file:
-      src: "{{ _symlink.src }}"
-      dest: "{{ _symlink.dest }}"
+      src: "{{ _symlink.src|trim }}"
+      dest: "{{ _symlink.dest|trim }}"
       state: link
       force: yes
     with_items: "{{ _symlink_files|d([]) }}"
     loop_control:
       loop_var: _symlink
-    when: _symlink is not none
-          and (_symlink.src is not none and _symlink.src|d('')|length > 0)
-          and (_symlink.dest is not none and _symlink.dest|d('')|length > 0)
+    when: _symlink|d(none) is not none
+          and (_symlink.src|d(none) is not none
+           and _symlink.src|d('')|trim|length > 0)
+          and (_symlink.dest|d(none) is not none
+           and _symlink.dest|d('')|trim|length > 0)
 
-  when: bashrc_install_path|d('')|length > 0
-        and bashrc_install_path|is_dir == true
-        and bashrc_bashrcdir_path|d('')|length > 0
-        and bashrc_bashrcdir_path|is_dir == true
   vars:
     _symlink_files:
     - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
@@ -65,5 +61,5 @@
     - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
       dest: "{{ '%s/profile'|format(bashrc_install_path) }}"
   tags:
-  - bashrc-system-symlinks
+  - bashrc-global-symlinks
 

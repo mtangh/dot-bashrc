@@ -7,16 +7,17 @@
   - name: "bashrc | bashrc for ..."
     set_fact:
       bashrc_install_for: "{{
-        dot_bashrc_install_for
-        if dot_bashrc_install_for is not none
-        and dot_bashrc_install_for|d('')|trim|length > 0 else
-        'system'
-        if system|d(true) else
-        'user' }}"
+        dot_bashrc_install_for|trim|lower
+        if dot_bashrc_install_for|d('')|trim|length > 0
+        and dot_bashrc_install_for|trim|lower|match('^(global|local)$') else
+        'global'
+        if bashrc_global|d(true) else
+        'local' }}"
 
   - name: "bashrc | Setup bashrc for {{ bashrc_install_for }}."
-    include: "{{ '%s.yml'|format(bashrc_install_for|d('system')) }}"
+    include: "{{ '%s.yml'|format(bashrc_install_for|d('global')) }}"
     when: bashrc_install_for|d('')|length > 0
+          or bashrc_global|d(none) is not none
 
   tags:
   - bashrc-install-for

@@ -17,7 +17,7 @@ bashrc_owner: 'root'
 
 bashrc_group: "{{
   'wheel'
-  if bashrc_os_family|match('^darwin') else
+  if bashrc_os_family|match('^darwin') == false else
   'admin' }}"
 
 bashrc_dir_mode: '0755'

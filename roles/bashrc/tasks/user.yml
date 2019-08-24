@@ -10,8 +10,9 @@
   - name: "bashrc | user | Check the user homedir."
     fail:
       msg: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
-    when: ( bashrc_userhomedir_path|d('')|length > 0
-          and bashrc_userhomedir_path|realpath|is_dir == true ) == false
+    when: not(bashrc_userhomedir_path|d(none) is not none
+          and bashrc_userhomedir_path|d('')|trim|length > 0
+          and bashrc_userhomedir_path|realpath|is_dir == true)
 
   - name: "bashrc | user | Facts - Build a install path."
     set_fact:
@@ -40,9 +41,10 @@
   - name: "bashrc | user | Facts - Build a file and dir prefix."
     set_fact:
       bashrc_bashrcdir_prefix: "{{
-        '.' if bashrc_install_prefix|d('')|length > 0
-            and bashrc_install_prefix|d('')|realpath == bashrc_userhomedir_path|d('')
-            else '' }}"
+        '.' 
+        if bashrc_install_path|d('')|length > 0
+        and bashrc_install_path|d('') == bashrc_userhomedir_path|d('') else
+        '' }}"
 
   - name: "bashrc | user | Facts - File and Dir name."
     set_fact:
