@@ -1,0 +1,84 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Get homedir."
+    include: "userhomedir.yml"
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Check the user homedir."
+    fail:
+      msg: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
+    when: bashrc_userhomedir_path|d('',true)|trim|length <= 0
+          or bashrc_userhomedir_path|realpath|is_dir == false
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Build a install path."
+    set_fact:
+      bashrc_install_path: "{{
+        '%s%s'|format(tests_prefix_dir|d('',true),(
+        bashrc_install_prefix|trim
+        if bashrc_install_prefix|d('',true)|trim|length > 0 else
+        '%s/.config'|format(bashrc_userhomedir_path)
+        ))|realpath }}"
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Set owner and group."
+    set_fact:
+      bashrc_install_owner: "{{
+        tests_owner|d(
+        bashrc_bash_user
+        if bashrc_bash_user|d('',true)|trim|length > 0 else
+        bashrc_userhomedir_owner
+        if bashrc_userhomedir_owner|d('',true)|trim|length > 0 else
+        bashrc_owner|d('root')) }}"
+      bashrc_install_group: "{{
+        tests_group|d(
+        bashrc_userhomedir_group
+        if bashrc_userhomedir_group|d('',true)|trim|length > 0 else
+        bashrc_group|d('root'))  }}"
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Build a file and dir prefix."
+    set_fact:
+      __name_prefix: "{{
+        (bashrc_install_path|d('',true)|match(
+        '%s$'|format(bashrc_userhomedir_path)))|ternary('.', '') }}"
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - File and Dir name."
+    set_fact:
+      bashrc_bashrcdir_name: "{{'%s%s'|format(__name_prefix,'bash.bashrc.d' }}"
+      bashrc_bashrc_name: "{{ '%s%s'|format(__name_prefix,'bash.bashrc') }}"
+      bashrc_profile_name: "{{ '%s%s'|format(__name_prefix,'bash.profile') }}"
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Build a path of 'bash.bashrc.d'."
+    set_fact:
+      bashrc_bashrcdir_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
+      bashrc_bash_rc_file_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
+      bashrc_bash_profile_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
+
+
+  tags:
+  - always
+
+- block:
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Create a bashrc install prefix."
+    file:
+      path: "{{ bashrc_install_path }}"
+      state: directory
+      owner: "{{ bashrc_install_owner }}"
+      group: "{{ bashrc_install_group }}"
+      mode: "{{ bashrc_dir_mode|d('0755',true) }}"
+    when: bashrc_install_path|d('',true)|trim|length > 0
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Installing bashrc."
+    include: "install.yml"
+
+  - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Setup user homedir."
+    include: "skel_user.yml"
+
+  tags:
+  - bashrc-install-local
+

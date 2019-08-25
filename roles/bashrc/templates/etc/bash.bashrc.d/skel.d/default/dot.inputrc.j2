@@ -1,7 +1,7 @@
 # $HOME/.inputrc
 # {{ ansible_managed }}
 
-$include {{ bash_bashrc_dir|d('/etc/bash.bashrc.d') }}/inputrc.d/default
+$include {{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}/inputrc.d/default
 
 
 #*eof*

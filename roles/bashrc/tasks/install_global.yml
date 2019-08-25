@@ -2,23 +2,30 @@
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
+#
+# Available:
+#  bashrc_install_prefix
+#  bashrc_base_dir
+#
+
 - block:
 
   - name: "bashrc | global | Facts - Build a install path."
     set_fact:
       bashrc_install_path: "{{
-        '%s%s'|format(tests_prefix_dir|d(''),(
-        bashrc_install_prefix
-        if bashrc_install_prefix|d('')|length > 0 else
-        bashrc_base_dir|d('/etc')
+        '%s%s'|format(tests_prefix_dir|d('',true),(
+        bashrc_install_prefix|trim
+        if bashrc_install_prefix|d(none)
+        and bashrc_install_prefix|d('',true)|trim|length > 0 else
+        bashrc_base_dir|d('/etc',true)
         ))|realpath }}"
 
   - name: "bashrc | global | Facts - Set owner and group."
     set_fact:
       bashrc_install_owner: "{{
-        tests_owner|d(bashrc_owner|d('root')) }}"
+        tests_owner|d(bashrc_owner|d('root',true)) }}"
       bashrc_install_group: "{{
-        tests_group|d(bashrc_group|d('root')) }}"
+        tests_group|d(bashrc_group|d('root',true)) }}"
 
   - name: "bashrc | global | Facts - File and Dir name."
     set_fact:
@@ -30,6 +37,10 @@
     set_fact:
       bashrc_bashrcdir_path: "{{
         '%s/%s'|format(bashrc_install_path,bashrc_bashrcdir_name) }}"
+      bashrc_bash_rc_file_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
+      bashrc_bash_profile_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
 
   tags:
   - always
@@ -48,11 +59,8 @@
     with_items: "{{ _symlink_files|d([]) }}"
     loop_control:
       loop_var: _symlink
-    when: _symlink|d(none) is not none
-          and (_symlink.src|d(none) is not none
-           and _symlink.src|d('')|trim|length > 0)
-          and (_symlink.dest|d(none) is not none
-           and _symlink.dest|d('')|trim|length > 0)
+    when: (_symlink|d({})).src|d('',true)|trim|length > 0)
+          and (_symlink|d({})).dest|d('',true)|trim|length > 0
 
   vars:
     _symlink_files:
@@ -61,5 +69,13 @@
     - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
       dest: "{{ '%s/profile'|format(bashrc_install_path) }}"
   tags:
-  - bashrc-global-symlinks
+  - bashrc-install-global
 
+- block:
+
+  - name: "bashrc | global | Installing user template."
+    include: "skel_template.yml"
+
+  when: bashrc_setup_skel|d(true,true) == true
+  tags:
+  - bashrc-install-skel-for-global

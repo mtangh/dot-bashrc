@@ -11,8 +11,8 @@ export USER LOGNAME UID EUID
 
 # bash ?
 [ -n "$BASH" ] &&
-[ -e "{{ bashrc_bashrc_path }}" ] && {
-  . {{ bashrc_bashrc_path }}; } || :
+[ -e "{{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}" ] && {
+  . "{{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}"; } || :
 [ -n "$BASH" ] &&
 [ -e "/etc/bashrc" ] && {
   . /etc/bashrc; } || :

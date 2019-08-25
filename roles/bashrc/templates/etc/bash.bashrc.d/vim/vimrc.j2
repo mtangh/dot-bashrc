@@ -19,13 +19,13 @@ set nocompatible
 "set insertmode
 " Paste mode, insert typed text literally
 "set paste
-" Key sequence to toggle paste mode 
+" Key sequence to toggle paste mode
 "set pastetoggle
 "
 " Runtime Path
 " ============
-" List of directories used for runtime files and plugins 
-set runtimepath^=~/.vim,~/.config/vim,{{ bashrc_bashrcdir_path }}/vim/vim.d,/etc/vim
+" List of directories used for runtime files and plugins
+set runtimepath^=~/.vim,~/.config/vim,{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}/vim/vim.d,/etc/vim
 "
 " Help file
 " =========
@@ -205,7 +205,7 @@ set showmatch
 "set thesaurus=
 " Adjust case of a keyword completion match
 "set infercase
-" 
+"
 " Syntax
 " ======
 " Name of syntax highlighting used
@@ -349,7 +349,7 @@ set history=8
 " Command-line completion shows a list of matches
 "set wildmenu
 " Key used to open the command-line window
-"set cedit=^F   
+"set cedit=^F
 " Height of the command-line window
 "set cmdwinheight=6
 " Suffixes that get lower priority when doing tab completion for filenames.

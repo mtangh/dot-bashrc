@@ -1,6 +1,19 @@
 ---
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+#
+# Required:
+#  bashrc_install_path
+#  bashrc_install_owner
+#  bashrc_install_group
+#
+# Options:
+#  role_path
+#  bashrc_template_dir
+#  bashrc_dir_mode
+#  bashrc_file_mode
+#  bashrc_script_mode
+#
 
 - block:
 
@@ -44,7 +57,7 @@
       state: directory
       owner: "{{ bashrc_install_owner }}"
       group: "{{ bashrc_install_group }}"
-      mode: "{{ bashrc_dir_mode|d('0755') }}"
+      mode: "{{ bashrc_dir_mode|d('0755',true) }}"
 
   - name: "bashrc | bash.bashrc.d | Install '{{ bashrc_bashrcdir_name }}' files"
     synchronize:
@@ -69,21 +82,18 @@
       state: touch
       owner: "{{ bashrc_install_owner }}"
       group: "{{ bashrc_install_group }}"
-      mode: "{{ bashrc_dir_mode|d('0755') 
-                if _bashrc_find_file.isdir|d(false) else
-                bashrc_script_mode|d('0755')
-                if _bashrc_find_file.path|match('\.sh[^.]*$')
+      mode: "{{ bashrc_dir_mode|d('0755',true)
+                if _bashrc_find_file.isdir|d(false,true) else
+                bashrc_script_mode|d('0755',true)
+                if _bashrc_find_file.path|match('[.]sh([.].+$|$)')
                 or _bashrc_find_file.path|match(
                    '^%s/bin/.*$'|format(bashrc_bashrcdir_path)) else
-                bashrc_file_mode|d('0644') }}"
-    with_items: "{{ _bashrc_find.files|d([]) }}"
+                bashrc_file_mode|d('0644',true) }}"
+    with_items: "{{ (_bashrc_find|d({})).files|d([]) }}"
     loop_control:
       loop_var: _bashrc_find_file
-    when: (_bashrc_find|d(none) is not none
-          and _bashrc_find.files(none) is not none)
-          and (_bashrc_find_file|d(none) is not none 
-               and _bashrc_find_file.path|d(none) is not none
-               and _bashrc_find_file.path|trim|length > 0)
+    when: (_bashrc_find|d({})).files|d([])|length > 0
+          and (_bashrc_find_file|d({})).path|d('',true)|trim|length > 0
 
   tags:
   - bashrc-install-bashrc-dir
@@ -95,20 +105,22 @@
       src: "{{ 'etc/%s'|format(
                _bashrc_template|replace(_templates_etc_dir,'')) }}"
       dest: "{{ '%s/%s'|format(
-                bashrc_install_path,_bashrc_template)|replace(
-                _templates_etc_dir,'')|replace('.j2','') }}"
+                bashrc_install_path,_bashrc_template)|regex_replace(
+                '^%s/(.+)[.]j2$|format(_templates_etc_dir),'\\1') }}"
       owner: "{{ bashrc_install_owner }}"
       group: "{{ bashrc_install_group }}"
       mode: "{{ bashrc_file_mode|d('0644') }}"
-    with_lines: 
+    with_lines:
     - "find {{ _bashrc_template_dir|quote }} -type f -name '*.j2'"
     loop_control:
       loop_var: _bashrc_template
-    when: _bashrc_template|d(none) is not none
-          and _bashrc_template|trim|length > 0
-  
+    when: _bashrc_template|d('',true)|trim|length > 0
+
   vars:
-    _templates_etc_dir: "{{ '%s/templates/etc'|format(role_path) }}"
+    _templates_etc_dir: "{{
+      (bashrc_template_dir|d('',true)|trim|length > 0)|ternary(
+      bashrc_template_dir|trim,
+      ('%s/templates/etc'|format(role_path|d(lookup('pipe','pwd'))) ) }}"
   tags:
   - bashrc-install-template-files
 

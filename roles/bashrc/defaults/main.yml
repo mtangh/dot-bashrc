@@ -9,16 +9,22 @@ bashrc_meta: |
 # If necessary,
 # define a default value with a variable name beginning with "bashrc_" here.
 
-bashrc_os_family: "{{ ansible_os_family|d('')|trim|lower }}"
+bashrc_os_family: "{{ ansible_os_family|d('',true)|trim|lower }}"
 
-bashrc_base_dir: '/etc'
+bashrc_distribution: "{{ ansible_distribution|d('',true)|trim|lower }}"
+
+bashrc_base_dir: "{{ '/etc'|realpath }}"
+
+bashrc_skel_dir: "{{
+  '%s'|format((
+  (bashrc_distribution|match('^macos')|ternary(
+  '/System/Library/User Template/Non_localized','/etc/skel')
+  ))|realpath }}"
 
 bashrc_owner: 'root'
 
 bashrc_group: "{{
-  'wheel'
-  if bashrc_os_family|match('^darwin') == false else
-  'admin' }}"
+  (bashrc_os_family|match('^darwin'))|ternary('admin','wheel') }}"
 
 bashrc_dir_mode: '0755'
 

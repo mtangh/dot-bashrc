@@ -87,9 +87,12 @@ _process_template_file() {
   [ -r "${_src}" ] || return 2
   cat "${_src}" |
   sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${dotbashtag}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_dir[ ]*[^\}]*}}@'"${dotbasedir}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_profile[ ]*[^\}]*}}@'"${dotinstall}/${bashrcprof}"'@g' \
-      -e 's@{{[ ]*bash_bashrc_rcfile[ ]*[^\}]*}}@'"${dotinstall}/${bashrcfile}"'@g' \
+      -e 's@{{[ ]*bashrc_bashrcdir_path[ ]*[^\}]*}}@'"${dotbasedir}"'@g' \
+      -e 's@{{[ ]*bashrc_bash_profile_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcprof}"'@g' \
+      -e 's@{{[ ]*bashrc_bash_rc_file_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcfile}"'@g' \
+      -e 's@{{[ ]*bashrc_bashrcdir_name[ ]*[^\}]*}}@'"${dotbasedir##*/}"'@g' \
+      -e 's@{{[ ]*bashrc_bashrc_name[ ]*[^\}]*}}@'"${bashrcfile}"'@g' \
+      -e 's@{{[ ]*bashrc_profile_name[ ]*[^\}]*}}@'"${bashrcfile}"'@g' \
       1>|"${_dst}" 2>/dev/null && {
     : && {
       echo "Difference between ${_src##*/} and ${_dst##*/}."
@@ -119,11 +122,9 @@ do
     ;;
   -G*|--global*|--system*)
     INSTALL_GLOBAL=1
-    SETUP_SKELETON=1
     ;;
   -U*|--user*|--local*)
     INSTALL_GLOBAL=0
-    SETUP_SKELETON=0
     ;;
   -skel|--skel|--with-skel)
     SETUP_SKELETON=1
@@ -148,6 +149,11 @@ do
   esac
   shift
 done
+
+# SKEL
+if [ -$INSTALL_GLOBAL -eq 0 ]
+then SETUP_SKELETON=0
+fi
 
 # Working dir
 [ -n "${DOT_BASHRC_TMP}" -a -d "${DOT_BASHRC_TMP}" ] || {
@@ -233,9 +239,9 @@ _MSG_
     dotbashrcopts=""
 
     [ $INSTALL_GLOBAL -eq 0 ] ||
-    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e global=true"
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e bashrc_install_global=true"
     [ $SETUP_SKELETON -eq 0 ] ||
-    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e skel=true"
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e bashrc_install_skel=true"
     [ $ENABLE_DRY_RUN -eq 0 ] ||
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-D"
 

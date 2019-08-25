@@ -7,44 +7,21 @@
   - name: "bashrc | bashrc for ..."
     set_fact:
       bashrc_install_for: "{{
-        dot_bashrc_install_for|trim|lower
-        if dot_bashrc_install_for|d('')|trim|length > 0
-        and dot_bashrc_install_for|trim|lower|match('^(global|local)$') else
-        'global'
-        if bashrc_global|d(true) else
-        'local' }}"
-
-  - name: "bashrc | Setup bashrc for {{ bashrc_install_for }}."
-    include: "{{ '%s.yml'|format(bashrc_install_for|d('global')) }}"
-    when: bashrc_install_for|d('')|length > 0
-          or bashrc_global|d(none) is not none
+        (bashrc_install_global|d(false,true))|ternary('global','local') }}"
+      bashrc_setup_skel: "{{
+         bashrc_install_skel|d(none) }}"
+      bashrc_bash_user: "{{
+        (bashrc_install_user|d('',true)|trim|length > 0)|ternary(
+        bashrc_install_user|trim,lookup('pipe','id -un') ) }}"
 
   tags:
-  - bashrc-install-for
+  - always
 
 - block:
 
-  - name: "bashrc | Set up user's environment."
-    include: "skel.yml"
-    with_items: "{{ bashrc_bash_users|d([]) }}"
-    loop_control:
-      loop_var: bashrc_bash_user
-    when: bashrc_bash_user|d('')|length > 0
+  - name: "bashrc | Setup bashrc for '{{ bashrc_install_for }}'."
+    include: "{{ 'install_%s.yml'|format(bashrc_install_for) }}"
 
-  when: bashrc_bash_users|d([])|length > 0
-  vars:
-    bashrc_skel:
-      install_path: "{{ bashrc_install_prefix }}"
-      bashrcdir_path: "{{ bashrc_bashrcdir_path }}"
-      bashrc_path: "{{
-        '%s/%s'|format(
-        bashrc_install_path,bashrc_rc_ile_name) }}"
-      profile_path: "{{
-        '%s/%s'|format(
-        bashrc_install_path,bashrc_profile_name) }}"
-      dir_mode: "{{ bashrc_dir_mode|d('0755') }}"
-      file_mode: "{{ bashrc_file_mode|d('0644') }}"
-      script_mode: "{{ bashrc_script_mode|d('0755') }}"
   tags:
-  - bashrc-skel
+  - bashrc-install
 

@@ -1,7 +1,7 @@
 " $HOME/.vimrc
 
 " load to the system-wide 'vimrc'
-source {{ bash_bashrc_dir|d('/etc/bash.bashrc.d') }}/vim/vimrc
+source {{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}/vim/vimrc
 
 
 " *eof*
