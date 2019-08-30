@@ -1,0 +1,63 @@
+---
+# tasks file for bashrc
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: "bashrc | skel-files | Lookup template files and dirs in {{ bashrc_skel_files_template_path|d('???',true) }}."
+    find:
+      paths: "{{
+        (_bashrc_skel_is_skel_template == true
+        and _bashrc_skel_tmpldir_os|is_dir == true)|ternary(
+          [ _bashrc_skel_tmpldir_os ],[])  +
+        (_bashrc_skel_is_skel_template == true
+        and _bashrc_skel_tmpldir_def|is_dir == true)|ternary(
+          [ _bashrc_skel_tmpldir_def ],[] ) +
+        (_bashrc_skel_is_skel_template == false)|ternary(
+          [ bashrc_skel_user_template_path|string|trim ],[] ) }}"
+      recurse: yes
+      hidden: yes
+    register: bashrc_skel_files_result
+    ignore_errors: yes
+    vars:
+      _bashrc_skel_is_skel_template: "{{
+        bashrc_skel_template_path|string|trim|match(
+        '/%s/skel.d/'|format(bashrc_bashrcdir_name)) }}"
+      _bashrc_skel_tmpldir_def: "{{
+        '%s/default'|format(
+        bashrc_skel_template_path|string|trim) }}"
+      _bashrc_skel_tmpldir_os: "{{
+        '%s/%s'|format(
+        bashrc_skel_template_path|string|trim,
+        bashrc_os_family|d('-',true)|string|trim) }}"
+
+  - name: "bashrc | skel-files | Stat {{ bashrc_skel_install_path|d('???',true") }}"
+    stat:
+      path: "{{ bashrc_skel_install_path|string|trim }}"
+    register: bashrc_skel_install_path_st
+    ignore_erros: yes
+    when: bashrc_skel_install_path|d('-',true)|string|trim|is_dir
+
+  - name: "bashrc | skel-files | Stat {{ bashrc_skel_install_path|d('???',true) }}"
+    set_fact:
+      bashrc_skel_install_owner: "{{
+        tests_owner|d(
+        bashrc_skel_install_path_st.stat.pw_name|d(omit)
+        if bashrc_skel_install_path_st|d(none) is not none
+        and bashrc_skel_install_path_st.stat|d(none) is not none
+        else none
+        ) }}"
+      bashrc_skel_install_group: "{{ tests_group|d(none) }}"
+        tests_owner|d(
+        bashrc_skel_install_path_st.stat.gr_name|d(omit)
+        if bashrc_skel_install_path_st|d(none) is not none
+        and bashrc_skel_install_path_st.stat|d(none) is not none
+        else none
+        ) }}"
+      bashrc_skel_dir_mode: "{{ bashrc_dir_mode|d('0755',true) }}"
+      bashrc_skel_file_mode: "{{ bashrc_file_mode|d('0644',true) }}"
+
+  when: bashrc_skel_template_path|d('-',true)|string|trim|is_dir
+  tags:
+  - bashrc-skel-files
+

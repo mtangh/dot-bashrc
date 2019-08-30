@@ -4,21 +4,17 @@
 
 - block:
 
-  - name: "bashrc | userhomedir | Username."
-    set_fact:
-      bashrc_userhomedir_user: "{{
-        tests_owner|d(
-        (bashrc_bash_user|d('',true)|trim|length > 0)|ternary(
-        bashrc_bash_user,(
-        (user_name|d('',true)|trim|length > 0)|ternary(user_name,none)
-        )),true) }}"
-
   - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???') }} - Stat user."
     user:
       name: "{{ bashrc_userhomedir_user }}"
       state: present
     register: bashrc_userhomedir_user_st
     ignore_errors: true
+    vars:
+      bashrc_userhomedir_user: "{{
+        tests_owner|d(
+        (bashrc_bash_user|d('',true)|string|trim|length > 0)|ternary(
+        bashrc_bash_user|string|trim,lookup('pipe','id un')),true) }}"
 
   - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???') }} - Stat user homedir."
     stat:
@@ -40,14 +36,12 @@
         none }}"
       bashrc_userhomedir_owner: "{{
         tests_owner|d(
-        bashrc_userhomedir_st.stat.pw_name
-        if ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true) else
-        none) }}"
+        ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true)|ternary(
+        bashrc_userhomedir_st.stat.pw_name,none),true) }}"
       bashrc_userhomedir_group: "{{
         tests_group|d(
-        bashrc_userhomedir_st.stat.gr_name
-        if ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true) else
-        none) }}"
+        ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true)|ternary(
+        bashrc_userhomedir_st.stat.gr_name,none),true) }}"
 
   tags:
   - always

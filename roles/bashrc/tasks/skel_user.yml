@@ -13,99 +13,35 @@
     when: bashrc_userhomedir_path|d('',true)|trim|length <= 0
           or bashrc_userhomedir_path|realpath|is_dir == false
 
-  - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Facts - Build facts."
-    set_fact:
-      bashrc_skel_user_template_path: "{{
-        '%s%s'|format(tests_prefix_dir|d('',true),(
-        bashrc_user_template_path|trim
-        if bashrc_user_template_path|d('',true)|trim|length > 0 else
-        bashrc_skel_dir|d('%s'|format(
-        (bashrc_distribution|match('^macos'))|ternary(
-        '/System/Library/User Template/Non_localized','/etc/skel')))
-        ))|realpath }}"
-      bashrc_skel_install_path: "{{
-        '%s%s'|format(tests_prefix_dir|d('',true),(
-        bashrc_userhomedir_path
-        ))|realpath }}"
-      bashrc_skel_install_owner: "{{
-        tests_owner|d(
-        bashrc_bash_user
-        if bashrc_bash_user|d(none) is not none
-        and bashrc_bash_user|d('',true)|trim|length > 0 else
-        bashrc_userhomedir_owner
-        if bashrc_userhomedir_owner|d(none) is not nune
-        and bashrc_userhomedir_owner|d('',true)|trim|length > 0 else
-        bashrc_owner|d('root',true)) }}"
-      bashrc_skel_install_group: "{{
-        tests_group|d(
-        bashrc_userhomedir_group
-        if bashrc_userhomedir_group|d(none) is not none
-        and bashrc_userhomedir_group|d('',true)|trim|length > 0 else
-        bashrc_group|d('root',true))  }}"
-
+  when: bashrc_skel_install_to|d('-',true)|string|is_dir == false
   tags:
-  - always
+  _ always
 
 - block:
 
   - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Lookup template files and dirs in {{ bashrc_skel_user_template_path|d('???',true) }}."
-    find:
-      paths: "{{ bashrc_skel_user_template_path|trim }}"
-      recurse: yes
-      hidden: yes
-    register: _bashrc_skel_find
-    ignore_errors: yes
-    when: bashrc_skel_user_template_path|d('',true)|trim|length > 0
-          and bashrc_skel_user_template_path|trim|is_dir == true
+    include: 'skel_files.yml'
 
   - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Convert absolute path to relative path."
-    shell: echo {{ _bashrc_skel_find_file.path|regex_replace(
-                  ('^%s/(.*)$'|format(bashrc_skel_user_template_path)),
-                  '\\1')|trim|quote }}
-    with_items: "{{ (_bashrc_skel_find|d({})).files|d([]) }}"
-    loop_control:
-      loop_var: _bashrc_skel_find_file
-    register: _bashrc_skel_ents
+    include: 'skel_copy.yml'
     ignore_errors: yes
-    when: bashrc_skel_user_template_path|d('',true)|trim|length > 0
-          and (_bashrc_skel_find_file|d({})).path|d('',true)|trim|length > 0
-
-  - name: bashrc | skel({{ bashrc_bash_user|d('???') }}) | Make user template directories.
-    file:
-      path: "{{ '%s/%s'|format(bashrc_skel_install_path,_bashrc_skel_ent.stdout) }}"
-      state: directory
-      owner: "{{ bashrc_skel_install_owner }}"
-      group: "{{ bashrc_skel_install_group }}"
-      mode: "{{ bashrc_dir_mode|d('0755',true) }}"
-    with_items: "{{ (_bashrc_skel_ents|d({})).results|d([]) }}"
+    with_items: "{{ (bashrc_skel_files_result|d({},true)).files|d([],true) }}"
     loop_control:
-      loop_var: _bashrc_skel_ent
-    when: ((_bashrc_skel_ents|d({})).results|d([]))|length > 0
-          and (_bashrc_skel_ent|d({})).stdout|d('',true)|trim|length > 0
-          and (_bashrc_skel_ent|d({})).stdout|d('',true)|is_dir == true
+      loop_var: bashrc_skel_template_file
+    when: (bashrc_skel_template_file|d({},true)).path|d('',true)|trim|length > 0
 
-  - name: bashrc | skel({{ bashrc_bash_user|d('???') }}) | Copy user template files.
-    copy:
-      src: "{{ '%s/%s'|format(
-               bashrc_skel_user_template_path,_bashrc_skel_ent.stdout) }}"
-      dest: "{{ '%s/%s%s'|format(
-                bashrc_skel_install_path,_bashrc_skel_ent.stdout,
-                (%s/%s'|format(bashrc_skel_install_path,_bashrc_skel_ent.stdout))|
-                exists|ternary('.skel','') ) }}"
-      remote_src: yes
-      owner: "{{ bashrc_skel_install_owner }}"
-      group: "{{ bashrc_skel_install_group }}"
-      mode: "{{ bashrc_file_mode|d('0644',true) }}"
-      force: "{{ '%s/%s'|format(
-                 bashrc_skel_install_path,_bashrc_skel_ent.stdout)|exists }}"
-      backup: no
-    with_items: "{{ (_bashrc_skel_ents|d({})).results|d([]) }}"
-    loop_control:
-      loop_var: _bashrc_skel_ent
-    when: ((_bashrc_skel_ents|d({})).results|d([]))|length > 0
-          and (_bashrc_skel_ent|d({})).stdout|d('',true)|trim|length > 0
-          and (_bashrc_skel_ent|d({})).stdout|d('',true)|is_dir == false
-
+  vars:
+    bashrc_skel_template_path: "{{
+      (bashrc_skel_dir|d('-',true)|string|trim|is_dir)|ternary(
+      bashrc_skel_dir|string|trim,
+      bashrc_default_skel_dir|d((bashrc_distribution|match('^macos'))|ternary(
+      '/System/Library/User Template/Non_localized','/etc/skel'),true)
+      )|realpath }}"
+    bashrc_skel_install_path: "{{
+      bashrc_skel_todir|string|trim
+      if bashrc_skel_todir|d('-',true)|string|trim|is_dir else
+      bashrc_userhomedir_path|d('',true)|string|trim
+      )|realpath }}"
   tags:
-  - bashrc-skel-process-files-and-dirs
+  - bashrc-skel-user
 

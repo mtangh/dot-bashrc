@@ -9,7 +9,7 @@
   - 01_default
 
   vars:
-    system: true
+    bashrc_install_global: true
 
   roles:
   - test-setup
@@ -24,8 +24,7 @@
   - 02_for-user
 
   vars:
-    system: false
-    bashrc_install_prefix: "{{ lookup('env','HOME') }}/.config"
+    bashrc_install_global: false
 
   roles:
   - test-setup

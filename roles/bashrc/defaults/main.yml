@@ -13,17 +13,17 @@ bashrc_os_family: "{{ ansible_os_family|d('',true)|trim|lower }}"
 
 bashrc_distribution: "{{ ansible_distribution|d('',true)|trim|lower }}"
 
-bashrc_base_dir: "{{ '/etc'|realpath }}"
+bashrc_default_predix_dir: "{{ '/etc'|realpath }}"
 
-bashrc_skel_dir: "{{
+bashrc_default_skel_dir: "{{
   '%s'|format((
   (bashrc_distribution|match('^macos')|ternary(
   '/System/Library/User Template/Non_localized','/etc/skel')
   ))|realpath }}"
 
-bashrc_owner: 'root'
+bashrc_default_owner: 'root'
 
-bashrc_group: "{{
+bashrc_default_group: "{{
   (bashrc_os_family|match('^darwin'))|ternary('admin','wheel') }}"
 
 bashrc_dir_mode: '0755'

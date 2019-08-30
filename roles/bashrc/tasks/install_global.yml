@@ -10,24 +10,19 @@
 
 - block:
 
-  - name: "bashrc | global | Facts - Build a install path."
+  - name: "bashrc | global | Facts - Build install path and owner and group."
     set_fact:
       bashrc_install_path: "{{
         '%s%s'|format(tests_prefix_dir|d('',true),(
-        bashrc_install_prefix|trim
-        if bashrc_install_prefix|d(none)
-        and bashrc_install_prefix|d('',true)|trim|length > 0 else
-        bashrc_base_dir|d('/etc',true)
-        ))|realpath }}"
-
-  - name: "bashrc | global | Facts - Set owner and group."
-    set_fact:
+        (bashrc_install_prefix|d('',true)|string|trim|length > 0)|ternary(
+        bashrc_install_prefix|string|trim,bashrc_default_prefix_dir|d('/etc',true))
+        )) }}"
       bashrc_install_owner: "{{
-        tests_owner|d(bashrc_owner|d('root',true)) }}"
+        tests_owner|d(bashrc_default_owner|d('root',true),true) }}"
       bashrc_install_group: "{{
-        tests_group|d(bashrc_group|d('root',true)) }}"
+        tests_group|d(bashrc_default_group|d('root',true),true) }}"
 
-  - name: "bashrc | global | Facts - File and Dir name."
+  - name: "bashrc | global | Facts - Set the names of RC files and directories."
     set_fact:
       bashrc_bashrcdir_name: "{{ 'bash.bashrc.d' }}"
       bashrc_bashrc_name: "{{ 'bash.bashrc' }}"
@@ -42,6 +37,14 @@
       bashrc_bash_profile_path: "{{
         '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
 
+  - name: "bashrc | global | Facts - Sets the RC file symlink list."
+    set_fact:
+      bashrc_rc_symlink_file_list:
+      - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
+        dest: "{{ '%s/bashrc'|format(bashrc_install_path) }}"
+      - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
+        dest: "{{ '%s/profile'|format(bashrc_install_path) }}"
+
   tags:
   - always
 
@@ -50,32 +53,27 @@
   - name: "bashrc | global | Installing bashrc."
     include: "install.yml"
 
-  - name: "bashrc | global | Symlinks"
+  - name: "bashrc | global | Set Symlink based on Symlink list"
     file:
-      src: "{{ _symlink.src|trim }}"
-      dest: "{{ _symlink.dest|trim }}"
+      src: "{{ bashrc_rc_symlink_file.src|trim }}"
+      dest: "{{ bashrc_rc_symlink_file.dest|trim }}"
       state: link
       force: yes
-    with_items: "{{ _symlink_files|d([]) }}"
+    with_items: "{{ bashrc_rc_symlink_file_list|d([],true) }}"
     loop_control:
-      loop_var: _symlink
-    when: (_symlink|d({})).src|d('',true)|trim|length > 0)
-          and (_symlink|d({})).dest|d('',true)|trim|length > 0
+      loop_var: bashrc_rc_symlink_file
+    when: (bashrc_rc_symlink_file|d({},true)).src|d('',true)|string|rim|length > 0
+          and (bashrc_rc_symlink_file|d({},true)).dest|d('',true)|string|trim|length > 0
 
-  vars:
-    _symlink_files:
-    - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
-      dest: "{{ '%s/bashrc'|format(bashrc_install_path) }}"
-    - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
-      dest: "{{ '%s/profile'|format(bashrc_install_path) }}"
   tags:
   - bashrc-install-global
 
 - block:
 
-  - name: "bashrc | global | Installing user template."
+  - name: "bashrc | global | Update user homedir template (skel)."
     include: "skel_template.yml"
+    when: ('%s/skel.d'|format(bashrc_bashrcdir_path))|is_dir
 
-  when: bashrc_setup_skel|d(true,true) == true
+  when: bashrc_install_skel|d(true,true) == true
   tags:
   - bashrc-install-skel-for-global

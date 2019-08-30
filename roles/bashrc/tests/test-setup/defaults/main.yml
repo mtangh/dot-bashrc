@@ -6,60 +6,79 @@ tests_run: yes
 
 # test case name
 tests_casename: "{{
-        testcase
-        if testcase|d('')|string|trim|length > 0
-        else lookup('pipe','mktemp -u testcase_XXXXXXXX') }}"
+    (testcase|d('',true)|string|trim|length > 0)|ternary(
+    testcase,lookup('pipe','mktemp -u testcase_XXXXXXXX')) }}"
 
 # test owner and group
 tests_owner: "{{
-        lookup('pipe','id -un')
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(lookup('pipe','id -un'),none)) }}"
 tests_group: "{{
-        lookup('pipe','id -gn')
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(lookup('pipe','id -gn'),none)) }}"
 
 # dirs.
 tests_root_dir: "{{
-        playbook_dir|d(lookup('pipe','pwd'))
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    playbook_dir|d(lookup('pipe','pwd'),true),none) }}"
 
 tests_setup_dir: "{{
-        '%s/test-setup'|format(tests_root_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/test-setup'|format(tests_root_dir),none) }}"
 tests_teardown_dir: "{{
-        '%s/test-teardown'|format(tests_root_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/test-teardown'|format(tests_root_dir),none) }}"
 
 tests_files_dir: "{{
-        '%s/files'|format(tests_root_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/files'|format(tests_root_dir),none) }}"
 tests_files_setup_dir: "{{
-        '%s/setup'|format(tests_files_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/setup'|format(tests_files_dir),none) }}"
 tests_files_expects_dir: "{{
-        '%s/expects'|format(tests_files_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/expects'|format(tests_files_dir),none) }}"
 
 tests_tasks_dir: "{{
-        '%s/tasks'|format(tests_root_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/tasks'|format(tests_root_dir),none) }}"
 
 tests_vars_dir: "{{
-        '%s/vars'|format(tests_root_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/vars'|format(tests_root_dir),none) }}"
 
 tests_target_dir: "{{
-        '%s/target'|format(tests_root_dir)
-        if tests_run|d(false) == true else none }}"
+    (tests_run|d(false,true))|ternary(
+    '%s/target'|format(tests_root_dir),none) }}"
 
 # root dir of test case
 tests_prefix_dir: "{{
-        prefix_dir
-        if tests_run|d(false) == true
-        and prefix_dir|d('')|string|trim|length > 0
-        else (
-        '%s/%s'|format(tests_target_dir,tests_casename)
-        if tests_run|d(false) == true
-        and tests_casename|d('')|string|trim|length > 0
-        else none ) }}"
+    (tests_run|d(false,true))|ternary((
+    prefix_dir
+    if prefix_dir|d('',true)|string|trim|length > 0 else
+    '%s/%s'|format(tests_target_dir,tests_casename)
+    if tests_casename|d('',true)|string|trim|length > 0 else
+    none
+    ),none) }}"
+
+# lists
+tests_vars_file_list:
+- "{{ '%s/main.yml'|format(tests_vars_dir|d('.',true)) }}"
+- "{{ '%s/%s.yml'|format(tests_vars_dir|d('.',true),tests_casename|d('default',true)) }}"
+
+tests_files_setup_dir_list:
+- "{{ '%s/%s'|format(tests_files_setup_dir|d('.',true),tests_casename|d('default',true)) }}"
+- "{{ '%s/default'|format(tests_files_setup_dir|d('.',true)) }}"
+    
+tests_tasks_file_list:
+- "{{ '%s/%s.yml'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
+- "{{ '%s/main.yml'|format(tests_tasks_dir) }}"
+
+tests_tasks_setup_file_list:
+- "{{ '%s/setup/%s'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
+- "{{ '%s/setup/main.yml'|format(tests_tasks_dir) }}"
+- "{{ tests_tasks_file_list }}"
+
+tests_tasks_teardown_file_list:
+- "{{ '%s/teardown/%s'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
+- "{{ '%s/teardown/main.yml'|format(tests_tasks_dir) }}"
+- "{{ tests_tasks_file_list }}"
 

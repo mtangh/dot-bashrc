@@ -2,17 +2,27 @@
 # tasks file for bashrc
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
+# (options)
+# bashrc_install_global
+# bashrc_with_skel
+# bashrc_prefix_dir
+# bashrc_install_user
+#
+
 - block:
 
   - name: "bashrc | bashrc for ..."
     set_fact:
       bashrc_install_for: "{{
-        (bashrc_install_global|d(false,true))|ternary('global','local') }}"
-      bashrc_setup_skel: "{{
-         bashrc_install_skel|d(none) }}"
+        (bashrc_install_global|d(false,true))|ternary('global','user') }}"
+      bashrc_install_skel: "{{
+         bashrc_with_skel|d(none) }}"
+      bashrc_install_prefix: "{{
+        (bashrc_prefix_dir|d('',true)|string|trim|length > 0)|ternary(
+        bashrc_prefix_dir|string|trim,none) }}"
       bashrc_bash_user: "{{
-        (bashrc_install_user|d('',true)|trim|length > 0)|ternary(
-        bashrc_install_user|trim,lookup('pipe','id -un') ) }}"
+        (bashrc_install_user|d('',true)|string|trim|length > 0)|ternary(
+        bashrc_install_user|string|trim,lookup('pipe','id -un') ) }}"
 
   tags:
   - always
