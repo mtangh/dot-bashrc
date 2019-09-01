@@ -45,27 +45,27 @@ SETUP_SKELETON=1
 
 # Echo
 _echo() {
-  local row_data=""
+  local row_data="" 1>/dev/null 2>&1
   if [ -n "$@" ]
   then printf "$THIS: %s" "$@"; echo
   else
-    cat 2>/dev/null |
+    cat |
     while read row_data
     do printf "$THIS: %s" "$row_data"; echo
     done
-  fi
+  fi 2>/dev/null
   return 0
 }
 
 # Abort
 _abort() {
-  local exitcode=1
+  local exitcode=1 1>/dev/null 2>&1
   case "$1" in
   [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
     exitcode="$1"; shift ;;
   *)
     ;;
-  esac
+  esac 1>/dev/null 2>&1
   _echo "ERROR: $@ (${exitcode:-1})" 1>&2
   exit ${exitcode:-1}
 }
@@ -82,8 +82,8 @@ _cleanup() {
 _process_template_file() {
   local _src="$1"; shift
   local _dst="$1"; shift
-  [ -z "${_src}" ] || return 1
-  [ -z "${_dst}" ] || return 1
+  [ -n "${_src}" ] || return 1
+  [ -n "${_dst}" ] || return 1
   [ -r "${_src}" ] || return 2
   cat "${_src}" |
   sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${dotbashtag}"'@g' \
@@ -413,7 +413,7 @@ then
   mkdir -p "${dotbasedir}" 1/dev/null 2>&1
 
   ( cd "${DOT_BASHRC_SRC}" &&
-    tar -c . |tar -C "${dotbasedir}/" -xvf -; )
+    tar -c . |tar -C "${dotbasedir}/" -xvf - |_echo; )
 
   if [ $? -ne 0 ]
   then
@@ -423,14 +423,14 @@ then
 else
 
   ( cd "${dotbasedir}" &&
-    diff -Nur . "${DOT_BASHRC_SRC}" |patch -p0; )
+    diff -Nur . "${DOT_BASHRC_SRC}" |patch -p0 |_echo; )
 
   if [ $? -ne 0 ]
   then
     _abort 1 "Abort: 'diff -Nur . "${DOT_BASHRC_SRC}" |patch -p0'."
   fi
 
-fi |_echo
+fi
 
 # Print message
 _echo "Install the templates."
@@ -461,11 +461,19 @@ _echo "Install the templates."
     esac
 
     _echo "Process templates '${dbrtmplsrc}' to '${dbrtmpl_to}'."
-    _process_template_file "${dbrtmplsrc}" "${dbrtmpl_to}" &&
-    _echo "OK." ||
-    _abort $? "NG."
+    _process_template_file "${dbrtmplsrc}" "${dbrtmpl_to}"
+    
+    if [ $? -eq 0 ]
+    then _echo "OK - '${dbrtmplsrc##*/}'."
+    else _abort 1 "NG - '${dbrtmplsrc##*/}'."
+    fi
 
   done; )
+
+if [ $? -ne 0 ]
+then
+  _abort 1 "Abort: One or more template files could not be installed."
+fi
 
 # Print message
 _echo "Grant and revoke on 'bash.bashrc.d' files."
