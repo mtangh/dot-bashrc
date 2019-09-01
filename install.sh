@@ -87,16 +87,17 @@ _process_template_file() {
   [ -r "${_src}" ] || return 2
   cat "${_src}" |
   sed -e 's@{{[ ]*ansible_managed[ ]*}}@'"${dotbashtag}"'@g' \
+      -e 's@{{[ ]*bashrc_install_path[ ]*[^\}]*}}@'"${dotinstall}"'@g' \
       -e 's@{{[ ]*bashrc_bashrcdir_path[ ]*[^\}]*}}@'"${dotbasedir}"'@g' \
-      -e 's@{{[ ]*bashrc_bash_profile_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcprof}"'@g' \
-      -e 's@{{[ ]*bashrc_bash_rc_file_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcfile}"'@g' \
       -e 's@{{[ ]*bashrc_bashrcdir_name[ ]*[^\}]*}}@'"${dotbasedir##*/}"'@g' \
+      -e 's@{{[ ]*bashrc_bash_rc_file_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcfile}"'@g' \
+      -e 's@{{[ ]*bashrc_bash_profile_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcprof}"'@g' \
       -e 's@{{[ ]*bashrc_bashrc_name[ ]*[^\}]*}}@'"${bashrcfile}"'@g' \
-      -e 's@{{[ ]*bashrc_profile_name[ ]*[^\}]*}}@'"${bashrcfile}"'@g' \
+      -e 's@{{[ ]*bashrc_profile_name[ ]*[^\}]*}}@'"${bashrcprof}"'@g' \
       1>|"${_dst}" 2>/dev/null && {
     : && {
       echo "Difference between ${_src##*/} and ${_dst##*/}."
-      diff -u "${_src}" "${_dst}"
+      diff -u "${_src}" "${_dst}" || :
       echo
     } |_echo
   }
@@ -409,19 +410,25 @@ then
           "${dotbasedir}.$(date +'%Y%m%d_%H%M%S')"
   }
 
-  mkdir -p "${dotbasedir}"
+  mkdir -p "${dotbasedir}" 1/dev/null 2>&1
 
-  ( cd "${bashbashrcsrc}" &&
-    tar -c . |tar -C "${dotbasedir}/" -xvf - ) || {
+  ( cd "${DOT_BASHRC_SRC}" &&
+    tar -c . |tar -C "${dotbasedir}/" -xvf -; )
+
+  if [ $? -ne 0 ]
+  then
     _abort 1 "Abort: 'tar -c . |tar -C "${dotbasedir}/" -xvf -'."
-  }
+  fi
 
 else
 
   ( cd "${dotbasedir}" &&
-    diff -Nur . "${bashbashrcsrc}" |patch -p0 ) || {
-    _abort 1 "Abort: 'diff -Nur . "${bashbashrcsrc}" |patch -p0'."
-  }
+    diff -Nur . "${DOT_BASHRC_SRC}" |patch -p0; )
+
+  if [ $? -ne 0 ]
+  then
+    _abort 1 "Abort: 'diff -Nur . "${DOT_BASHRC_SRC}" |patch -p0'."
+  fi
 
 fi |_echo
 
@@ -446,7 +453,7 @@ _echo "Install the templates."
     case "${dbrtmpl_to}" in
     */*)
       [ -z "${dbrtmpl_to%/*}" -o -d "${dbrtmpl_to%/*}" ] || {
-        mkdir -p "${dbrtmpl_to%/*}" 2>/dev/null
+        mkdir -p "${dbrtmpl_to%/*}" 2>/dev/null || :
       }
       ;;
     *)
@@ -456,7 +463,7 @@ _echo "Install the templates."
     _echo "Process templates '${dbrtmplsrc}' to '${dbrtmpl_to}'."
     _process_template_file "${dbrtmplsrc}" "${dbrtmpl_to}" &&
     _echo "OK." ||
-    _echo "NG($?)."
+    _abort $? "NG."
 
   done; )
 
@@ -468,7 +475,7 @@ _echo "Grant and revoke on 'bash.bashrc.d' files."
   chown -R "${bash_rc_owner}:${bash_rc_group}" . 2>/dev/null &&
   find . -type d -print -exec chmod u=rwx,go=rx {} \; 2>/dev/null &&
   find . -type f -print -exec chmod u=rw,go=r {} \; 2>/dev/null &&
-  find . -type f -a -name "*.sh" -print -exec chmod a+x {} \; 2>/dev/null &&
+  find . -type f -a -name "*.sh*" -print -exec chmod a+x {} \; 2>/dev/null &&
   find ./bin -type f -print -exec chmod a+x {} \; 2>/dev/null &&
   echo; ) |_echo ||
   _abort 1 "Abort: 'chown -R "${bash_rc_owner}:${bash_rc_group}" .' ..."

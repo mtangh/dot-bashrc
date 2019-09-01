@@ -28,7 +28,7 @@ install:
 
 script:
   # Install shell
-  - bash -n install.sh && bash install.sh --install --source=$(pwd)/roles/bashrc
+  - bash -n install.sh && bash install.sh -D --install --source=$(pwd)/roles/bashrc
   # Basic role syntax check
   - (cd roles/bashrc/tests/ && ansible-playbook -i inventory test.yml --syntax-check)
 
