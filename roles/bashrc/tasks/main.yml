@@ -16,18 +16,15 @@
       bashrc_install_for: "{{
         (bashrc_install_global|d(false,true))|ternary('global','user') }}"
       bashrc_install_skel: "{{
-         bashrc_with_skel|d(none) }}"
+        bashrc_with_skel|d(none) }}"
       bashrc_install_prefix: "{{
-        (bashrc_prefix_dir|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_prefix_dir|string|trim,none) }}"
+        bashrc_prefix_dir|string|trim
+        if bashrc_prefix_dir|d('',true)|string|trim|length > 0 else
+        none }}"
       bashrc_bash_user: "{{
-        (bashrc_install_user|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_install_user|string|trim,lookup('pipe','id -un') ) }}"
-
-  tags:
-  - always
-
-- block:
+        bashrc_install_user|string|trim
+        if bashrc_install_user|d('',true)|string|trim|length > 0 else
+        lookup('pipe','id -un') }}"
 
   - name: "bashrc | Setup bashrc for '{{ bashrc_install_for }}'."
     include: "{{ 'install_%s.yml'|format(bashrc_install_for) }}"

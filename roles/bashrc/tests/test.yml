@@ -3,7 +3,7 @@
 
 - hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: yes
 
   tags:
   - 01_default
@@ -18,7 +18,7 @@
 
 - hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: yes
 
   tags:
   - 02_for-user

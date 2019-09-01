@@ -68,12 +68,17 @@
       delete: yes
       links: yes
       recursive: yes
+      rsync_opts:
+      - "--no-motd"
+      - "--exclude=.git*"
     register: _bashrc_files_installed
 
   - name: "bashrc | install | bash.bashrc.d | Find files and dirs under the {{ bashrc_bashrcdir_name }}/"
     find:
       paths: "{{ bashrc_bashrcdir_path }}"
+      file_type: any
       recurse: yes
+      hidden: yes
     register: _bashrc_find
 
   - name: "bashrc | install | bash.bashrc.d | Change mode all files and dirs under the {{ bashrc_bashrcdir_name }}/"
@@ -87,13 +92,13 @@
                 bashrc_script_mode|d('0755',true)
                 if _bashrc_find_file.path|match('[.]sh([.].+$|$)')
                 or _bashrc_find_file.path|match(
-                   '^%s/bin/.*$'|format(bashrc_bashrcdir_path)) else
+                   '^%s/bin/.+$'|format(bashrc_bashrcdir_path)) else
                 bashrc_file_mode|d('0644',true) }}"
-    with_items: "{{ (_bashrc_find|d({})).files|d([]) }}"
+    with_items: "{{ (_bashrc_find|d({},true)).files|d([],true) }}"
     loop_control:
       loop_var: _bashrc_find_file
-    when: (_bashrc_find|d({})).files|d([])|length > 0
-          and (_bashrc_find_file|d({})).path|d('',true)|trim|length > 0
+    when: (_bashrc_find|d({},true)).files|d([],true)|length > 0
+          and (_bashrc_find_file|d({},true)).path|d('',true)|trim|length > 0
 
   tags:
   - bashrc-install-bashrc-dir
@@ -102,25 +107,26 @@
 
   - name: "bashrc | install | template | Install the rc files from template"
     template:
-      src: "{{ 'etc/%s'|format(
-               _bashrc_template|replace(_templates_etc_dir,'')) }}"
-      dest: "{{ '%s/%s'|format(
-                bashrc_install_path,_bashrc_template)|regex_replace(
-                '^%s/(.+)[.]j2$|format(_templates_etc_dir),'\\1') }}"
+      src: "{{
+        'etc/%s'|format(_bashrc_template|regex_replace('^[.]+/','')) }}"
+      dest: "{{
+        '%s/%s'|format(bashrc_install_path,
+        _bashrc_template|regex_replace('^[.]+[/]+([^/].*)[.]j2$','\\1')
+        ) }}"
       owner: "{{ bashrc_install_owner }}"
       group: "{{ bashrc_install_group }}"
       mode: "{{ bashrc_file_mode|d('0644') }}"
     with_lines:
-    - "find {{ _bashrc_template_dir|quote }} -type f -name '*.j2'"
+    - "cd {{ _templates_etc_dir|quote }}; find . -type f -a -name '*.j2'"
     loop_control:
       loop_var: _bashrc_template
-    when: _bashrc_template|d('',true)|trim|length > 0
+    when: _bashrc_template|d('',true)|string|trim|length > 0
 
   vars:
     _templates_etc_dir: "{{
-      (bashrc_template_dir|d('',true)|trim|length > 0)|ternary(
-      bashrc_template_dir|trim,
-      ('%s/templates/etc'|format(role_path|d(lookup('pipe','pwd'))) ) }}"
+      bashrc_template_dir|string|trim
+      if bashrc_template_dir|d('',true)|string|trim|length > 0 else
+      '%s/templates/etc'|format(role_path|d(lookup('pipe','pwd'))) }}"
   tags:
   - bashrc-install-template-files
 

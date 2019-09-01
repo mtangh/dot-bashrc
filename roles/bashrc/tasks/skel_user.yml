@@ -15,7 +15,7 @@
 
   when: bashrc_skel_install_to|d('-',true)|string|is_dir == false
   tags:
-  _ always
+  - bashrc-skel-user-homedir
 
 - block:
 
@@ -32,16 +32,21 @@
 
   vars:
     bashrc_skel_template_path: "{{
-      (bashrc_skel_dir|d('-',true)|string|trim|is_dir)|ternary(
-      bashrc_skel_dir|string|trim,
-      bashrc_default_skel_dir|d((bashrc_distribution|match('^macos'))|ternary(
-      '/System/Library/User Template/Non_localized','/etc/skel'),true)
-      )|realpath }}"
+      '%s'|format((
+      bashrc_skel_dir|string|trim
+      if bashrc_skel_dir|d('-',true)|string|trim|is_dir else
+      '%s%s'|format(tests_prefix_dir|d('',true),(
+      bashrc_default_skel_dir|d(
+      (bashrc_distribution|match('^macos'))|ternary(
+      '/System/Library/User Template/Non_localized','/etc/skel')
+      ,true)))
+      ))|realpath }}"
     bashrc_skel_install_path: "{{
+      '%s'|format((
       bashrc_skel_todir|string|trim
       if bashrc_skel_todir|d('-',true)|string|trim|is_dir else
       bashrc_userhomedir_path|d('',true)|string|trim
-      )|realpath }}"
+      ))|realpath }}"
   tags:
   - bashrc-skel-user
 

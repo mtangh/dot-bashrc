@@ -4,45 +4,58 @@
 
 - block:
 
-  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???') }} - Stat user."
+  - name: "bashrc | userhomedir | Facts - user."
+    set_fact:
+      bashrc_userhomedir_user: "{{
+        tests_owner|d((
+        bashrc_bash_user|string|trim
+        if bashrc_bash_user|d('',true)|string|trim|length > 0 else
+        lookup('pipe','id -un')
+        ),true) }}"
+
+  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???',true) }} - Stat user."
     user:
       name: "{{ bashrc_userhomedir_user }}"
       state: present
     register: bashrc_userhomedir_user_st
-    ignore_errors: true
-    vars:
-      bashrc_userhomedir_user: "{{
-        tests_owner|d(
-        (bashrc_bash_user|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_bash_user|string|trim,lookup('pipe','id un')),true) }}"
+    ignore_errors: yes
 
-  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???') }} - Stat user homedir."
+  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???',true) }} - Stat user homedir."
     stat:
       path: "{{
+        '%s/%s'|format(tests_prefix_dir|d('',true),(
         bashrc_userhomedir_user_st.home
-        if tests_run|d(false,true) == false
-        and bashrc_userhomedir_user_st.home|d('',true)|is_dir else
-        '%s/home/%s'|format(tests_prefix_dir,tests_owner) }}"
+        if bashrc_userhomedir_user_st.home|d('-',true)|is_dir else
+        (bashrc_distribution|match('^macos'))|ternary(
+        '/home/%s','/Users/%s')|format(
+        tests_prefix_dir|d('',true),tests_owner|d('test',true))
+        )) }}"
     register: bashrc_userhomedir_st
-    ignore_errors: true
+    ignore_errors: yes
     when: bashrc_userhomedir_user_st|d(none) is not none
 
-  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???') }} - Set fact user homedir."
+  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???',true) }} - Set fact user homedir."
     set_fact:
       bashrc_userhomedir_path: "{{
-        bashrc_userhomedir_st.path
-        if ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true)
-        and (bashrc_userhomedir_st|d({})).path|d('',true)|trim|lemgth > 0 else
-        none }}"
+        '%s'|format((
+        bashrc_userhomedir_st.path|string|trim
+        if ((bashrc_userhomedir_st|d({},true)).stat|d({},true)).isdir|d(false,true)
+        and (bashrc_userhomedir_st|d({},true)).path|d('',true)|string|trim|length > 0 else
+        none
+        )) }}"
       bashrc_userhomedir_owner: "{{
-        tests_owner|d(
-        ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true)|ternary(
-        bashrc_userhomedir_st.stat.pw_name,none),true) }}"
+        tests_owner|d((
+        bashrc_userhomedir_st.stat.pw_name|d(none)
+        if ((bashrc_userhomedir_st|d({},true)).stat|d({},true)).isdir|d(false,true) else
+        none
+        ),true) }}"
       bashrc_userhomedir_group: "{{
-        tests_group|d(
-        ((bashrc_userhomedir_st|d({})).stat({})).isdir|d(false,true)|ternary(
-        bashrc_userhomedir_st.stat.gr_name,none),true) }}"
+        tests_group|d((
+        bashrc_userhomedir_st.stat.gr_name|d(none)
+        if ((bashrc_userhomedir_st|d({},true)).stat|d({},true)).isdir|d(false,true) else
+        none
+        ),true) }}"
 
   tags:
-  - always
+  - bashrc-userhomedir
 

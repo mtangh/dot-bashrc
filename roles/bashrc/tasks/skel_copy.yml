@@ -6,30 +6,33 @@
 
   - name: bashrc | skel-copy| Make skel template directories.
     file:
-      path: "{{ _bashrc_skel_ent_dest }}"
+      path: "{{
+        (_bashrc_skel_ent_src|d('',true)|string|trim|is_dir)|ternary(
+        _bashrc_skel_ent_dest,_bashrc_skel_ent_dest|dirname) }}"
       state: directory
       owner: "{{ bashrc_skel_install_owner }}"
       group: "{{ bashrc_skel_install_group }}"
       mode: "{{ bashrc_skel_dir_mode|d('0755',true) }}"
       recurse: yes
-    when: _bashrc_skel_ent_src|d('',true)|string|trim|is_dir == true
+    when: _bashrc_skel_ent_src|d('',true)|string|trim|is_link == false
           and _bashrc_skel_ent_dest|d('',true)|string|trim|length > 0
 
   - name: bashrc | skel-copy | Copy skel template files.
     copy:
       src: "{{ _bashrc_skel_ent_src }}"
       dest: "{{ '%s%s'|format(_bashrc_skel_ent_dest,
-                (_bashrc_skel_ent_dest|is_exists)|ternary('.skel','.')) }}"
+                (_bashrc_skel_ent_dest|exists)|ternary('.skel','.')) }}"
       remote_src: yes
       owner: "{{ bashrc_skel_install_owner }}"
       group: "{{ bashrc_skel_install_group }}"
       mode: "{{ bashrc_skel_file_mode|d('0644',true) }}"
-      force: "{{ (_bashrc_skel_ent_dest|is_exists) }}"
+      force: "{{ (_bashrc_skel_ent_dest|exists) }}"
       backup: no
-    when: _bashrc_skel_ent_src|d('',true)|string|trim|is_dir == false
+    when: _bashrc_skel_ent_src|d('',true)|string|trim|is_file
           and _bashrc_skel_ent_dest|d('',true)|string|trim|length > 0
 
-  when: bashrc_skel_template_path|d(none,true) is not none
+  when: (bashrc_skel_template_file|d({},true)).path|d(none) is not none
+        and bashrc_skel_template_path|d(none,true) is not none
         and bashrc_skel_install_path|d(none,true) is not none
   vars:
     _bashrc_skel_ent_src: "{{

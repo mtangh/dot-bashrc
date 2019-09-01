@@ -16,20 +16,22 @@
   - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Build install path and owner and group."
     set_fact:
       bashrc_install_path: "{{
-        '%s%s'|format(tests_prefix_dir|string|d('',true),(
-        (bashrc_install_prefix|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_install_prefix|string|trim,'%s/.config'|format(
-        bashrc_userhomedir_path))
+        '%s%s'|format(tests_prefix_dir|d('',true),(
+        bashrc_install_prefix|string|trim
+        if bashrc_install_prefix|d('',true)|string|trim|length > 0 else
+        '%s/.config'|format(bashrc_userhomedir_path)
         )) }}"
       bashrc_install_owner: "{{
         tests_owner|d((
-        (bashrc_userhomedir_owner|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_userhomedir_owner|string|trim,bashrc_default_owner|d('root',true))
+        bashrc_userhomedir_owner|string|trim
+        if bashrc_userhomedir_owner|d('',true)|string|trim|length > 0 else
+        bashrc_default_owner|d('root',true)
         ),true) }}"
       bashrc_install_group: "{{
         tests_group|d((
-        (bashrc_userhomedir_group|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_userhomedir_group|string|trim,bashrc_default_group|d('root',true))
+        bashrc_userhomedir_group|string|trim
+        if bashrc_userhomedir_group|d('',true)|string|trim|length > 0 else
+        bashrc_default_group|d('root',true)
         ),true) }}"
 
   - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Get the prefix of file and directory names."
@@ -54,9 +56,8 @@
       bashrc_bash_profile_path: "{{
         '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
 
-
   tags:
-  - always
+  - bashrc-install-user-set-facts
 
 - block:
 
@@ -80,5 +81,5 @@
       bashrc_skel_todir: "{{ bashrc_userhomedir_path }}"
 
   tags:
-  - bashrc-install-local
+  - bashrc-install-user
 

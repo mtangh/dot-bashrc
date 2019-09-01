@@ -7,20 +7,18 @@
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | Include vars."
     include_vars:
       file: "{{ tests_vars_file }}"
-    with_items: "{{ tests_vars_file_list|d([]) }}"
+    with_items: "{{ tests_vars_file_list|d([],true) }}"
     loop_control:
       loop_var: tests_vars_file
-    when: tests_vars_file_list|d([])|length > 0
+    when: tests_vars_file_list|d([],true)|length > 0
           and tests_vars_file|d('',true)|is_file == true
-    no_log: "{{ tests_vars_file_list|d([])|length <= 0
-                or tests_vars_file|d('',true)|is_file == false }}"
 
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | Cleanup."
     file:
       path: "{{ tests_prefix_dir }}"
       state: absent
       force: yes
-    no_log: "{{ tests_prefix_dir|is_exists == false }}"
+    no_log: "{{ tests_prefix_dir|exists == false }}"
 
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | Create a prefix directories."
     file:
@@ -39,26 +37,26 @@
       delete: yes
       links: yes
       recursive: yes
-    with_items: "{{ tests_files_setup_dir_list|d([]) }}"
+    with_items: "{{ tests_files_setup_dir_list|d([],true) }}"
     loop_control:
       loop_var: tests_files_setup_dir
     when: tests_prefix_dir|is_dir == true
-          and tests_files_setup_dir_list|d([])|length > 0
+          and tests_files_setup_dir_list|d([],true)|length > 0
           and tests_files_setup_dir|d('-',true)|is_dir == true
     ignore_errors: yes
     no_log: "{{ tests_prefix_dir|is_dir == false
-                or tests_files_setup_dir_list|d([])|length <= 0
+                or tests_files_setup_dir_list|d([],true)|length <= 0
                 or tests_files_setup_dir|d('-',true)|is_dir == false }}"
 
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | Task for case."
     include_tasks:
       file: "{{ tests_tasks_setup_file }}"
-    with_flatten: "{{ tests_tasks_setup_file_list|d([]) }}"
+    with_flattened: "{{ tests_tasks_setup_file_list|d([],true) }}"
     loop_control:
       loop_var: tests_tasks_setup_file
-    when: tests_tasks_setup_file_list|d([])|length > 0
+    when: tests_tasks_setup_file_list|d([],true)|length > 0
           and tests_tasks_setup_file|d('',true)|is_file == true
-    no_log: "{{ tests_tasks_setup_file_list|d([])|length <= 0
+    no_log: "{{ tests_tasks_setup_file_list|d([],true)|length <= 0
                 or tests_tasks_setup_file|d('',true)|is_file == false  }}"
 
   when: tests_run|d(false,true)

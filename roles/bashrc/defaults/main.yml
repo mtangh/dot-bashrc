@@ -13,11 +13,11 @@ bashrc_os_family: "{{ ansible_os_family|d('',true)|trim|lower }}"
 
 bashrc_distribution: "{{ ansible_distribution|d('',true)|trim|lower }}"
 
-bashrc_default_predix_dir: "{{ '/etc'|realpath }}"
+bashrc_default_prefix_dir: "{{ '/etc'|realpath }}"
 
 bashrc_default_skel_dir: "{{
   '%s'|format((
-  (bashrc_distribution|match('^macos')|ternary(
+  (bashrc_distribution|match('^macos'))|ternary(
   '/System/Library/User Template/Non_localized','/etc/skel')
   ))|realpath }}"
 

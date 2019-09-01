@@ -14,8 +14,9 @@
     set_fact:
       bashrc_install_path: "{{
         '%s%s'|format(tests_prefix_dir|d('',true),(
-        (bashrc_install_prefix|d('',true)|string|trim|length > 0)|ternary(
-        bashrc_install_prefix|string|trim,bashrc_default_prefix_dir|d('/etc',true))
+        bashrc_install_prefix|string|trim
+        if bashrc_install_prefix|d('',true)|string|trim|length > 0 else
+        bashrc_default_prefix_dir|d('/etc',true)
         )) }}"
       bashrc_install_owner: "{{
         tests_owner|d(bashrc_default_owner|d('root',true),true) }}"
@@ -37,16 +38,23 @@
       bashrc_bash_profile_path: "{{
         '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
 
+  - name: "bashrc | global | Facts - etc dir."
+    set_fact:
+      bashrc_etc_path: "{{
+        '%s/etc'|format(tests_prefix_dir|d('',true))|realpath }}"
+
   - name: "bashrc | global | Facts - Sets the RC file symlink list."
     set_fact:
       bashrc_rc_symlink_file_list:
-      - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
-        dest: "{{ '%s/bashrc'|format(bashrc_install_path) }}"
-      - src: "{{ '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
-        dest: "{{ '%s/profile'|format(bashrc_install_path) }}"
+      - src: "{{ '%s/%s'|format(bashrc_install_path,
+                 bashrc_bashrc_name)|relpath(bashrc_etc_path) }}"
+        dest: "{{ '%s/bashrc'|format(bashrc_etc_path) }}"
+      - src: "{{ '%s/%s'|format(bashrc_install_path,
+                 bashrc_profile_name)|relpath(bashrc_etc_path) }}"
+        dest: "{{ '%s/profile'|format(bashrc_etc_path) }}"
 
   tags:
-  - always
+  - bashrc-install-global-set-facts
 
 - block:
 
@@ -62,7 +70,7 @@
     with_items: "{{ bashrc_rc_symlink_file_list|d([],true) }}"
     loop_control:
       loop_var: bashrc_rc_symlink_file
-    when: (bashrc_rc_symlink_file|d({},true)).src|d('',true)|string|rim|length > 0
+    when: (bashrc_rc_symlink_file|d({},true)).src|d('',true)|string|trim|length > 0
           and (bashrc_rc_symlink_file|d({},true)).dest|d('',true)|string|trim|length > 0
 
   tags:
