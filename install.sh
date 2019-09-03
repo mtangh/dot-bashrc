@@ -351,6 +351,9 @@ ${bashrcfile}:bashrc
 _EOF_
   } 2>/dev/null; )
 
+# User home updater
+usrhomeupd="${dotbasedir}/bin/update-user-home"
+
 # Print variables
 cat <<_MSG_ |_echo
 **
@@ -396,7 +399,6 @@ _MSG_
 
 } 2>/dev/null |
 _echo
-
 
 # Print message
 _echo "Install the 'bash.bashrc.d' to '${dotbasedir}'."
@@ -460,15 +462,16 @@ _echo "Install the templates."
       ;;
     esac
 
-    _echo "Process templates '${dbrtmplsrc}' to '${dbrtmpl_to}'."
+    _message="Process templates '${dbrtmplsrc}' to '${dbrtmpl_to}'"
+   
     _process_template_file "${dbrtmplsrc}" "${dbrtmpl_to}"
     
     if [ $? -eq 0 ]
-    then _echo "OK - '${dbrtmplsrc##*/}'."
-    else _abort 1 "NG - '${dbrtmplsrc##*/}'."
+    then echo "${_message}: OK."
+    else echo "${_message}: NG."; exit 1
     fi
 
-  done; )
+  done |_echo; )
 
 if [ $? -ne 0 ]
 then
@@ -479,23 +482,30 @@ fi
 _echo "Grant and revoke on 'bash.bashrc.d' files."
 
 # Set installation file permissions
-( cd "${dotbasedir}" 2>/dev/null &&
-  chown -R "${bash_rc_owner}:${bash_rc_group}" . 2>/dev/null &&
-  find . -type d -print -exec chmod u=rwx,go=rx {} \; 2>/dev/null &&
-  find . -type f -print -exec chmod u=rw,go=r {} \; 2>/dev/null &&
-  find . -type f -a -name "*.sh*" -print -exec chmod a+x {} \; 2>/dev/null &&
-  find ./bin -type f -print -exec chmod a+x {} \; 2>/dev/null &&
-  echo; ) |_echo ||
-  _abort 1 "Abort: 'chown -R "${bash_rc_owner}:${bash_rc_group}" .' ..."
+( : && {
+    cd "${dotbasedir}" 2>/dev/null &&
+    chown -R "${bashrcuser}:${bashrc_grp}" . 2>/dev/null &&
+    find . -type d -print -exec chmod u=rwx,go=rx {} \; 2>/dev/null &&
+    find . -type f -print -exec chmod u=rw,go=r {} \; 2>/dev/null &&
+    find . -type f -a -name "*.sh*" -print -exec chmod a+x {} \; 2>/dev/null &&
+    find ./bin -type f -print -exec chmod a+x {} \; 2>/dev/null &&
+    echo ||
+    exit 1
+  } |_echo; )
+
+if [ $? -ne 0 ]
+then
+  _abort 1 "Abort: Permission setting failed."
+fi
 
 # Symlinks
 if [ $INSTALL_GLOBAL -ne 0 ]
 then
 
   # Print message
-  echo "Create symlinks."
+  _echo "Create symlinks."
 
-  # Sumlink processing
+  # Symlink processing
   ( cd "${dotinstall}" &&
     for symlnk_ent in ${dotsymlnks}
     do
@@ -518,12 +528,30 @@ then
         ;;
       esac
 
-      ln -sf "${symlnk_src}" "${symlnk_dst}" 2>/dev/null &&
-      echo "Symlink '${symlnk_src}' to '${symlnk_dst}'."
+      _message="Symlink '${symlnk_src}' to '${symlnk_dst}'"
 
-    done; )
+      ln -sf "${symlnk_src}" "${symlnk_dst}" 2>/dev/null
+      
+      if [ $? -eq 0 ]
+      then echo "${_message}: OK."
+      else echo "${_message}: NG."; exit 1
+      fi
 
-fi |_echo
+    done |_echo; )
+
+  if [ $? -ne 0 ]
+  then
+    _abort 1 "Abort: Symlink creation failed."
+  fi
+
+fi
+
+# The options for update-user-home
+usrhomeopt=""
+[ $ENABLE_DRY_RUN -ne 0 ] &&
+usrhomeopt="${usrhomeopt:+${usrhomeopt }--dry-run"
+[ $ENABLE_X_TRACE -ne 0 ] &&
+usrhomeopt="${usrhomeopt:+${usrhomeopt }--debug"
 
 # bash rc-files setup from skeleton
 if [ $SETUP_SKELETON -ne 0 ]
@@ -531,11 +559,13 @@ then
 
   # print
   _echo "Update USER-HOME Template."
+
   # Update SKEL
   ( cd "${dotbasedir}" 2>/dev/null &&
-    [ -x "./bin/update-user-home" ] && {
-      "./bin/update-user-home" --update-skel
-    }; )
+    [ -x "${usrhomeupd}" ] && {
+      "${usrhomeupd}" ${usrhomeopt} --update-skel
+      exit $?
+    } |_echo; )
 
 fi # if [ $SETUP_SKELETON -ne 0 ]
 
@@ -545,11 +575,13 @@ then
 
   # print
   _echo "Update USER-HOME."
+
   # Update user-home
   ( cd "${dotbasedir}" 2>/dev/null &&
-    [ -x "./bin/update-user-home" ] && {
-      "./bin/update-user-home" --skel=./skel.d
-    }; )
+    [ -x "${usrhomeupd}" ] && {
+      "${usrhomeupd}" ${usrhomeopt} --skel=./skel.d
+      exit $?
+    } |_echo; )
 
 fi # if [ $INSTALL_GLOBAL -eq 0 ]
 
