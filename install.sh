@@ -463,9 +463,9 @@ _echo "Install the templates."
     esac
 
     _message="Process templates '${dbrtmplsrc}' to '${dbrtmpl_to}'"
-   
+
     _process_template_file "${dbrtmplsrc}" "${dbrtmpl_to}"
-    
+
     if [ $? -eq 0 ]
     then echo "${_message}: OK."
     else echo "${_message}: NG."; exit 1
@@ -531,7 +531,7 @@ then
       _message="Symlink '${symlnk_src}' to '${symlnk_dst}'"
 
       ln -sf "${symlnk_src}" "${symlnk_dst}" 2>/dev/null
-      
+
       if [ $? -eq 0 ]
       then echo "${_message}: OK."
       else echo "${_message}: NG."; exit 1
@@ -549,9 +549,9 @@ fi
 # The options for update-user-home
 usrhomeopt=""
 [ $ENABLE_DRY_RUN -ne 0 ] &&
-usrhomeopt="${usrhomeopt:+${usrhomeopt }--dry-run"
+usrhomeopt="${usrhomeopt:+$usrhomeopt }--dry-run"
 [ $ENABLE_X_TRACE -ne 0 ] &&
-usrhomeopt="${usrhomeopt:+${usrhomeopt }--debug"
+usrhomeopt="${usrhomeopt:+$usrhomeopt }--debug"
 
 # bash rc-files setup from skeleton
 if [ $SETUP_SKELETON -ne 0 ]
