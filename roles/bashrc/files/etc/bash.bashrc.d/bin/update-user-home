@@ -377,12 +377,12 @@ darwin*)
 esac || :
 
 # Set user name if list is empty
-[ updatesyatem -eq 0 -a -z "${usernamelist}" ] && {
+[ updatesystem -eq 0 -a -z "${usernamelist}" ] && {
   usernamelist="${run_username}"
 }
 
 # Setup skelton file(s)
-[ $updatesyatem -eq 0 ] || {
+[ $updatesystem -eq 0 ] || {
   skel_get_ents "${skeltmpltdir}" |skel_files_update "SKEL"
 }
 
