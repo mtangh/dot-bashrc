@@ -1,10 +1,7 @@
 #!/bin/bash
-THIS="${0##*/}"
-CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
-
-# Name
-THIS="${THIS:-install.sh}"
-BASE="${THIS%.*}"
+THIS="${BASH_SOURCE##*/}"
+NAME="${THIS%.*}"
+CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 
 # Path
 PATH=/usr/bin:/bin; export PATH
@@ -46,31 +43,22 @@ SETUP_SKELETON=1
   ENABLE_X_TRACE=1
 }
 
+# Stdout
 _stdout() {
   local row_data=""
-  case "${1:-1}" in
-  2) exec 1>&2 ;;
-  *) ;;
-  esac|| :
-  cat |
-  while read row_data
-  do printf "$THIS: %s" "$row_data"; echo
-  done
+  cat | while IFS= read row_data
+  do printf "$THIS: %s" "${row_data}"; echo; done
   return 0
 }
 
 # Abort
 _abort() {
   local exitcode=1 &>/dev/null
-  case "$1" in
-  [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
-    exitcode="$1"; shift ;;
-  *)
-    ;;
-  esac &>/dev/null
-  echo "$@" "(${exitcode:-1})" 1>&2
-  [ ${exitcode:-1} -gt 0 ] ||
-  exit ${exitcode:-1}
+  [[ ${1} =~ ^[0-9]+$ ]] && {
+    exitcode="$1"; shift;
+  } &>/dev/null
+  echo "ERROR: $@" "(${exitcode:-1})" |_stdout 1>&2
+  [ ${exitcode:-1} -gt 0 ] || exit ${exitcode:-1}
   return 0
 }
 
@@ -109,7 +97,7 @@ _process_template_file() {
 }
 
 # Redirect to filter
-exec 1> >(_stdout 1) 2> >(_stdout 2)
+exec 1> >(_stdout)
 
 # Parsing command line options
 while [ $# -gt 0 ]
@@ -163,7 +151,7 @@ set -Cu
 
 # Enable trace, verbose
 [ $ENABLE_X_TRACE -eq 0 ] || {
-  PS4='>(${BASH_SOURCE:-$THIS}:${LINENO:-0})${FUNCNAME:+:$FUNCNAME()}: '
+  PS4='>(${THIS}:${LINENO:-?})${FUNCNAME:+:$FUNCNAME()}: '
   export PS4
   set -xv
 }
@@ -227,7 +215,7 @@ then
 
   if [ ! -d "${DOT_BASHRC_SRC}" ]
   then
-  
+
     if [ -d "${CDIR}/${dotbashrcpath}/files" -a \
          -d "${CDIR}/${dotbashrcpath}/templates" ]
     then
@@ -409,7 +397,7 @@ _MSG_
       bash.bashrc bash.profile \
       bash_profile bash_logout
     do
-      if [ $GLOBAL_INSTALL -ne 0 ]
+      if [ $INSTALL_GLOBAL -ne 0 ]
       then
         [ -e "${dotinstall}/${file}" ] && {
           cp -prf ${dotinstall}/${file} ./ 2>/dev/null &&

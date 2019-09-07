@@ -1,11 +1,7 @@
 #!/bin/bash
-# $Id$
-THIS="${0##*/}"
-CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
-
-# Name
-THIS="${THIS:-pathconfig}"
+THIS="${BASH_SOURCE##*/}"
 NAME="${THIS%.*}"
+CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 
 ##
 ## Internal variables
@@ -198,7 +194,7 @@ set -Cu
 
 # Enable trace, verbose
 [ $XTRC -eq 0 ] || {
-  PS4='>(${BASH_SOURCE:-$THIS}:${LINENO:-0})${FUNCNAME:+:$FUNCNAME()}: '
+  PS4='>(${THIS}:${LINENO:--})${FUNCNAME:+:$FUNCNAME()}: '
   export PS4
   set -xv
 }

@@ -1,10 +1,7 @@
 #!/bin/bash
-THIS="${0##*/}"
-CDIR=$([ -n "${0%/*}" ] && cd "${0%/*}" 2>/dev/null; pwd)
-
-# Name
-THIS="${THIS:-update-user-home}"
+THIS="${BASH_SOURCE##*/}"
 NAME="${THIS%.*}"
+CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 
 # PATH
 PATH=/usr/bin:/bin
@@ -50,29 +47,21 @@ _USAGE_
   return 0
 }
 
-_echo() {
-  local _row=""
-  if [ -n "$@" ]
-  then printf "$THIS: %s" "$@"; echo
-  else
-    cat 2>/dev/null |
-    while read _row
-    do printf "$THIS: %s" "$_row"; echo
-    done
-  fi
+_stdout() {
+  local row_data=""
+  cat | while IFS= read row_data
+  do printf "$THIS: %s" "${row_data}"; echo; done
   return 0
 }
 
 _abort() {
-  local exitcode=1
-  case "$1" in
-  [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
-    exitcode="$1"; shift ;;
-  *)
-    ;;
-  esac
-  _echo "ERROR: $@ (${exitcode:-1})" 1>&2
-  exit ${exitcode:-1}
+  local exitcode=1 &>/dev/null
+  [[ ${1} =~ ^[0-9]+$ ]] && {
+    exitcode="$1"; shift;
+  } &>/dev/null
+  echo "ERROR: $@" "(${exitcode:-1})" |_stdout 1>&2
+  [ ${exitcode:-1} -gt 0 ] || exit ${exitcode:-1}
+  return 0
 }
 
 command_run() {
@@ -175,7 +164,7 @@ skel_files_update() {
   esac
 
   # Print
-  _echo "$_tag: to-dir='$_uhd'."
+  echo "$_tag: to-dir='$_uhd'."
 
   # Each files
   ( cd "$_uhd" 2>/dev/null &&
@@ -193,18 +182,18 @@ skel_files_update() {
 
       [ -n "$_dir" -a ! -d "$_dir" ] &&
       skel_mkdir "$_usr" "$_dir" 2>/dev/null && {
-        _echo "$_tag: Mkdir '$_dir'."
+        echo "$_tag: Mkdir '$_dir'."
       } || :
 
       [ ! -d "$_src" ] &&
       skel_copy "$_usr" "$_src" "$_dst" 2>/dev/null && {
-        _echo "$_tag: Copying '$_src' to '$_dst'."
+        echo "$_tag: Copying '$_src' to '$_dst'."
       } || :
 
     done; )
 
   # Print
-  _echo "$_tag: done."
+  echo "$_tag: done."
 
   # end
   return $_ret
@@ -262,6 +251,9 @@ skel_copy() {
 
   return $?
 }
+
+# Redirect to filter
+exec 1> >(_stdout)
 
 # Parse options
 while [ $# -gt 0 ]
@@ -322,18 +314,18 @@ set -Cu
 
 # Enable trace, verbose
 [ $dehugrun_flg -eq 0 ] || {
-  PS4='>(${BASH_SOURCE:-$THIS}:${LINENO:-0})${FUNCNAME:+:$FUNCNAME()}: '
+  PS4='>(${THIS}:${LINENO:-?})${FUNCNAME:+:$FUNCNAME()}: '
   export PS4
   set -xv
 }
 
 # Check permissions
-if [ "${run_user_uid}" != "0" -a $updatesystem -ne 0 ]
+if [ "${run_user_uid}" != "0" ]
 then
-  _abort 1 "Need SUDO."
-elif [ "${run_user_uid}" != "0" -a "${usernamelist}" != "${run_username}" ]
-then
-  _abort 1 "Need SUDO."
+  [ $updatesystem -ne 0 ] &&
+    _abort 1 "Need SUDO."
+  [ -n "${usernamelist}" -a "${usernamelist}" != "${run_username}" ] &&
+    _abort 1 "Need SUDO."
 fi
 
 # Skel template dir
