@@ -96,9 +96,6 @@ _process_template_file() {
   return $?
 }
 
-# Redirect to filter
-exec 1> >(_stdout)
-
 # Parsing command line options
 while [ $# -gt 0 ]
 do
@@ -145,6 +142,9 @@ do
   esac
   shift
 done
+
+# Redirect to filter
+exec 1> >(_stdout)
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu

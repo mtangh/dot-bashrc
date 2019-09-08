@@ -35,7 +35,7 @@ script:
            ${HOME}/.config/bash.{bashrc,profile} \
            ${HOME}/.config/bash.bashrc.d/vim/vimrc \
            ${HOME}/.config/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc} \
-           ${HOME}/.bashrc \
+           ${HOME}/.bashrc ;
           do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
           done; ) &&
         . "${HOME}/.config/bash.bashrc" &&

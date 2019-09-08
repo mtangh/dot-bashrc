@@ -255,9 +255,6 @@ skel_copy() {
   return $?
 }
 
-# Redirect to filter
-exec 1> >(_stdout)
-
 # Parse options
 while [ $# -gt 0 ]
 do
@@ -306,6 +303,9 @@ do
   esac
   shift
 done
+
+# Redirect to filter
+exec 1> >(_stdout)
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
