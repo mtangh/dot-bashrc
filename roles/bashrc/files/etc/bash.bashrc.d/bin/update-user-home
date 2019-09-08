@@ -12,7 +12,12 @@ declare -r run_username="$(id -un 2>/dev/null)"
 declare -r run_user_uid="$(id -u 2>/dev/null)"
 
 # OS Type
-declare -r os_type_name="$(uname -s |tr 'A-Z' 'a-z' 2>/dev/null)"
+declare -r os_type_name=$(
+  if [ -n "$(type -P sw_vers 2>/dev/null)" ]
+  then os=$(sw_vers -productName)
+  else os=$(uname -s)
+  fi 2>/dev/null
+  os="${os// /}";  echo "${os,,}" || :; )
 
 # Users
 usernamelist=""
@@ -82,7 +87,7 @@ getuserhomedir() {
   *)
     if [ "$run_user_uid" = "0" ]
     then
-      [ -n "$(id -n $_usr 2>/dev/null)" ] &&
+      [ -n "$(id -un $_usr 2>/dev/null)" ] &&
       su - "$_usr" -c 'cd; pwd' 2>/dev/null
       _ret=$?
     else
@@ -154,11 +159,9 @@ skel_files_update() {
     _uhd="${skel_userdir}"
     ;;
   *)
-    if [ -n "$(id -n $_usr 2>/dev/null)" ]
-    then
-      _uhd="$(getuserhomedir $_usr 2>/dev/null)"
-    else
-      return 1
+    if [ -n "$(id -un $_usr 2>/dev/null)" ]
+    then _uhd="$(getuserhomedir $_usr 2>/dev/null)"
+    else return 1
     fi
     ;;
   esac
@@ -169,24 +172,24 @@ skel_files_update() {
   # Each files
   ( cd "$_uhd" 2>/dev/null &&
     cat |
-    while read _row
+    while IFS= read _row
     do
 
       _src="$_row"
-      _dst=$(skel_get_populate_path "$_src" 2>/dev/null)
+      _dst=$(skel_get_populate_path "$_src")
       _dir=$(
         if [ ! -d "$_src" ]
-        then skel_get_dirpath "$_dst" 2>/dev/null
+        then skel_get_dirpath "$_dst"
         else echo "${_dst}"
         fi; )
 
       [ -n "$_dir" -a ! -d "$_dir" ] &&
-      skel_mkdir "$_usr" "$_dir" 2>/dev/null && {
+      skel_mkdir "$_usr" "$_dir" && {
         echo "$_tag: Mkdir '$_dir'."
       } || :
 
       [ ! -d "$_src" ] &&
-      skel_copy "$_usr" "$_src" "$_dst" 2>/dev/null && {
+      skel_copy "$_usr" "$_src" "$_dst" && {
         echo "$_tag: Copying '$_src' to '$_dst'."
       } || :
 
@@ -203,7 +206,7 @@ skel_mkdir() {
   local _usr="$1"; shift
   local _dir="$1"; shift
 
-  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
+  [ -n "$(id -un $_usr 2>/dev/null)" ] ||
     return 1
   [ -n "$_dir" ] ||
     return 1
@@ -229,7 +232,7 @@ skel_copy() {
   local _src="$1"; shift
   local _dst="$1"; shift
 
-  [ -n "$(id -n $_usr 2>/dev/null)" ] ||
+  [ -n "$(id -un $_usr 2>/dev/null)" ] ||
     return 1
   [ -n "$_src" -a -r "$_src" ] ||
     return 2
@@ -261,13 +264,10 @@ do
   case "${opts_end_flg}::${1}" in
   0::-skel=*|0::--skel=*)
     if [ ! -d "${1##*skel=}" ]
-    then
-      _abort 2 "no such file or directory: '${1}'."
+    then _abort 2 "no such file or directory: '${1}'."
     elif [ -n "${skel_userdir}" ]
-    then
-      _abort 1 "Multiple Dirs were specified: '${1}'."
-    else
-      skel_userdir="${1##*skel=}"
+    then _abort 1 "Multiple Dirs were specified: '${1}'."
+    else skel_userdir="${1##*skel=}"
     fi
     ;;
   0::-update-skel*|0::--update-skel*)
@@ -298,10 +298,8 @@ do
     echo "${usernamelist}" |
     egrep '^([^ ]+ *| *)'${1}'( *[^ ]+.+| *)$' 1>/dev/null 2>&1 || {
       if [ -n "$(id -un ${1} 2>/dev/null)" ]
-      then
-        usernamelist="${usernamelist}${usernamelist:+ }${1}"
-      else
-        _abort 13 "no such user: '${1}'."
+      then usernamelist="${usernamelist}${usernamelist:+ }${1}"
+      else _abort 13 "no such user: '${1}'."
       fi
     }
     ;;
@@ -337,7 +335,7 @@ declare -r skeltmpltdir
 # User homedir template (skel)
 [ -n "${skel_userdir}" ] || {
   case "${os_type_name}" in
-  darwin*)
+  macos*)
     if [ "${run_user_uid}" = "0" ]
     then skel_userdir="/System/Library/User Template/Non_localized"
     else skel_userdir="${skeltmpltdir}"
@@ -352,7 +350,7 @@ declare -r skel_userdir
 
 # For OS
 case "${os_type_name}" in
-darwin*)
+macos*)
   [ -d "${skel_userdir}" ] ||
   _abort 2 "no such directory: '${skel_userdir}'."
   if [ "${run_user_uid}" = "0" ]

@@ -28,12 +28,29 @@ install:
 
 script:
   # Install shell
-  - bash -n install.sh && bash install.sh -D --install --source=$(pwd)/roles/bashrc
-  # Basic role syntax check
-  - (cd roles/bashrc/tests/ && ansible-playbook -i inventory test.yml --syntax-check)
+  - |
+    set -x;
+    : "install.sh" && {
+      bash -n install.sh &&
+      bash install.sh -D --install --source=$(pwd)/roles/bashrc && {
+        [ -d "${HOME}/.config/bash.bashrc.d" ] &&
+        [ -r "${HOME}/.config/bash.bashrc"   ] &&
+        [ -r "${HOME}/.config/bash.profile"  ] &&
+        . "${HOME}/.bashrc" && {
+          [ -n "$osvendor" ] && echo "osvendor=$osvendor" &&
+          [ -n "$ostype"   ] && echo "ostype=$ostype"     &&
+          [ -n "$machine"  ] && echo "machine=$machine"   &&
+        :; }
+    } &&
+    : "OK";
 
+  # Basic role syntax check
+  - |
+    cd roles/bashrc/tests/ &&
+    ansible-playbook -i inventory test.yml --syntax-check
+
+# Notifications
 #notifications:
-#  webhooks: https://galaxy.ansible.com/api/v1/notifications/
 #  email:
-#  - youremailaddress
+#  - your@emailaddress
 

@@ -21,46 +21,28 @@ set -u
 # bash resource configs default
 bashrcdir="{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}"
 
-# platform and vendor
-if [[ "${MACHTYPE}" =~ ^([^-]+)-([^-]+)-([_A-Za-z]+).*$ ]]
-then
-  ostype="${BASH_REMATCH[3]}"
-  osvendor="${BASH_REMATCH[2]}"
-else
-  ostype="__UNKNOWN__"
-  osvendor="__UNKNOWN__"
-fi
-
-# machine name
-if [[ "${HOSTNAME}" =~ ^([^.]+).(.+)$ ]]
-then
-  machine="${BASH_REMATCH[1]}"
-else
-  machine="`hostname -s 2>/dev/null`"
-fi
+# Platform
+. "${bashrcdir}/__platform.sh" 1>/dev/null 2>&1 || {
+  declare -r osvendor=__UNKNOWN__
+  declare -r ostype=__UNKNOWN__
+  declare -r machine=__UNKNOWN__
+}
 
 # Prompt setting (default)
 PS1='\u@\h \W\$ '
 
-# bash resource configs
-[ -d "${BASH_SOURCE}.d" ] &&
-  bashrcdir="${BASH_SOURCE}.d"
-
 # Load to the 'bash.bashrc.d' scripts
-for bashrc_sh in \
-`ls -1 ${bashrcdir}/[0-9][0-9]*.sh{,.${ostype},.${osvendor},.${machine}} 2>/dev/null`
+for bashrc_sh in $({
+  /bin/ls ${bashrcdir}/[0-9][0-9]*.sh{,.${ostype},.${osvendor},.${machine}}
+  } 2>/dev/null)
 do
-  set +u
-  [ -x "$bashrc_sh" ] &&
-    . "$bashrc_sh"
-  set -u
+  set +u; [ ! -x "$bashrc_sh" ] || . "$bashrc_sh"; set -u
 done
+
+# cleanup
+unset bashrcdir bashrc_sh
 
 # unset 'u'
 set +u
-
-# cleanup
-unset bashrcdir
-unset bashrc_sh
 
 # *eof*
