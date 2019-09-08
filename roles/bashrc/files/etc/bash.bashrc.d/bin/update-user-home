@@ -377,7 +377,7 @@ darwin*)
 esac || :
 
 # Set user name if list is empty
-[ updatesystem -eq 0 -a -z "${usernamelist}" ] && {
+[ $updatesystem -eq 0 -a -z "${usernamelist}" ] && {
   usernamelist="${run_username}"
 }
 
