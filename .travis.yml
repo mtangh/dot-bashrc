@@ -2,6 +2,7 @@
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 language: python
+
 python: "2.7"
 
 # Use the new container infrastructure
@@ -23,9 +24,6 @@ install:
   # Check bash version
   - bash --version
 
-  ## Create ansible.cfg with correct roles_path
-  #- printf '[defaults]\nroles_path=../' >ansible.cfg
-
 script:
   # Install shell
   - |
@@ -33,14 +31,20 @@ script:
     : "install.sh" && {
       bash -n install.sh &&
       bash install.sh -D --install --source=$(pwd)/roles/bashrc && {
-        [ -d "${HOME}/.config/bash.bashrc.d" ] &&
-        [ -r "${HOME}/.config/bash.bashrc"   ] &&
-        [ -r "${HOME}/.config/bash.profile"  ] &&
-        . "${HOME}/.bashrc" && {
-          [ -n "$osvendor" ] && echo "osvendor=$osvendor" &&
-          [ -n "$ostype"   ] && echo "ostype=$ostype"     &&
-          [ -n "$machine"  ] && echo "machine=$machine"   &&
-        :; }
+        ( for check_file in \
+           ${HOME}/.config/bash.{bashrc,profile} \
+           ${HOME}/.config/bash.bashrc.d/vim/vimrc \
+           ${HOME}/.config/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc} \
+           ${HOME}/.bashrc \
+          do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
+          done; ) &&
+        . "${HOME}/.config/bash.bashrc" &&
+        echo "Load ${HOME}/.config/bash.bashrc" && {
+          [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
+          [ -n "$ostype"   ] && echo "Found - ostype=$ostype"     &&
+          [ -n "$machine"  ] && echo "Found - machine=$machine"   &&
+          :; }
+      }
     } &&
     : "OK";
 

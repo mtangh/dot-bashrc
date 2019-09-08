@@ -1,7 +1,7 @@
 # ${bashrcdir}/99user_bashrc.sh
 # $Id$
 
-: && {
+: "user_bashrc" && {
 
 # User local .bashrc file(s)
 for dot_bashrc_sh in $(
