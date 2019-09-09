@@ -1,6 +1,8 @@
 # ${bashrcdir}/04inputrc.sh.darwin
 # $Id$
 
+MAC_INPUTRC=""
+
 inputrc_file=""
 fname_suffix=""
 
@@ -20,23 +22,26 @@ do
   for fname_suffix in ${machine} ${osvendor} ${ostype}
   do
     [ -r "${inputrc_file}.${fname_suffix}" ] && {
-      INPUTRC="${inputrc_file}.${fname_suffix}" &&
-      break 2; }
+      MAC_INPUTRC="${inputrc_file}.${fname_suffix}" &&
+      break 2
+    } || :
   done
   # Test without suffix
   [ -z "${INPUTRC}" -a -r "${inputrc_file}" ] && {
-    INPUTRC="${inputrc_file}" &&
-    break; }
+    MAC_INPUTRC="${inputrc_file}" &&
+    break
+  } || :
 done
+
+# Export
+[ -n "${MAC_INPUTRC}" ] && {
+  export INPUTRC="${MAC_INPUTRC}"
+} || :
 
 # Cleanup
 unset inputrc_file fname_suffix
 unset mac_os_inputrc_path macosx_inputrc_path
-
-# Export
-[ -n "$INPUTRC" ] && {
-  export INPUTRC
-} || :
+unset MAC_INPUTRC
 
 # end
 return 0

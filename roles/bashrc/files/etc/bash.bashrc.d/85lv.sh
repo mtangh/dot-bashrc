@@ -2,7 +2,7 @@
 # $Id$
 
 # lv installed ?
-[ -x "`type -p lv`" ] ||
+[ -x "$(type -p lv)" ] ||
   return 0
 
 # LV Environment Variables

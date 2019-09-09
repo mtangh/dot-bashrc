@@ -6,6 +6,7 @@ set +u
 
 # I18N Paths
 sys_i18n_path="${bashrcdir}/i18n.d"
+ule_i18n_path="/usr/local/etc/${bashrcdir##*/}/i18n.d"
 usr_i18n_path="${HOME}/.i18n"
 xdg_i18n_path="${XDG_CONFIG_HOME:-${HOME}/.config}/i18n"
 
@@ -20,9 +21,9 @@ for i18n in $(
 {${usr_i18n_path},${xdg_i18n_path}}.d/{${osvendor},${ostype}}{.${TERM},} \
 {${usr_i18n_path},${xdg_i18n_path}}.d/{${TERM},default} \
 {${usr_i18n_path},${xdg_i18n_path}}{.${TERM},} \
-"${sys_i18n_path}/${machine}"{.${TERM},} \
-"${sys_i18n_path}"/{${osvendor},${ostype}}{.${TERM},} \
-"${sys_i18n_path}/default" \
+{${sys_i18n_path},${ule_i18n_path}}/${machine}{.${TERM},} \
+{${sys_i18n_path},${ule_i18n_path}}/{${osvendor},${ostype}}{.${TERM},} \
+{${sys_i18n_path},${ule_i18n_path}}/default \
 2>/dev/null; )
 do
   [ -f "${i18n}" ] && {
@@ -111,6 +112,6 @@ fi
 set -u
 
 # Cleanup
-unset sys_i18n_path usr_i18n_path xdg_i18n_path
+unset sys_i18n_path ule_i18n_path usr_i18n_path xdg_i18n_path
 
 # *eof*

@@ -13,7 +13,9 @@ for inputrc_file in $(
 /bin/ls -1 \
 {${usr_inputrc_path},${xdg_inputrc_path}}.d/{${TERM},default} \
 {${usr_inputrc_path},${xdg_inputrc_path}}{.${TERM},} \
-"${bashrcdir}/inputrc.d"/{${TERM},default} \
+/usr/local/etc/${bashrcdir##*/}/inputrc.d/{${TERM},default} \
+/usr/local/etc/${bashrcdir##*/}/inputrc{.${TERM},} \
+${bashrcdir}/inputrc.d/{${TERM},default} \
 2>/dev/null; )
 do
   # Test with suffix
@@ -21,22 +23,24 @@ do
   do
     [ -r "${inputrc_file}.${fname_suffix}" ] && {
       INPUTRC="${inputrc_file}.${fname_suffix}" &&
-      break 2; }
+      break 2;
+    } || :
   done
   # Test without suffix
   [ -z "${INPUTRC}" -a -r "${inputrc_file}" ] && {
     INPUTRC="${inputrc_file}" &&
-    break; }
+    break
+  } || :
 done
-
-# Cleanup
-unset inputrc_file fname_suffix
-unset usr_inputrc_path xdg_inputrc_path
 
 # Export
 [ -n "$INPUTRC" ] && {
   export INPUTRC
 } || :
+
+# Cleanup
+unset inputrc_file fname_suffix
+unset usr_inputrc_path xdg_inputrc_path
 
 # end
 return 0

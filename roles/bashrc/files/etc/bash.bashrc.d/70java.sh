@@ -4,7 +4,7 @@
 [ -z "$JAVA_HOME" ] && {
 
   [ -x "/usr/libexec/java_home" ] &&
-    JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null)"
+  JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null)"
 
 } || :
 
@@ -36,6 +36,6 @@
 } || :
 
 [ -n "$JAVA_HOME" ] &&
-  export JAVA_HOME || :
+export JAVA_HOME || :
 
 # *eof*

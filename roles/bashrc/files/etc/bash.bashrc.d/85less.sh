@@ -2,7 +2,7 @@
 # $Id$
 
 # less installed ?
-[ -x "`type -p less`" ] ||
+[ -x "$(type -p less)" ] ||
   return 0
 
 # Charset for LESS

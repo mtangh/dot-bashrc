@@ -19,12 +19,13 @@ ${darwin_etc}/manpaths.d{,${machine}}/* \
 2>/dev/null; )
 do
   [ -f "${manpath_entry}" ] ||
-  continue
+    continue
+  manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }"
   [ -x "${manpath_entry}" ] &&
-  manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }$(/bin/bash ${manpath_entry} 2>/dev/null)"
+    manpaths_dirs="${manpaths_dirs}$(/bin/bash ${manpath_entry})"
   [ -x "${manpath_entry}" ] ||
-  manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }$(/bin/cat ${manpath_entry} 2>/dev/null)"
-done
+    manpaths_dirs="${manpaths_dirs}$(/bin/cat ${manpath_entry})"
+done 2>/dev/null || :
 
 # export new PATH
 eval $($pathconf MANPATH -s -a ${manpaths_dirs})

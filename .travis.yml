@@ -15,14 +15,10 @@ addons:
     - python-pip
 
 install:
-  # Install ansible
-  - pip install ansible
-
-  # Check ansible version
-  - ansible --version
-
   # Check bash version
   - bash --version
+  # Install ansible
+  - pip install ansible; ansible --version
 
 script:
   # Install shell
@@ -38,18 +34,20 @@ script:
            ${HOME}/.bashrc ;
           do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
           done; ) &&
-        . "${HOME}/.config/bash.bashrc" &&
-        echo "Load ${HOME}/.config/bash.bashrc" && {
-          [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
-          [ -n "$ostype"   ] && echo "Found - ostype=$ostype"     &&
-          [ -n "$machine"  ] && echo "Found - machine=$machine"   &&
-          :; }
+        ( . "${HOME}/.config/bash.bashrc" &&
+          echo "Load ${HOME}/.config/bash.bashrc" && {
+            [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
+            [ -n "$ostype"   ] && echo "Found - ostype=$ostype"     &&
+            [ -n "$machine"  ] && echo "Found - machine=$machine"   &&
+            :;
+          }; )
       }
     } &&
     : "OK";
 
   # Basic role syntax check
   - |
+    set -x;
     cd roles/bashrc/tests/ &&
     ansible-playbook -i inventory test.yml --syntax-check
 

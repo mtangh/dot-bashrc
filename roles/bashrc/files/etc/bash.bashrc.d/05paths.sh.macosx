@@ -22,18 +22,21 @@ ${darwin_etc}/paths.d{,/${machine}}/* \
 2>/dev/null; )
 do
   [ -f "${path_entry}" ] ||
-  continue
+    continue
+  paths_dirs="${paths_dirs+${paths_dirs} }"
   [ -x "${path_entry}" ] &&
-  paths_dirs="${paths_dirs+${paths_dirs} }$(/bin/bash ${path_entry} 2>/dev/null)"
+    paths_dirs="${paths_dirs}$(/bin/bash ${path_entry})"
   [ -x "${path_entry}" ] ||
-  paths_dirs="${paths_dirs+${paths_dirs} }$(/bin/cat ${path_entry} 2>/dev/null)"
-done
+    paths_dirs="${paths_dirs}$(/bin/cat ${path_entry})"
+done 2>/dev/null || :
 
 # User bin dir
 for path_entry in ${HOME}/{.macOS,.MacOSX,Library/UNIX}/{s,}bin
 do
-  [ -d "${path_entry}" ] &&
-  paths_dirs="${paths_dirs+${paths_dirs} }${path_entry}"
+  [ -d "${path_entry}" ] && {
+    paths_dirs="${paths_dirs+${paths_dirs} }"
+    paths_dirs="${paths_dirs}${path_entry}"
+  } || :
 done
 
 # export new PATH

@@ -3,26 +3,27 @@
 
 # completion dierctory
 sys_completions_dir="${bashrcdir}/completion.d"
+ule_completions_dir="/usr/local/etc/${bashrcdir##*/}/completion.d"
 usr_completions_dir="${HOME}/.bash_completion.d"
 xdg_completions_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/bash_completion.d"
 
 # lookup completion settings
 for completion_sh in $(
 /bin/ls -1 \
-"${sys_completions_dir}"/*.sh{,.${ostype},.${machine}} \
-"${sys_completions_dir}/${ostype}"/*.sh{,.${machine}} \
-{${usr_completions_dir},${xdg_completions_dir}/*.sh.${ostype},.${machine} \
-{${usr_completions_dir},${xdg_completions_dir}/${ostype}/*.sh{,.${machine}} \
+{${sys_completions_dir},${ule_completions_dir}}/*.sh{,.${ostype},.${machine}} \
+{${sys_completions_dir},${ule_completions_dir}}/${ostype}/*.sh{,.${machine}} \
+{${usr_completions_dir},${xdg_completions_dir}}/*.sh{,.${ostype},.${machine}} \
+{${usr_completions_dir},${xdg_completions_dir}}/${ostype}/*.sh{,.${machine}} \
 2>/dev/null; )
 do
   [ -x "${completion_sh}" ] && {
     . "${completion_sh}"
-  } 2>/dev/null || :
-done
+  } || :
+done 2>/dev/null
 
 # Cleanup
 unset completion_sh
-unset sys_completions_dir
+unset sys_completions_dir ule_completions_dir
 unset usr_completions_dir xdg_completions_dir
 
 # *eof*

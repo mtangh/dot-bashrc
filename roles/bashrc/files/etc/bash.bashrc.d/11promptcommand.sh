@@ -14,7 +14,8 @@ xdg_prompt_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/bash_prompt.d"
 # PROMPT_COMMAND
 for prompt_command_sh in $(
 /bin/ls -1 \
-"${bashrcdir}/prompt.d"/{$TERM/,}[0-9][0-9]*.sh \
+"${bashrcdir}/prompt.d/"{$TERM/,}[0-9][0-9]*.sh \
+"/usr/local/etc/${bashrcdir##*/}/prompt.d/"{$TERM/,}[0-9][0-9]*.sh \
 {${usr_prompt_dir},${xdg_prompt_dir}}/{$TERM/,}*.sh \
 2>/dev/null; )
 do
