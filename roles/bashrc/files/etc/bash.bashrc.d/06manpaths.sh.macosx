@@ -12,18 +12,18 @@ macosx_etc="${HOME}/.MacOSX/etc"
 # lookup paths file(s)
 for manpath_entry in $(
 /bin/ls -1 \
-"${darwin_etc}/manpaths" \
-"${darwin_etc}/manpaths.d"/{,${machine}/}* \
-{${mac_os_etc},${macosx_etc},${HOME}${darwin_etc}}/manpaths"{,.${machine}} \
-{${mac_os_etc},${macosx_etc},${HOME}${darwin_etc}}/manpaths.d"/{,${machine}/}* \
+${darwin_etc}/manpaths \
+${darwin_etc}/manpaths.d{,${machine}}/* \
+{${mac_os_etc},${macosx_etc},${HOME}${darwin_etc}}/manpaths{,.${machine}} \
+{${mac_os_etc},${macosx_etc},${HOME}${darwin_etc}}/manpaths.d{,/${machine}}/* \
 2>/dev/null; )
 do
   [ -f "${manpath_entry}" ] ||
-    continue
+  continue
   [ -x "${manpath_entry}" ] &&
-    manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }$(/bin/bash ${manpath_entry} 2>/dev/null)"
+  manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }$(/bin/bash ${manpath_entry} 2>/dev/null)"
   [ -x "${manpath_entry}" ] ||
-    manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }$(/bin/cat ${manpath_entry} 2>/dev/null)"
+  manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }$(/bin/cat ${manpath_entry} 2>/dev/null)"
 done
 
 # export new PATH
