@@ -4,32 +4,36 @@
 # path config command
 pathconf="${bashrcdir}/bin/pathconfig"
 
-# manpath file and directory.
-brc_mpaths="${bashrcdir}/pathconfig.d/manpaths"
-sys_mpaths="/usr/local/etc/${bashrcdir##*/}/pathconfig.d/manpaths"
-usr_mpaths="${HOME}/.manpaths"
-xdg_mpaths="${XDG_CONFIG_HOME:-${HOME}/.config}/manpaths"
-
 # manpaths entry
 mpathsdirs=""
 
-# lookup manpaths file(s)
-for mpathentry in $(
-: "manpaths list" && {
-  echo {"${brc_mpaths}","${sys_mpaths}"}
-  echo {"${brc_mpaths}","${sys_mpaths}"}.d/*
-  echo "${usr_mpaths}"{.${os},.${vendor},.${machine}} \
-  echo "${xdg_mpaths}"{.${os},.${vendor},.${machine}} \
-  echo "${usr_mpaths}".d{/${os},/${vendor},/${machine},}/* \
-  echo "${xdg_mpaths}".d{/${os},/${vendor},/${machine},}/* \
-} 2>/dev/null || :; )
+for paths_path in \
+/etc/manpaths \
+{"${bashrcdir}","${bashlocal}"}/pathconfig.d/manpaths \
+{"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
 do
-  [ -f "${mpathentry}" ] || continue
-  mpathsdirs="${mpathsdirs+${mpathsdirs} }"
-  [ -x "${mpathentry}" ] &&
-  mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathentry})"
-  [ -x "${mpathentry}" ] ||
-  mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathentry})"
+  for mpathsfile in $(
+    [ -n "${paths_path}" -a -d "${paths_path%/*}" ]  && {
+      for ps in "" ${os} ${osvendor} ${machine}
+      do
+        for gn in "" ${usergroups}
+        do
+          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
+          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
+          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
+          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
+        done
+      done
+    } 2>/dev/null)
+  do
+    [ -f "${mpathentry}" ] || continue
+    mpathsdirs="${mpathsdirs+${mpathsdirs} }"
+    [ -x "${mpathentry}" ] &&
+    mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathentry})"
+    [ -x "${mpathentry}" ] ||
+    mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathentry})"
+  done
+  unset mpathsfile
 done 2>/dev/null || :
 
 # export new PATH
@@ -38,9 +42,7 @@ eval $($pathconf MANPATH -s -a ${mpathsdirs})
 
 # Cleanup
 unset pathconf
-unset brc_mpaths sys_mpaths
-unset usr_mpaths xdg_mpaths
-unset mpathsdirs mpathentry
+unset mpathsdirs paths_path
 
 # end
 return 0

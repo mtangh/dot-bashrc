@@ -1,4 +1,4 @@
-# ${bashrcdir}/99user_bashrc.sh.darwin
+# ${bashrcdir}/99user_bashrc.sh.macosx
 # $Id$
 
 : "user_bashrc for macOS" && {
@@ -14,10 +14,11 @@
       do
         [ -x "${bash_profile_scr}" ] &&
         . "${bash_profile_scr}"
-      done &&
+      done
       unset bash_profile_scr
     fi
-  done &&
+  done
+
   unset bash_profile_dir
 
 } 1>/dev/null 2>&1 || :

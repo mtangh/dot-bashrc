@@ -1,0 +1,23 @@
+# ${bashrcdir}/12completion.sh.macosx
+# $Id$
+
+# completion dierctory
+for completdir in "${HOME}"/{.macOS,.MacOSX}/{etc/,}bash_completion.d
+do
+  if [ -d "${completdir}" ]
+  then
+    for complet_sh in \
+    "${completdir}"/*.sh{,.${machine}}
+    do
+      [ -x "${complet_sh}" ] && {
+        . "${complet_sh}"
+      } || :
+    done
+    unset complet_sh
+  fi
+done 2>/dev/null || :
+
+# Cleanup
+unset completdir
+
+# *eof*

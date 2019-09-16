@@ -84,8 +84,10 @@ _process_template_file() {
       -e 's@{{[ ]*bashrc_bashrcdir_name[ ]*[^\}]*}}@'"${dotbasedir##*/}"'@g' \
       -e 's@{{[ ]*bashrc_bash_rc_file_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcfile}"'@g' \
       -e 's@{{[ ]*bashrc_bash_profile_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrcprof}"'@g' \
+      -e 's@{{[ ]*bashrc_bash_logout_path[ ]*[^\}]*}}@'"${dotinstall}/${bashrclout}"'@g' \
       -e 's@{{[ ]*bashrc_bashrc_name[ ]*[^\}]*}}@'"${bashrcfile}"'@g' \
       -e 's@{{[ ]*bashrc_profile_name[ ]*[^\}]*}}@'"${bashrcprof}"'@g' \
+      -e 's@{{[ ]*bashrc_logout_name[ ]*[^\}]*}}@'"${bashrclout}"'@g' \
       1>|"${_dst}" 2>/dev/null && {
     : && {
       echo "Difference between ${_src##*/} and ${_dst##*/}."
@@ -331,6 +333,7 @@ then
   dotbasedir="${dotinstall}/bash.bashrc.d"
   bashrcfile="bash.bashrc"
   bashrcprof="bash.profile"
+  bashrclout="bash.bash_logout"
   bashrcuser="root"
   bashrc_grp=$(id -gn "$bashrcuser")
 else
@@ -341,6 +344,7 @@ else
   dotbasedir="${dotinstall}/bash.bashrc.d"
   bashrcfile="bash.bashrc"
   bashrcprof="bash.profile"
+  bashrclout="bash.bash_logout"
   bashrcuser=$(id -un)
   bashrc_grp=$(id -gn "$bashrcuser")
   set -u
@@ -365,6 +369,7 @@ dotsymlnks=$(
     cat <<_EOF_
 ${bashrcprof}:profile
 ${bashrcfile}:bashrc
+${bashrclout}:bash.bash.logout
 _EOF_
   } 2>/dev/null; )
 

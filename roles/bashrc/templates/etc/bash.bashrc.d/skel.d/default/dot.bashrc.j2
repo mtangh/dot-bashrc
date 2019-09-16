@@ -2,12 +2,8 @@
 # {{ ansible_managed }}
 # User local .bashrc file
 
-bashrcfile:={{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}
-
-[ -e "${bashrcfile}" ] && {
-  . "${bashrcfile}"; } || :
-
-unset bashrcfile
+[ -e "${bashrcfile:={{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}}" ] &&
+. "${bashrcfile}"; unset bashrcfile || :
 
 # Aliases
 

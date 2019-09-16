@@ -14,19 +14,30 @@ xdg_i18n_path="${XDG_CONFIG_HOME:-${HOME}/.config}/i18n"
 # we want to re-read settings in case we're running in CJKI and
 # have been defaulted to English on the console.
 
-for i18n_file in $(
-: "I18N files and dirs" && {
-echo {"${usr_i18n_path}","${xdg_i18n_path}"}.d/${machine}{.${TERM},}
-echo {"${usr_i18n_path}","${xdg_i18n_path}"}.d/{${vendor},${os}}{.${TERM},}
-echo {"${usr_i18n_path}","${xdg_i18n_path}"}.d/{${TERM},default}
-echo {"${usr_i18n_path}","${xdg_i18n_path}"}{.${TERM},}
-echo {"${brc_i18n_path}","${sys_i18n_path}"}/{${TERM},default}
-} 2>/dev/null; )
+for i18npath in \
+{"${XDG_CONFIG_HOME:-${HOME}/.config}/","${HOME}/."}i18n \
+{"${bashlocal}","${bashrcdir}"}/i18n
 do
-  [ -f "${i18n_file}" ] && {
-    . "${i18n_file}" && break
-  }
-done 2>/dev/null || :
+  for i18nfile in $(
+    [ -n "${i18npath}" -a -d "${i18npath%/*}" ]  && {
+      for ps in "" ${os} ${osvendor} ${machine}
+      do
+        for gn in "" ${usergroups}
+        do
+          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
+          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
+          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
+          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
+        done
+      done
+    } 2>/dev/null)
+  do
+    [ -f "${i18n_file}" ] && {
+      . "${i18n_file}" && break 2
+    } || :
+  done
+  unset i18nfile
+done
 
 # GDM Lang
 if [ -n "$GDM_LANG" ]
@@ -108,8 +119,6 @@ fi
 set -u
 
 # Cleanup
-unset brc_i18n_path sys_i18n_path
-unset usr_i18n_path xdg_i18n_path
-unset i18n_file
+unset i18npath i18nfile
 
 # *eof*

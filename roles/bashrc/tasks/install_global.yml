@@ -28,6 +28,7 @@
       bashrc_bashrcdir_name: "{{ 'bash.bashrc.d' }}"
       bashrc_bashrc_name: "{{ 'bash.bashrc' }}"
       bashrc_profile_name: "{{ 'bash.profile' }}"
+      bashrc_logout_name: "{{ 'bash.bash_logout' }}"
 
   - name: "bashrc | global | Facts - Build a path of 'bash.bashrc.d'."
     set_fact:
@@ -37,6 +38,8 @@
         '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
       bashrc_bash_profile_path: "{{
         '%s/%s'|format(bashrc_install_path,bashrc_profile_name) }}"
+      bashrc_bash_logout_path: "{{
+        '%s/%s'|format(bashrc_install_path,bashrc_logout_name) }}"
 
   - name: "bashrc | global | Facts - etc dir."
     set_fact:
@@ -52,6 +55,9 @@
       - src: "{{ '%s/%s'|format(bashrc_install_path,
                  bashrc_profile_name)|relpath(bashrc_etc_path) }}"
         dest: "{{ '%s/profile'|format(bashrc_etc_path) }}"
+      - src: "{{ '%s/%s'|format(bashrc_install_path,
+                 bashrc_logout_name)|relpath(bashrc_etc_path) }}"
+        dest: "{{ '%s/bash.bash.logout'|format(bashrc_etc_path) }}"
 
   tags:
   - bashrc-install-global-set-facts

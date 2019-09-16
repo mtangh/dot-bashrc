@@ -11,6 +11,7 @@ set +u
 [ -z "$EDITOR" ] && EDITOR="$(type -p pico)"
 [ -z "$EDITOR" ] && EDITOR="$(type -p nano)"
 [ -z "$EDITOR" ] || export EDITOR
+[ -z "$EDITOR" ] && unset EDITOR || :
 
 # PAGER
 [ -z "$PAGER" ] && PAGER="$(type -p lv)"
@@ -18,18 +19,19 @@ set +u
 [ -z "$PAGER" ] && PAGER="$(type -p less)"
 [ -z "$PAGER" ] && PAGER="$(type -p more)"
 [ -z "$PAGER" ] || export PAGER
+[ -z "$PAGER" ] && unset PAGER || :
 
 # RSYNC
 [ -x "$(type -p rsync)" -a -x "$(type -p ssh)" ] && {
   RSYNC_RSH="$(type -p ssh)"
   export RSYNC_RSH
-}
+} || :
 
 # CVS
 [ -x "$(type -p cvs)" -a -x "$(type -p ssh)" ] && {
   CVS_RSH="$(type -p ssh)"
   export CVS_RSH
-}
+} || :
 
 # Enable the 'u' option again.
 set -u

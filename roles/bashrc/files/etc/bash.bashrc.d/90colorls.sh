@@ -7,8 +7,7 @@
 
 # load color ls settings
 for lscolors_d in \
-"/usr/local/etc/${bashrcdir##*/}/colors.d" \
-"${bashrcdir}"/colors.d{/${os},}
+{"${bashlocal}","${bashrcdir}"}/colors.d{/${os},/${osvendor},}
 do
   [ -e "${lscolors_d}/colorls.sh" ] &&
   . "${lscolors_d}/colorls.sh" &&

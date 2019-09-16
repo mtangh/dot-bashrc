@@ -1,4 +1,4 @@
-# ${bashrcdir}/09env.sh.darwin
+# ${bashrcdir}/09env.sh.macosx
 # $Id$
 
 # A colon-separated list of suffixes to ignore when performing

@@ -29,19 +29,21 @@ bashlocal="/usr/local/etc/${bashrcdir##*/}"
   declare -r machine=__UNKNOWN__
 }
 
+# User Groups
+usergroups="$(id -Gn 2>/dev/null)"
+
 # Prompt setting (default)
 PS1='\u@\h \W\$ '
 
 # Load to the 'bash.bashrc.d' scripts
-for bashrc_sh in $({
-  /bin/ls ${bashrcdir}/[0-9][0-9]*.sh{,.${ostype},.${osvendor},.${machine}}
-  } 2>/dev/null)
+for bashrcsh in \
+"${bashrcdir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
 do
-  set +u; [ ! -x "$bashrc_sh" ] || . "$bashrc_sh"; set -u
+  set +u; [ ! -x "$bashrcsh" ] || . "$bashrcsh"; set -u
 done
 
 # cleanup
-unset bashrcdir bashlocal bashrc_sh
+unset bashrcdir bashlocal usergroups bashrcsh
 
 # unset 'u'
 set +u

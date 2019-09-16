@@ -11,34 +11,33 @@
 [ -z "$JAVA_HOME" ] && {
 
   java_cmd=$(type -p java)
-  
+
   [ -n "${java_cmd}" -a -n "$(type -P readlink)" ] && {
-    java_cmd=$(readlink -f "${java_cmd}")
+    jcmdreal=$(readlink "${java_cmd}")
+    java_cmd="${jcmdreal:-${java_cmd}}"
+    unset jcmdreal
   } 2>/dev/null
 
-  for java_home_path in \
-  /{usr,usr/local,opt}/java/{default,latest} \
-  "${java_cmd%/bin/java}"
+  for jhomedir in \
+  /{usr,usr/local,opt}/java/{default,latest} "${java_cmd%/bin/java}"
   do
-    for java_jdk_cmd in \
-    java javac javah javap jar keytool
+    for jsdk_cmd in java javac javah javap jar keytool
     do
-      [ -x "${java_home_path}/bin/${java_jdk_cmd}" ] || {
+      [ -x "${jhomedir}/bin/${jsdk_cmd}" ] || {
         break 2
       }
-    done &&
-    unset java_jdk_cmd
-    JAVA_HOME="${java_home_path}"
-    break
+    done && {
+      JAVA_HOME="${jhomedir}"
+      break
+    }
   done
 
-  unset java_home_path
-  unset java_cmd
+  unset jhomedir jsdk_cmd
 
 } || :
 
 [ -n "$JAVA_HOME" ] && {
-  export JAVA_HOME 
+  export JAVA_HOME
 } || :
 
 # *eof*

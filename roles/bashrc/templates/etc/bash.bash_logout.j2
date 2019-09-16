@@ -1,0 +1,24 @@
+# bash.bash_logout
+# System-wide .bash_logout file for interactive bash(1) shells.
+# {{ ansible_managed }}
+
+for bash_logoutdir in \
+"/usr/local/etc/{{ bashrc_bashrcdir_name|d('bash.bashrc.d') }}/logout.d" \
+"{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}/logout.d"
+do
+  if [ -d "${bash_logoutdir}" ]
+  then
+    for bash_logout_sh in \
+    "${bash_logoutdir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
+    do
+      [ -x "${bash_logout_sh}" ] && {
+         . "${bash_logout_sh}"
+      } || :
+    done
+  fi
+done 2>/dev/null
+
+# Cleanup
+unset bash_logoutdir bash_logout_sh || :
+
+# *eof*

@@ -12,8 +12,7 @@
     continue
     [ -f "${dot_bashrc}" ] &&
     . "${dot_bashrc}"
-  done &&
-  unset dot_bashrc
+  done
 
   # Load scripts under the 'bash_profile.d' dir
   for bash_profile_dir in \
@@ -27,10 +26,12 @@
       do
         [ -x "${bash_profile_scr}" ] &&
         . "${bash_profile_scr}"
-      done &&
+      done
       unset bash_profile_scr
     fi
-  done &&
+  done
+
+  unset dot_bashrc
   unset bash_profile_dir
 
 } 1>/dev/null 2>&1 || :

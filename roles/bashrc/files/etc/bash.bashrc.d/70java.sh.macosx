@@ -1,4 +1,4 @@
-# ${bashrcdir}/70java.sh.darwin
+# ${bashrcdir}/70java.sh.macosx
 # $Id$
 
 JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"

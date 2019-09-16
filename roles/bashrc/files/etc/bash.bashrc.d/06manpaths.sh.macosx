@@ -1,26 +1,37 @@
-# ${bashrcdir}/06manpath.sh.darwin
+# ${bashrcdir}/06manpath.sh.macosx
 # $Id$
 
 # path config command
 pathconf="${bashrcdir}/bin/pathconfig"
 
-# Man Paths file
-macos_path="${HOME}/.macOS/etc/manpaths"
-macosxpath="${HOME}/.MacOSX/etc/manpaths"
+# manpaths entry
+mpathsdirs=""
 
-# lookup paths file(s)
-for mpathentry in $(
-: "manpath list for macOS" && {
-  echo {"${macos_path}","${macosxpath}"}/manpaths{,.${machine}}
-  echo {"${macos_path}","${macosxpath}"}/manpaths.d{,/${machine}}/*
-} 2>/dev/null; )
+# lookup manpaths file(s)
+for paths_path in "${HOME}"/{.macOS,.MacOSX}/{etc/,}manpaths
 do
-  [ -f "${mpathentry}" ] || continue
-  mpathsdirs="${mpathsdirs+${mpathsdirs} }"
-  [ -x "${mpathentry}" ] &&
-  mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathentry})"
-  [ -x "${mpathentry}" ] ||
-  mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathentry})"
+  for mpathsfile in $(
+    [ -n "${paths_path}" -a -d "${paths_path%/*}" ]  && {
+      for ps in "" ${machine}
+      do
+        for gn in "" ${usergroups}
+        do
+          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
+          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
+          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
+          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
+        done
+      done
+    } 2>/dev/null)
+  do
+    [ -f "${mpathsfile}" ] || continue
+    mpathsdirs="${mpathsdirs+${mpathsdirs} }"
+    [ -x "${mpathsfile}" ] &&
+    mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathsfile})"
+    [ -x "${mpathsfile}" ] ||
+    mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathsfile})"
+  done
+  unset mpathsfile
 done 2>/dev/null || :
 
 # export new PATH
@@ -28,7 +39,6 @@ eval $($pathconf MANPATH -s -a ${mpathsdirs})
 
 # Cleanup
 unset pathconf
-unset macos_path macosxpath
-unset mpathsdirs mpathentry
+unset mpathsdirs paths_path
 
 # *eof*
