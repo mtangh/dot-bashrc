@@ -21,6 +21,15 @@ install:
   - pip install ansible; ansible --version
 
 script:
+  # Scripts:
+  - |
+    set -x;
+    : "syntax-check.sh" && {
+      bash -n syntax-check.sh &&
+      bash syntax-check.sh
+    } &&
+    : "OK";
+
   # Install shell
   - |
     set -x;
