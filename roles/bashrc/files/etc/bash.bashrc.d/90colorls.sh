@@ -5,23 +5,17 @@
 ## color ls
 ##
 
-# colors dir.
-sys_colors_dir="${bashrcdir}/colors.d"
-ule_colors_dir="/usr/local/etc/${bashrcdir##*/}/colors.d"
-
 # load color ls settings
-for lscolors_sh in \
-{${ule_colors_dir},${sys_colors_dir}}/${ostype}/colorls.sh \
-{${ule_colors_dir},${sys_colors_dir}}/colorls.sh
+for lscolors_d in \
+"/usr/local/etc/${bashrcdir##*/}/colors.d" \
+"${bashrcdir}"/colors.d{/${os},}
 do
-  [ -e "${lscolors_sh}" ] && {
-    . "${lscolors_sh}" &&
-    break
-  } || :
-done 2>/dev/null
+  [ -e "${lscolors_d}/colorls.sh" ] &&
+  . "${lscolors_d}/colorls.sh" &&
+  break || :
+done 1>/dev/null 2>&1 || :
 
 # Cleanup
-unset lscolors_sh
-unset sys_colors_dir ule_colors_dir
+unset lscolors_d
 
 # *eof*

@@ -4,35 +4,31 @@
 # path config command
 pathconf="${bashrcdir}/bin/pathconfig"
 
-# Darwin etc
-darwin_etc="/Library/UNIX/etc"
-mac_os_etc="${HOME}/.macOS/etc"
-macosx_etc="${HOME}/.MacOSX/etc"
+# Man Paths file
+macos_path="${HOME}/.macOS/etc/manpaths"
+macosxpath="${HOME}/.MacOSX/etc/manpaths"
 
 # lookup paths file(s)
-for manpath_entry in $(
-/bin/ls -1 \
-${darwin_etc}/manpaths \
-${darwin_etc}/manpaths.d{,${machine}}/* \
-{${mac_os_etc},${macosx_etc},${HOME}${darwin_etc}}/manpaths{,.${machine}} \
-{${mac_os_etc},${macosx_etc},${HOME}${darwin_etc}}/manpaths.d{,/${machine}}/* \
-2>/dev/null; )
+for mpathentry in $(
+: "manpath list for macOS" && {
+  echo {"${macos_path}","${macosxpath}"}/manpaths{,.${machine}}
+  echo {"${macos_path}","${macosxpath}"}/manpaths.d{,/${machine}}/*
+} 2>/dev/null; )
 do
-  [ -f "${manpath_entry}" ] ||
-    continue
-  manpaths_dirs="${manpaths_dirs+${manpaths_dirs} }"
-  [ -x "${manpath_entry}" ] &&
-    manpaths_dirs="${manpaths_dirs}$(/bin/bash ${manpath_entry})"
-  [ -x "${manpath_entry}" ] ||
-    manpaths_dirs="${manpaths_dirs}$(/bin/cat ${manpath_entry})"
+  [ -f "${mpathentry}" ] || continue
+  mpathsdirs="${mpathsdirs+${mpathsdirs} }"
+  [ -x "${mpathentry}" ] &&
+  mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathentry})"
+  [ -x "${mpathentry}" ] ||
+  mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathentry})"
 done 2>/dev/null || :
 
 # export new PATH
-eval $($pathconf MANPATH -s -a ${manpaths_dirs})
+eval $($pathconf MANPATH -s -a ${mpathsdirs})
 
 # Cleanup
 unset pathconf
-unset darwin_etc mac_os_etc macosx_etc
-unset manpaths_dirs manpath_entry
+unset macos_path macosxpath
+unset mpathsdirs mpathentry
 
 # *eof*

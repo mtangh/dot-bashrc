@@ -2,28 +2,27 @@
 # $Id$
 
 # completion dierctory
-sys_completions_dir="${bashrcdir}/completion.d"
-ule_completions_dir="/usr/local/etc/${bashrcdir##*/}/completion.d"
-usr_completions_dir="${HOME}/.bash_completion.d"
-xdg_completions_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/bash_completion.d"
-
-# lookup completion settings
-for completion_sh in $(
-/bin/ls -1 \
-{${sys_completions_dir},${ule_completions_dir}}/*.sh{,.${ostype},.${machine}} \
-{${sys_completions_dir},${ule_completions_dir}}/${ostype}/*.sh{,.${machine}} \
-{${usr_completions_dir},${xdg_completions_dir}}/*.sh{,.${ostype},.${machine}} \
-{${usr_completions_dir},${xdg_completions_dir}}/${ostype}/*.sh{,.${machine}} \
-2>/dev/null; )
+for completdir in \
+"${bashrcdir}/completion.d" \
+"/usr/local/etc/${bashrcdir##*/}/completion.d" \
+"${XDG_CONFIG_HOME:-${HOME}/.config}/bash_completion.d" \
+"${HOME}/.bash_completion.d"
 do
-  [ -x "${completion_sh}" ] && {
-    . "${completion_sh}"
-  } || :
-done 2>/dev/null
+  if [ -d "${completdir}" ]
+  then
+    for complet_sh in \
+    "${completdir}"/*.sh{,.${os},.${vendor},.${machine}} \
+    "${completdir}/${os}"/*.sh{,.${vendor},.${machine}}
+    do
+      [ -x "${complet_sh}" ] && {
+        . "${complet_sh}"
+      } || :
+    done
+    unset complet_sh
+  fi
+done
 
 # Cleanup
-unset completion_sh
-unset sys_completions_dir ule_completions_dir
-unset usr_completions_dir xdg_completions_dir
+unset completdir || :
 
 # *eof*

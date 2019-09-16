@@ -20,6 +20,7 @@ set -u
 
 # bash resource configs default
 bashrcdir="{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}"
+bashlocal="/usr/local/etc/${bashrcdir##*/}"
 
 # Platform
 . "${bashrcdir}/__platform.sh" 1>/dev/null 2>&1 || {
@@ -40,7 +41,7 @@ do
 done
 
 # cleanup
-unset bashrcdir bashrc_sh
+unset bashrcdir bashlocal bashrc_sh
 
 # unset 'u'
 set +u

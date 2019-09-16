@@ -4,12 +4,9 @@
 ## Shell options
 
 # The user file-creation mask is set to MODE.
-if [ $UID -gt 99 ] &&
-   [ "$(id -un)" = "$(id -gn)" ]
-then 
-  umask 0002
-else
-  umask 0022
+if [ $UID -gt 99 -a "$(id -un)" = "$(id -gn)" ]
+then umask 0002
+else umask 0022
 fi
 
 # Do not produce core dumps
@@ -67,10 +64,8 @@ HISTCONTROL='ignoreboth:erasedups'
 # The shell sets the default value to 500 after reading any
 # startup files.
 if [ $UID -gt 99 ]
-then 
-  HISTSIZE=1024
-else
-  HISTSIZE=32
+then HISTSIZE=1024
+else HISTSIZE=32
 fi
 
 # The maximum number of lines contained in the history file.
@@ -83,10 +78,8 @@ fi
 # zero inhibit truncation. The shell sets the default value to
 # the value of HISTSIZE after reading any startup files.
 if [ $UID -gt 99 ]
-then 
-  HISTFILESIZE=1024
-else
-  HISTFILESIZE=0
+then HISTFILESIZE=1024
+else HISTFILESIZE=0
 fi
 
 # A colon-separated list of patterns used to decide which

@@ -2,8 +2,7 @@
 # $Id$
 
 # bash ?
-if [ -n "$BASH" ] &&
-   [ -e /etc/bash.bashrc ]
+if [ -n "$BASH" -a -e /etc/bash.bashrc ]
 then
   . /etc/bash.bashrc
 fi

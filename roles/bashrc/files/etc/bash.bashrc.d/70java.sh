@@ -4,28 +4,30 @@
 [ -z "$JAVA_HOME" ] && {
 
   [ -x "/usr/libexec/java_home" ] &&
-  JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null)"
+  JAVA_HOME="$(/usr/libexec/java_home)"
 
-} || :
+} 2>/dev/null || :
 
 [ -z "$JAVA_HOME" ] && {
 
-  java_cmd=`type -p java`
+  java_cmd=$(type -p java)
+  
+  [ -n "${java_cmd}" -a -n "$(type -P readlink)" ] && {
+    java_cmd=$(readlink -f "${java_cmd}")
+  } 2>/dev/null
 
-  for java_home_path in /usr/java/{default,latest} "${java_cmd%/bin/java}"
+  for java_home_path in \
+  /{usr,usr/local,opt}/java/{default,latest} \
+  "${java_cmd%/bin/java}"
   do
-    [ -x "${java_home_path}/bin/java" ] ||
-      continue
-    [ -x "${java_home_path}/bin/javac" ] ||
-      continue
-    [ -x "${java_home_path}/bin/javah" ] ||
-      continue
-    [ -x "${java_home_path}/bin/javap" ] ||
-      continue
-    [ -x "${java_home_path}/bin/jar" ] ||
-      continue
-    [ -x "${java_home_path}/bin/keytool" ] ||
-      continue
+    for java_jdk_cmd in \
+    java javac javah javap jar keytool
+    do
+      [ -x "${java_home_path}/bin/${java_jdk_cmd}" ] || {
+        break 2
+      }
+    done &&
+    unset java_jdk_cmd
     JAVA_HOME="${java_home_path}"
     break
   done
@@ -35,7 +37,8 @@
 
 } || :
 
-[ -n "$JAVA_HOME" ] &&
-export JAVA_HOME || :
+[ -n "$JAVA_HOME" ] && {
+  export JAVA_HOME 
+} || :
 
 # *eof*

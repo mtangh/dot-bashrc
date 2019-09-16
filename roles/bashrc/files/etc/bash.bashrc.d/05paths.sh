@@ -4,86 +4,60 @@
 # path config command
 pathconf="${bashrcdir}/bin/pathconfig"
 
-# path file and directory.
-sys_path_file="${bashrcdir}/pathconfig.d/paths"
-sys_paths_dir="${bashrcdir}/pathconfig.d/paths.d"
-ule_path_file="/usr/local/etc/${bashrcdir##*/}/paths"
-ule_paths_dir="/usr/local/etc/${bashrcdir##*/}/paths.d"
-usr_path_file="${HOME}/.paths"
-xdg_path_file="${XDG_CONFIG_HOME:-${HOME}/.config}/paths"
-
-# path entry
-paths_root=""
+# paths
 paths_dirs=""
 
 # root or admin
-root_or_admin=0
+is_sys_adm=0
 
 # root ?
 if [ "$UID" = "0" ] ||
    [[ "$(/bin/groups)" =~ (, *| *)(wheel|admin)(, *| *) ]]
-then
-  root_or_admin=1
+then is_sys_adm=1
 fi
 
-# root path setting
-if [ $root_or_admin -eq 0 ]
-then
-  for path_entry in $(
-  /bin/ls -1 \
-  "${sys_path_file}.root" \
-  "${sys_paths_dir}/root"/* \
-  "${ule_path_file}.root" \
-  "${ule_paths_dir}/root"/* \
-  2>/dev/null; )
-  do
-    [ -f "${path_entry}" ] ||
-      continue
-    paths_root="${paths_root+${paths_root} }"
-    [ -x "${path_entry}" ] &&
-      paths_root="${paths_root}$(/bin/bash ${path_entry})"
-    [ -x "${path_entry}" ] ||
-      paths_root="${paths_root}$(/bin/cat ${path_entry})"
-  done || :
-  # Set default if empty
-  if [ -z "${paths_root}" ]
-  then
-    for path_entry in {/usr/local,/usr,}/sbin
-    do
-      [ -d "${path_entry}" ] && {
-        paths_root="${paths_root+${paths_root} }"
-        paths_root="${paths_root}${path_entry}"
-      } || :
-    done 
-  fi
-fi 2>/dev/null || :
-
 # lookup paths file(s)
-for path_entry in $(
-/bin/ls -1 \
-"${sys_path_file}" \
-"${sys_paths_dir}"/* \
-"${ule_path_file}" \
-"${ule_paths_dir}"/* \
-"${usr_path_file}"{.${machine},.${osvendor},.${ostype},} \
-"${xdg_path_file}"{.${machine},.${osvendor},.${ostype},} \
-"${usr_path_file}.d"{/${machine},/${osvendor},/${ostype},}/* \
-"${xdg_path_file}.d"{/${machine},/${osvendor},/${ostype},}/* \
-2>/dev/null; )
+for lookuppath in \
+{"${bashrcdir}","${bashlocal}"}/pathconfig.d/paths \
+{"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}paths
 do
-  [ -f "${path_entry}" ] ||
-    continue
-  paths_dirs="${paths_dirs+${paths_dirs} }"
-  [ -x "${path_entry}" ] &&
-    paths_dirs="${paths_dirs}$(/bin/bash ${path_entry})"
-  [ -x "${path_entry}" ] ||
-    paths_dirs="${paths_dirs}$(/bin/cat ${path_entry})"
+  for paths_file in $( {
+    [ -d "${lookuppath%/*}" ] &&
+    echo "${lookuppath}"{.${os},.${osvendor},.${machine},}
+    [ -d "${lookuppath}.d" ] &&
+    echo "${lookuppath}".d{/${os},/${osvendor},/${machine},}/*
+  } 2>/dev/null; )
+  do
+    [ -f "${paths_file}" ] || continue
+    paths_dirs="${paths_dirs+${paths_dirs} }"
+    [ -x "${paths_file}" ] &&
+    paths_dirs="${paths_dirs}$(/bin/bash ${paths_file})"
+    [ -x "${paths_file}" ] ||
+    paths_dirs="${paths_dirs}$(/bin/cat ${paths_file})"
+  done
+  for group_name in $(id -Gn 2>/dev/null)
+  do
+    for paths_file in
+    "${lookuppath}"
+    [ -f "${paths_file}" ] || continue
+    paths_dirs="${paths_dirs+${paths_dirs} }"
+    [ -x "${paths_file}" ] &&
+    paths_dirs="${paths_dirs}$(/bin/bash ${paths_file})"
+    [ -x "${paths_file}" ] ||
+    paths_dirs="${paths_dirs}$(/bin/cat ${paths_file})"
+  done
+  unset paths_file
 done 2>/dev/null || :
 
-# Set default if empty
+# Set default if dirs is empty
 if [ -z "${paths_dirs}" ]
 then
-  for path_entry in {/usr/local,/usr,}/bin
+  for path_entry in $(
+  : "Default path-list" && {
+    [ $is_sys_adm -ne 0 ] &&
+    echo {/usr/local,/usr,}/sbin
+    echo {/usr/local,/usr,}/bin
+  } 2>/dev/null || :; )
   do
     [ -d "${path_entry}" ] && {
       paths_dirs="${paths_dirs+${paths_dirs} }"
@@ -103,14 +77,13 @@ done
 
 # export new PATH
 PATH=
-eval $($pathconf PATH -s -f -a ${paths_root} ${paths_dirs})
+eval $($pathconf PATH -s -f -a ${paths_dirs})
 
 # Cleanup
 unset pathconf
-unset sys_path_file sys_paths_dir
-unset ule_path_file ule_paths_dir
-unset usr_path_file xdg_path_file
-unset paths_root paths_dirs path_entry
-unset root_or_admin
+unset brc_cpaths sys_cpaths
+unset usr_cpaths xdg_cpaths
+unset paths_dirs path_entry
+unset is_sys_adm
 
 # *eof*

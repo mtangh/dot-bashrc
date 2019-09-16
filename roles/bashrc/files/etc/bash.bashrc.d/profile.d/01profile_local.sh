@@ -1,14 +1,12 @@
-# ${bashrcdir}/00bash_profile.sh
+# ${bashrcdir}/profile.d/01profile_local.sh
 # $Id$
 
-# Run login shell only.
-[[ "${BASH_SOURCE[@]}" \
-  =~ .*\ /etc/profile$ ]] ||
-  return 0
+[ -d "${bashlocal}" ] ||
+return 0
 
 # Load scripts under '${profiledir}' dir
 for profile_sh in \
-"${bashrcdir}"/profile.d/[0-9][0-9]*.sh{,".${os}",".${osvendor}"}
+"${bashlocal}"/profile.d/[0-9][0-9]*.sh{"${machine}",}
 do
   [ -x "${profile_sh}" ] && {
     . "${profile_sh}"

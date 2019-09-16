@@ -4,22 +4,20 @@
 [ -n "$USER" ] ||
   return 0
 
-usr_mbox_conf_file="${HOME}/.mbox.conf"
-xdg_mbox_conf_file="${XDG_CONFIG_HOME:-$HOME/.config}/mbox.conf"
-
+# Mail spool dir
 mail_spool_dir=""
 
-# Mail spool dir
+# Lookup Mail spool dir
 for mail_spool_dir in /var/spool/mail /var/mail
 do
   [ -d "${mail_spool_dir}" ] &&
   break || :
 done
 
-# Mail box config
+# Lookup Mbox config
 for mbox_conf_file in \
-"${xdg_mbox_conf_file}" \
-"${usr_mbox_conf_file}"
+"${HOME}/.mbox.conf" \
+"${XDG_CONFIG_HOME:-$HOME/.config}/mbox.conf"
 do
   [ -f "${mbox_conf_file}" ] && {
     . "${mbox_conf_file}" &&
@@ -40,7 +38,6 @@ set +u
 set -u
 
 # Cleanup
-unset mbox_conf_file mail_spool_dir
-unset usr_mbox_conf_file xdg_mbox_conf_file
+unset mail_spool_dir mbox_conf_file
 
 # *eof*

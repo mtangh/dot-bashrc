@@ -5,8 +5,8 @@
 set +u
 
 # I18N Paths
-sys_i18n_path="${bashrcdir}/i18n.d"
-ule_i18n_path="/usr/local/etc/${bashrcdir##*/}/i18n.d"
+brc_i18n_path="${bashrcdir}/i18n"
+sys_i18n_path="/usr/local/etc/${bashrcdir##*/}/i18n"
 usr_i18n_path="${HOME}/.i18n"
 xdg_i18n_path="${XDG_CONFIG_HOME:-${HOME}/.config}/i18n"
 
@@ -14,23 +14,19 @@ xdg_i18n_path="${XDG_CONFIG_HOME:-${HOME}/.config}/i18n"
 # we want to re-read settings in case we're running in CJKI and
 # have been defaulted to English on the console.
 
-# Finding the i18n config.
-for i18n in $(
-/bin/ls -1 \
-{${usr_i18n_path},${xdg_i18n_path}}.d/${machine}{.${TERM},} \
-{${usr_i18n_path},${xdg_i18n_path}}.d/{${osvendor},${ostype}}{.${TERM},} \
-{${usr_i18n_path},${xdg_i18n_path}}.d/{${TERM},default} \
-{${usr_i18n_path},${xdg_i18n_path}}{.${TERM},} \
-{${sys_i18n_path},${ule_i18n_path}}/${machine}{.${TERM},} \
-{${sys_i18n_path},${ule_i18n_path}}/{${osvendor},${ostype}}{.${TERM},} \
-{${sys_i18n_path},${ule_i18n_path}}/default \
-2>/dev/null; )
+for i18n_file in $(
+: "I18N files and dirs" && {
+echo {"${usr_i18n_path}","${xdg_i18n_path}"}.d/${machine}{.${TERM},}
+echo {"${usr_i18n_path}","${xdg_i18n_path}"}.d/{${vendor},${os}}{.${TERM},}
+echo {"${usr_i18n_path}","${xdg_i18n_path}"}.d/{${TERM},default}
+echo {"${usr_i18n_path}","${xdg_i18n_path}"}{.${TERM},}
+echo {"${brc_i18n_path}","${sys_i18n_path}"}/{${TERM},default}
+} 2>/dev/null; )
 do
-  [ -f "${i18n}" ] && {
-    . "${i18n}" && break
-  } 2>/dev/null || :
-done
-unset i18n
+  [ -f "${i18n_file}" ] && {
+    . "${i18n_file}" && break
+  }
+done 2>/dev/null || :
 
 # GDM Lang
 if [ -n "$GDM_LANG" ]
@@ -112,6 +108,8 @@ fi
 set -u
 
 # Cleanup
-unset sys_i18n_path ule_i18n_path usr_i18n_path xdg_i18n_path
+unset brc_i18n_path sys_i18n_path
+unset usr_i18n_path xdg_i18n_path
+unset i18n_file
 
 # *eof*

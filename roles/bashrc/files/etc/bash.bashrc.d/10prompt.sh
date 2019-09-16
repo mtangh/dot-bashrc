@@ -5,10 +5,10 @@
 PS1=$([ $UID -gt 0 ] && echo '\u@')'\h \W\$ '
 PS2='> '
 PS3='=> '
-PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME:+$FUNCNAME(): }'
+PS4='+(${BASH_SOURCE##*/}${LINENO:+:$LINENO}): ${FUNCNAME:+$FUNCNAME(): }'
 
 # PS* for TERM
-case "$TERM" in
+case "${TERM}" in
 xterm*)
   CLR=$([ $UID -eq 0 ] && echo '1;31' || echo '1;34')
   PS1="\[\e[${CLR}m\]${PS1}\[\e[0;39m\]"
