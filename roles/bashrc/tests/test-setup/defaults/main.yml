@@ -7,7 +7,7 @@ tests_run: yes
 # test case name
 tests_casename: "{{
     (testcase|d('',true)|string|trim|length > 0)|ternary(
-    testcase,lookup('pipe','mktemp -u testcase_XXXXXXXX')) }}"
+    testcase|trim,lookup('pipe','mktemp -u testcase_XXXXXXXX')) }}"
 
 # test owner and group
 tests_owner: "{{

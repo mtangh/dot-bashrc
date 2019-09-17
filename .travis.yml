@@ -6,7 +6,7 @@ language: python
 python: "2.7"
 
 # Use the new container infrastructure
-sudo: false
+sudo: true
 
 # Install ansible
 addons:
@@ -19,8 +19,10 @@ install:
   - bash --version
   # Install ansible
   - pip install ansible; ansible --version
+  ## Create ansible.cfg with correct roles_path
+  #- printf '[defaults]\nroles_path=../' >ansible.cfg
 
-script:
+ascript:
   # Scripts:
   - |
     set -x;
@@ -35,7 +37,7 @@ script:
     set -x;
     : "install.sh" && {
       bash -n install.sh &&
-      bash install.sh -D --install --source=$(pwd)/roles/bashrc && {
+      bash install.sh --install --source=$(pwd)/roles/bashrc && {
         ( for check_file in \
            ${HOME}/.config/bash.{bashrc,profile} \
            ${HOME}/.config/bash.bashrc.d/vim/vimrc \
@@ -55,11 +57,28 @@ script:
     } &&
     : "OK";
 
-  # Basic role syntax check
+  # Basic role syntax check, and tests-run
   - |
     set -x;
-    cd roles/bashrc/tests/ &&
-    ansible-playbook -i inventory test.yml --syntax-check
+    ansible_play="ansible-playbook -i inventory test.yml"
+    tests_case_ret=0;
+    cd roles/bashrc/tests/ && {
+      echo "ansible-playbook syntax-check." &&
+      $ansible_play --syntax-check &&
+      echo "ansible-playbook tests-run." &&
+      for tests_casename in $(
+        $ansible_play --list-tags 2>/dev/null |
+        egrep '^[ ]*play[ ]*.*[ ]*TAGS:' |
+        sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
+        sort -u 2>/dev/null )
+      do
+        echo "ansible-playbook tests-run [$tests_casename]."
+        $ansible_play -e tests_run=yes -e tests_casename="${tests_casename}" ||
+        tests_case_ret=$?
+      done &&
+      [ ${tests_case_ret:-1} =eq 0 ];
+    } &&
+    : "OK";
 
 # Notifications
 #notifications:

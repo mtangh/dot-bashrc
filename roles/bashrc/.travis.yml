@@ -2,6 +2,7 @@
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 language: python
+
 python: "2.7"
 
 # Use the new container infrastructure
@@ -14,21 +15,40 @@ addons:
     - python-pip
 
 install:
+  # Check bash version
+  - bash --version
   # Install ansible
-  - pip install ansible
-
-  # Check ansible version
-  - ansible --version
-
+  - pip install ansible; ansible --version
   ## Create ansible.cfg with correct roles_path
   #- printf '[defaults]\nroles_path=../' >ansible.cfg
 
 script:
-  # Basic role syntax check
-  - cd tests/ && ansible-playbook -i inventory test.yml --syntax-check
 
+  # Basic role syntax check, and tests-run
+  - |
+    set -x;
+    ansible_play="ansible-playbook -i inventory test.yml"
+    tests_case_ret=0;
+    cd roles/bashrc/tests/ && {
+      echo "ansible-playbook syntax-check." &&
+      $ansible_play --syntax-check &&
+      echo "ansible-playbook tests-run." &&
+      for tests_casename in $(
+        $ansible_play --list-tags 2>/dev/null |
+        egrep '^[ ]*play[ ]*.*[ ]*TAGS:' |
+        sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
+        sort -u 2>/dev/null )
+      do
+        echo "ansible-playbook tests-run [$tests_casename]."
+        $ansible_play -e tests_run=yes -e tests_casename="${tests_casename}" ||
+        tests_case_ret=$?
+      done &&
+      [ ${tests_case_ret:-1} =eq 0 ];
+    } &&
+    : "OK";
+
+# Notifications
 #notifications:
-#  webhooks: https://galaxy.ansible.com/api/v1/notifications/
 #  email:
-#  - youremailaddress
+#  - your@emailaddress
 
