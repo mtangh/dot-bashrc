@@ -5,7 +5,7 @@
 
   # Load scripts under the 'bash_profile.d' dir
   for bash_profile_dir in \
-  "${HOME}/.{macOS,MacOSX}/{etc/,}{bash_,}profile.d"
+  "${HOME}"/.{macOS,MacOSX}/{etc/,}{bash_,}profile.d
   do
     if [ -d "${bash_profile_dir}" ]
     then

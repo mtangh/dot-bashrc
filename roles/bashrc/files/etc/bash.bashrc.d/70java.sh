@@ -19,7 +19,7 @@
   } 2>/dev/null
 
   for jhomedir in \
-  /{usr,usr/local,opt}/java/{default,latest} "${java_cmd%/bin/java}"
+  /{usr/local,opt,usr}/java/{default,latest} "${java_cmd%/bin/java}"
   do
     for jsdk_cmd in java javac javah javap jar keytool
     do
