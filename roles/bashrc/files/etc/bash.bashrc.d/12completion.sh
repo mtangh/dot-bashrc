@@ -1,9 +1,9 @@
-# ${bashrcdir}/12completion.sh
+# ${bashrc_dir}/12completion.sh
 # $Id$
 
 # completion dierctory
 for completdir in \
-{"${bashrcdir}","${bashlocal}"}/completion.d \
+{"${bashrc_dir}","${bash_local}"}/completion.d \
 {"${XDG_CONFIG_HOME:-${HOME}/.config}/","${HOME}/."}bash_completion.d
 do
   if [ -d "${completdir}" ]

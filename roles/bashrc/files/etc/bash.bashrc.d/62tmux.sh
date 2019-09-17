@@ -1,4 +1,4 @@
-# ${bashrcdir}/62tmux.sh
+# ${bashrc_dir}/62tmux.sh
 # $Id$
 
 # *eof*

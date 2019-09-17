@@ -1,4 +1,4 @@
-# ${bashrcdir}/99user_bashrc.sh
+# ${bashrc_dir}/99user_bashrc.sh
 # $Id$
 
 : "user_bashrc" && {

@@ -1,7 +1,7 @@
-# ${bashrcdir}/20mbox.sh
+# ${bashrc_dir}/20mbox.sh
 # $Id$
 
-[ -n "$USER" ] ||
+[ -n "${USER:-}" ] ||
   return 0
 
 # Mail spool dir
@@ -16,7 +16,9 @@ do
 done 2>/dev/null || :
 
 # Lookup Mbox config
-for mboxconffile in {"${XDG_CONFIG_HOME:-$HOME/.config}/","${HOME}/."}mbox.conf
+for mboxconffile in \
+"${XDG_CONFIG_HOME:-$HOME/.config}"/{etc/,}mbox.conf \
+"${HOME}"/.mbox.conf
 do
   [ -f "${mboxconffile}" ] && {
     . "${mboxconffile}" &&
@@ -24,17 +26,11 @@ do
   } || :
 done 2>/dev/null || :
 
-# Disable the 'u' option.
-set +u
-
 # Env
-[ -z "${MBOX}" ] && MBOX=".mbox"
-[ -z "${MBOX}" ] || export MBOX
-[ -z "${MAIL}" ] && MAIL="${mailspooldir}/${USER}"
-[ -z "${MAIL}" ] || export MAIL
-
-# Enable the 'u' option again.
-set -u
+[ -z "${MBOX:-}" ] && MBOX=".mbox"
+[ -z "${MBOX:-}" ] || export MBOX
+[ -z "${MAIL:-}" ] && MAIL="${mailspooldir}/${USER}"
+[ -z "${MAIL:-}" ] || export MAIL
 
 # Cleanup
 unset mailspooldir mboxconffile

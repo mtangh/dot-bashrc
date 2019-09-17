@@ -1,4 +1,4 @@
-# ${bashrcdir}/80emacs.sh
+# ${bashrc_dir}/80emacs.sh
 # $Id$
 
 # *eof*

@@ -1,4 +1,4 @@
-# ${bashrcdir}/85less.sh
+# ${bashrc_dir}/85less.sh
 # $Id$
 
 # less installed ?

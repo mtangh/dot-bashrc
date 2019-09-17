@@ -1,28 +1,36 @@
-# ${bashrcdir}/colors.d/${ostype}/colorls.sh
+# ${bashrc_dir}/colors.d/${os}/colorls.sh
 # $Id$
 
 ##
-## color-ls For Darwin
+## color-ls For macOS
 ##
 
 # color-ls
-for lscolors_sh in \
-${HOME}/.lscolors/${ostype}/${TERM}{.${machine},.${osvendor},} \
-${HOME}/.lscolors/${TERM}{.${machine},.${osvendor},} \
-${HOME}/.lscolors.${TERM}{.${machine},.${osvendor},} \
-${HOME}/.lscolors \
-${sys_colors_dir}/${ostype}/LSCOLORS.${TERM}{.${machine},.${osvendor},} \
-${sys_colors_dir}/${ostype}/LSCOLORS{.${machine},.${osvendor},} 
+for lsclr_path in \
+"${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}lscolors \
+"${HOME}/.lscolors" \
+{"${bash_local}","${bashrc_dir}"}/colors.d/${os}/LSCOLORS
 do
-  [ -f "${lscolors_sh}" ] ||
-    continue
-  [ -x "${lscolors_sh}" ] &&
-    export LSCOLORS=`bash ${lscolors_sh} 2>/dev/null` ||
-    export LSCOLORS=`cat ${lscolors_sh} 2>/dev/null`
-  break
+  for lsclr_file in \
+  "${lsclr_path}"{/${TERM},.${TERM},}{.${machine},.${vendor},}
+  do
+    [ -f "${lsclr_file}" ] || {
+      continue
+    }
+    [ -x "${lscolorssh}" ] &&
+    LSCOLORS=$(bash ${lscolorssh} 2>/dev/null) ||
+    LSCOLORS=$(cat ${lscolorssh} 2>/dev/null)
+    [ -n "${LSCOLORS:-}" ] && {
+      export LSCOLORS
+      break 2
+    } || :
+  done
+  [ -z "${LSCOLORS:-}" ] || {
+    break
+  }
 done
 
-# setup ls aliases
+# Setup ls aliases
 alias ls="ls -FGq"
 alias le="ls -le"
 alias l@="ls -l@"
@@ -30,7 +38,7 @@ alias lll="ls -lTO"
 alias lsacl="ls -le"
 alias lsattr="ls -l@"
 
-# cleanup
-unset lscolors_sh
+# Cleanup
+unset lsclr_path lsclr_file
 
 # *eof*

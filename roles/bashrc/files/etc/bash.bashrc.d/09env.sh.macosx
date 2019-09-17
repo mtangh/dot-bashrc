@@ -1,16 +1,16 @@
-# ${bashrcdir}/09env.sh.macosx
+# ${bashrc_dir}/09env.sh.macosx
 # $Id$
 
 # A colon-separated list of suffixes to ignore when performing
 # filename. completion. A file name whose suffix matches one of
 # the entries in FIGNORE is excluded from the list of matched
 # file names.
-FIGNORE="$(${bashrcdir}/bin/pathconfig FIGNORE -a .DS_Store)"
+FIGNORE="$(${bashrc_dir}/bin/pathconfig FIGNORE -a .DS_Store)"
 # exports
 export FIGNORE
 
 # Hex UID
-_hex_uid="0x$(printf "%X" "$UID")"
+_hex_uid="0x$(printf "%X" "${UID:-0}")"
 # ".CFUserTextEncoding"
 _cf_file="${HOME}/.CFUserTextEncoding"
 

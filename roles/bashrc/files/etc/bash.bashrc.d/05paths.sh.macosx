@@ -1,12 +1,8 @@
-# ${bashrcdir}/05path.sh.macosx
+# ${bashrc_dir}/05path.sh.macosx
 # $Id$
 
 # path config command
-pathconf="${bashrcdir}/bin/pathconfig"
-
-# Paths files
-macos_path="${HOME}/.macOS/etc/paths"
-macosxpath="${HOME}/.MacOSX/etc/paths"
+pathconf="${bashrc_dir}/bin/pathconfig"
 
 # path entry
 paths_dirs=""

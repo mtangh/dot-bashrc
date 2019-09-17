@@ -19,15 +19,14 @@
 set -u
 
 # bash resource configs default
-bashrcdir="{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}"
-bashlocal="/usr/local/etc/${bashrcdir##*/}"
+bashrc_dir="{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}"
+bash_local="/usr/local/etc/${bashrc_dir##*/}"
 
 # Platform
-. "${bashrcdir}/__platform.sh" 1>/dev/null 2>&1 || {
-  declare -r osvendor=__UNKNOWN__
-  declare -r ostype=__UNKNOWN__
+. "${bashrc_dir}/__platform.sh" || {
+  declare -r os=__UNKNOWN__ vendor=__UNKNOWN__ osvendor=__UNKNOWN__
   declare -r machine=__UNKNOWN__
-}
+} || :
 
 # User Groups
 usergroups="$(id -Gn 2>/dev/null)"
@@ -37,9 +36,9 @@ PS1='\u@\h \W\$ '
 
 # Load to the 'bash.bashrc.d' scripts
 for bashrcsh in \
-"${bashrcdir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
+"${bashrc_dir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
 do
-  set +u; [ ! -x "$bashrcsh" ] || . "$bashrcsh"; set -u
+  [ ! -x "$bashrcsh" ] || . "$bashrcsh"
 done
 
 # cleanup

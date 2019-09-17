@@ -1,5 +1,8 @@
-# ${bashrcdir}/00bash_profile.sh
+# ${bashrc_dir}/00bash_profile.sh
 # $Id$
+
+[ -n "${BASH:-}" ] ||
+  return 0
 
 # Run login shell only.
 [[ "${BASH_SOURCE[@]}" \
@@ -8,12 +11,12 @@
 
 # Load scripts under '${profiledir}' dir
 for profile_sh in \
-"${bashrcdir}"/profile.d/[0-9][0-9]*.sh{,".${os}",".${osvendor}"}
+"${bashrc_dir}"/profile.d/[0-9][0-9]*.sh{,".${os}",".${osvendor}"}
 do
   [ -x "${profile_sh}" ] && {
     . "${profile_sh}"
   } || :
-done 2>/dev/null
+done
 
 # Cleanup
 unset profile_sh

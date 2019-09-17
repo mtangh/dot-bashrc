@@ -1,8 +1,8 @@
-# ${bashrcdir}/06manpath.sh.macosx
+# ${bashrc_dir}/06manpath.sh.macosx
 # $Id$
 
 # path config command
-pathconf="${bashrcdir}/bin/pathconfig"
+pathconf="${bashrc_dir}/bin/pathconfig"
 
 # manpaths entry
 mpathsdirs=""

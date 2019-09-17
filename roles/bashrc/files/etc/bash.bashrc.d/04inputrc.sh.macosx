@@ -1,4 +1,4 @@
-# ${bashrcdir}/04inputrc.sh.macosx
+# ${bashrc_dir}/04inputrc.sh.macosx
 # $Id$
 
 inputrc_path=""
@@ -21,8 +21,8 @@ do
 done 2>/dev/null || :
 
 # Export
-[ -n "${MAC_INPUTRC}" ] && {
-  export INPUTRC="${MAC_INPUTRC}"
+[ -n "${MAC_INPUTRC:-}" ] && {
+  INPUTRC="${MAC_INPUTRC}"; export INPUTRC
 } || :
 
 # Cleanup

@@ -45,8 +45,9 @@ script:
           done; ) &&
         ( . "${HOME}/.config/bash.bashrc" &&
           echo "Load ${HOME}/.config/bash.bashrc" && {
+            [ -n "$os"       ] && echo "Found - os=$os"             &&
+            [ -n "$vendor"   ] && echo "Found - vendor=$vendor"     &&
             [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
-            [ -n "$ostype"   ] && echo "Found - ostype=$ostype"     &&
             [ -n "$machine"  ] && echo "Found - machine=$machine"   &&
             :;
           }; )

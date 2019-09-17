@@ -1,15 +1,12 @@
-# ${bashrcdir}/11promptxommand.sh
+# ${bashrc_dir}/11promptxommand.sh
 # $Id$
-
-# Not an error undefined variable
-set +u
 
 # Initialize PROMPT_COMMAND
 PROMPT_COMMAND=""
 
 # Lookup PROMPT_COMMAND
 for promptsdir in \
-{"${bashrcdir}","${bashlocal}"}/prompt.d \
+{"${bashrc_dir}","${bash_local}"}/prompt.d \
 {"${XDG_CONFIG_HOME:-${HOME}/.config}/","${HOME}/."}bash_prompt.d
 do
   if [ -d "${promptsdir}" ]
@@ -26,7 +23,7 @@ do
   [ -n "$PROMPT_COMMAND" ] && {
     break
   } || :
-done 1>/dev/null 2>&1 || :
+done &>/dev/null || :
 unset promptsdir
 
 # PROMPT_COMMAND
@@ -39,9 +36,6 @@ then
     PROMPT_COMMAND="${PROMPT_COMMAND}${prompt_cmd}"
   done
   unset prompt_cmd
-fi 1>/dev/null 2>&1 || :
-
-# To an undefined variable in error
-set -u
+fi &>/dev/null || :
 
 # *eof*

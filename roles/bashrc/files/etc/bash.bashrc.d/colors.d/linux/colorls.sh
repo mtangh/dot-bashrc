@@ -1,4 +1,4 @@
-# ${bashrcdir}/colors.d/${os}/colorls.sh
+# ${bashrc_dir}/colors.d/${os}/colorls.sh
 # $Id$
 
 ##
@@ -16,7 +16,7 @@ ls_options="-A ${ls_options}" || :
 for lsclr_path in \
 "${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}dir{_,}colors \
 "${HOME}"/.dir{_,}colors \
-"${bashrcsir}/colors.d/${os}/DIR_COLORS"
+{"${bash_local}","${bashrc_dir}"}/colors.d/${os}/DIR_COLORS
 do
   for lsclr_file in \
   "${lsclr_path}"{/${TERM},.${TERM},}{.${machine},.${osvendor},.${os},}
@@ -39,7 +39,7 @@ if [ -f "${dir_colors}" ] &&
    ! egrep -qi "^COLOR.*none" "${dir_colors}" &>/dev/null
 then
   eval $(dircolors --sh "${dir_colors}" 2>/dev/null)
-  if [ -n "$LS_COLORS" ]
+  if [ -n "${LS_COLORS:-}" ]
   then
     alias ls="ls ${ls_options} --color=tty"
   fi

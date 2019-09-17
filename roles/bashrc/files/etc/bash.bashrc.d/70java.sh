@@ -1,14 +1,14 @@
-# ${bashrcdir}/70java.sh
+# ${bashrc_dir}/70java.sh
 # $Id$
 
-[ -z "$JAVA_HOME" ] && {
+[ -z "${JAVA_HOME:-}" ] && {
 
   [ -x "/usr/libexec/java_home" ] &&
   JAVA_HOME="$(/usr/libexec/java_home)"
 
 } 2>/dev/null || :
 
-[ -z "$JAVA_HOME" ] && {
+[ -z "${JAVA_HOME:-}" ] && {
 
   java_cmd=$(type -p java)
 
@@ -36,7 +36,7 @@
 
 } || :
 
-[ -n "$JAVA_HOME" ] && {
+[ -n "${JAVA_HOME:-}" ] && {
   export JAVA_HOME
 } || :
 

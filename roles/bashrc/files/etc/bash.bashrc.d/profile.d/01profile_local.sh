@@ -1,17 +1,17 @@
-# ${bashrcdir}/profile.d/01profile_local.sh
+# ${bashrc_dir}/profile.d/01profile_local.sh
 # $Id$
 
-[ -d "${bashlocal}" ] ||
+[ -d "${bash_local:-}" ] ||
 return 0
 
 # Load scripts under '${profiledir}' dir
 for profile_sh in \
-"${bashlocal}"/profile.d/[0-9][0-9]*.sh{"${machine}",}
+"${bash_local}"/profile.d/[0-9][0-9]*.sh{"${machine}",}
 do
   [ -x "${profile_sh}" ] && {
     . "${profile_sh}"
   } || :
-done 2>/dev/null
+done
 
 # Cleanup
 unset profile_sh

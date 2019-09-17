@@ -1,4 +1,4 @@
-# ${bashrcdir}/70perl.sh
+# ${bashrc_dir}/70perl.sh
 # $Id$
 
 PERL_BADLANG=0

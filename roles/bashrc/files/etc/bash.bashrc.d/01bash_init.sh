@@ -1,4 +1,4 @@
-# ${bashrcdir}/01bash_init.sh
+# ${bashrc_dir}/01bash_init.sh
 # $Id$
 
 [ -d "/etc/profile.d" ] && {

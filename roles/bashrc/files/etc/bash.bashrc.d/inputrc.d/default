@@ -1,4 +1,4 @@
-# ${bashrcdir}/inputrc.d/default
+# ${bashrc_dir}/inputrc.d/default
 # System-wide inputrc file for readline library.
 
 ##

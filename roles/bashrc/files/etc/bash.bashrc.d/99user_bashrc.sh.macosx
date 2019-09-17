@@ -1,4 +1,4 @@
-# ${bashrcdir}/99user_bashrc.sh.macosx
+# ${bashrc_dir}/99user_bashrc.sh.macosx
 # $Id$
 
 : "user_bashrc for macOS" && {

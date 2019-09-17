@@ -1,15 +1,15 @@
-# ${bashrcdir}/06manpath.sh
+# ${bashrc_dir}/06manpath.sh
 # $Id$
 
 # path config command
-pathconf="${bashrcdir}/bin/pathconfig"
+pathconf="${bashrc_dir}/bin/pathconfig"
 
 # manpaths entry
 mpathsdirs=""
 
 for paths_path in \
 /etc/manpaths \
-{"${bashrcdir}","${bashlocal}"}/pathconfig.d/manpaths \
+{"${bashrc_dir}","${bash_local}"}/pathconfig.d/manpaths \
 {"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
 do
   for mpathsfile in $(

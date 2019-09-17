@@ -1,4 +1,4 @@
-# ${bashrcdir}/98aliases.sh
+# ${bashrc_dir}/98aliases.sh
 # $Id$
 
 # cd

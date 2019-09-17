@@ -1,10 +1,10 @@
-# ${bashrcdir}/02bash_options.sh
+# ${bashrc_dir}/02bash_options.sh
 # $Id$
 
 ## Shell options
 
 # The user file-creation mask is set to MODE.
-if [ $UID -gt 99 -a "$(id -un)" = "$(id -gn)" ]
+if [ ${UID:-0} -gt 99 -a "$(id -un)" = "$(id -gn)" ]
 then umask 0002
 else umask 0022
 fi
@@ -63,7 +63,7 @@ HISTCONTROL='ignoreboth:erasedups'
 # command being saved on the history list (there is no limit).
 # The shell sets the default value to 500 after reading any
 # startup files.
-if [ $UID -gt 99 ]
+if [ ${UID:-0} -gt 99 ]
 then HISTSIZE=1024
 else HISTSIZE=32
 fi
@@ -77,7 +77,7 @@ fi
 # zero size. Non-numeric values and numeric values less than
 # zero inhibit truncation. The shell sets the default value to
 # the value of HISTSIZE after reading any startup files.
-if [ $UID -gt 99 ]
+if [ ${UID:-0} -gt 99 ]
 then HISTFILESIZE=1024
 else HISTFILESIZE=0
 fi

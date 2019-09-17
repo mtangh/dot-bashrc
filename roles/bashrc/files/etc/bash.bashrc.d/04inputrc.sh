@@ -1,4 +1,4 @@
-# ${bashrcdir}/04inputrc.sh
+# ${bashrc_dir}/04inputrc.sh
 # $Id$
 
 inputrc_path=""
@@ -8,8 +8,8 @@ inputrc_file=""
 for inputrc_path in \
 "${XDG_CONFIG_HOME:-${HOME}/.config}/inputrc" \
 "${HOME}/.inputrc" \
-"${bashlocal}/inputrc" \
-"${bashrcdir}/inputrc"
+"${bash_local}/inputrc" \
+"${bashrc_dir}/inputrc"
 do
   for inputrc_file in \
   "${inputrc_path}"{.d/${TERM},.d/default,.${TERM},}{.${machine},.${osvendor},.${os},}
@@ -22,7 +22,7 @@ do
 done 2>/dev/null || :
 
 # Export
-[ -n "$INPUTRC" ] && {
+[ -n "${INPUTRC:-}" ] && {
   export INPUTRC
 } || :
 
