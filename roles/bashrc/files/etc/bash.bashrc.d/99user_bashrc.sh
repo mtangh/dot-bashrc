@@ -5,12 +5,13 @@
 
   # User local .bashrc file(s)
   for dot_bashrc in \
-  "${HOME}"/.{bash.,}bashrc{.${os},.${vendor},.${machine},}
+  "${HOME}"/{.bash,}.bashrc{.${machine},.${osvendor},.${os},}
   do
+    [ -f "${dot_bashrc}" ] ||
+      continue
     [[ "${BASH_SOURCE[@]}" \
       =~ .*\ ${dot_bashrc}(\ .*|\ *)$ ]] &&
-    continue
-    [ -f "${dot_bashrc}" ] &&
+      continue
     . "${dot_bashrc}"
   done
 
@@ -22,10 +23,10 @@
     if [ -d "${bash_profile_dir}" ]
     then
       for bash_profile_scr in \
-      "${bash_profile_dir}"/*.sh{.${os},.${vendor},.${machine},}
+      "${bash_profile_dir}"/*.sh{.${os},.${osvendor},.${machine},}
       do
         [ -x "${bash_profile_scr}" ] &&
-        . "${bash_profile_scr}"
+        . "${bash_profile_scr}" || :
       done
       unset bash_profile_scr
     fi
@@ -34,6 +35,6 @@
   unset dot_bashrc
   unset bash_profile_dir
 
-} 1>/dev/null 2>&1 || :
+} || :
 
 # *eof*

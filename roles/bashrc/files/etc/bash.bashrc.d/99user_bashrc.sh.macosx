@@ -13,7 +13,7 @@
       "${bash_profile_dir}"/*.sh{.${machine},}
       do
         [ -x "${bash_profile_scr}" ] &&
-        . "${bash_profile_scr}"
+        . "${bash_profile_scr}" || :
       done
       unset bash_profile_scr
     fi

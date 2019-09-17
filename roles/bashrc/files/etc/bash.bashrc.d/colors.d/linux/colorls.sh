@@ -1,43 +1,47 @@
-# ${bashrcdir}/colors.d/${ostype}/colorls.sh
+# ${bashrcdir}/colors.d/${os}/colorls.sh
 # $Id$
 
 ##
 ## color-ls For Linux
 ##
 
-ls_user_opt="-Fq"
+dir_colors=""
 
-if [ "`id -u`" = "0" ]
-then
-  ls_root_opt="-A"
-else
-  ls_root_opt=""
-fi
+# ls options
+ls_options="-Fq"
+[ ${UID} -eq 0 ] &&
+ls_options="-A ${ls_options}" || :
 
 # color-ls
-for dircolors in \
-${HOME}/.dir{_colors,colors}/${TERM}{.${machine},.${osvendor},} \
-${HOME}/.dir{_colors,colors}.${TERM}{.${machine},.${osvendor},} \
-${HOME}/.dir{_colors,colors} \
-${sys_colors_dir}/${ostype}/DIR_COLORS.${TERM}{.${machine},.${osvendor},} \
-${sys_colors_dir}/${ostype}/DIR_COLORS
+for lsclr_path in \
+"${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}dir{_,}colors \
+"${HOME}"/.dir{_,}colors \
+"${bashrcsir}/colors.d/${os}/DIR_COLORS"
 do
-  [ -f "${dircolors}" ] ||
-    continue
-  COLORS="${dircolors}"
-  break
+  for lsclr_file in \
+  "${lsclr_path}"{/${TERM},.${TERM},}{.${machine},.${osvendor},.${os},}
+  do
+    [ -f "${lsclr_file}" ] && {
+      dir_colors="${lsclr_file}"
+      break 2
+    } || :
+  done
+  [ -z "${dir_colors}" ] || {
+    break
+  }
 done
 
 # default dircolors
-alias ls="ls ${ls_root_opt} ${ls_user_opt}"
+alias ls="ls ${ls_options}"
 
 # setup dircolors
-if ! egrep -qi "^COLOR.*none" ${COLORS} &>/dev/null
+if [ -f "${dir_colors}" ] &&
+   ! egrep -qi "^COLOR.*none" "${dir_colors}" &>/dev/null
 then
-  eval `dircolors --sh "${COLORS}" 2>/dev/null`
+  eval $(dircolors --sh "${dir_colors}" 2>/dev/null)
   if [ -n "$LS_COLORS" ]
   then
-    alias ls="ls ${ls_root_opt} ${ls_user_opt} --color=tty"
+    alias ls="ls ${ls_options} --color=tty"
   fi
 fi
 
@@ -45,8 +49,7 @@ fi
 alias lll="ls -l --author --full-time --time-style='+%Y-%m-%d %H:%M:%S'"
 
 # cleanup
-unset dircolors
-unset ls_root_opt
-unset ls_user_opt
+unset dir_colors ls_options
+unset lsclr_path lsclr_file
 
 # *eof*

@@ -10,9 +10,9 @@ for lscolors_d in \
 {"${bashlocal}","${bashrcdir}"}/colors.d{/${os},/${osvendor},}
 do
   [ -e "${lscolors_d}/colorls.sh" ] &&
-  . "${lscolors_d}/colorls.sh" &&
+  . "${lscolors_d}/colorls.sh" 2>/dev/null &&
   break || :
-done 1>/dev/null 2>&1 || :
+done || :
 
 # Cleanup
 unset lscolors_d
