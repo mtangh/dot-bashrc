@@ -17,7 +17,7 @@
 
   # Load scripts under the 'bash_profile.d' dir
   for bash_profile_dir in \
-  "${XDG_CONFIG_HOME;-${HOME}/.config}"/{etc/,}{bash_,}profile.d \
+  "${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}{bash_,}profile.d \
   "${HOME}"/.{bash_,}profile.d
   do
     if [ -d "${bash_profile_dir}" ]
