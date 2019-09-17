@@ -30,12 +30,12 @@ do
     [ -f "${paths_file}" ] || continue
     paths_dirs="${paths_dirs+${paths_dirs} }"
     [ -x "${paths_file}" ] &&
-    paths_dirs="${paths_dirs}$(/bin/bash ${paths_file})"
+    paths_dirs="${paths_dirs}$(/bin/bash ${paths_file} 2>/dev/null)"
     [ -x "${paths_file}" ] ||
-    paths_dirs="${paths_dirs}$(/bin/cat ${paths_file})"
+    paths_dirs="${paths_dirs}$(/bin/cat ${paths_file} 2>/dev/null)"
   done
   unset paths_file
-done 2>/dev/null || :
+done || :
 
 # Set default if dirs is empty
 if [ -z "${paths_dirs}" ]
@@ -51,7 +51,7 @@ then
       paths_dirs="${paths_dirs}${paths_file}"
     } || :
   done
-fi 2>/dev/null || :
+fi || :
 
 # for ${HOME}/bin
 for paths_file in {${HOME},${XDG_CONFIG_HOME:-$HOME/.config}}/{s,.s,,.}bin

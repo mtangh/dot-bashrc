@@ -8,18 +8,18 @@ pathconf="${bashrc_dir}/bin/pathconfig"
 mpathsdirs=""
 
 # lookup manpaths file(s)
-for paths_path in "${HOME}"/{.macOS,.MacOSX}/{etc/,}manpaths
+for mpathspath in "${HOME}"/{.macOS,.MacOSX}/{etc/,}manpaths
 do
   for mpathsfile in $(
-    [ -n "${paths_path}" -a -d "${paths_path%/*}" ]  && {
+    [ -n "${mpathspath}" -a -d "${mpathspath%/*}" ]  && {
       for ps in "" ${machine}
       do
         for gn in "" ${usergroups}
         do
-          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
-          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
-          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
-          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
+          [ -f "${mpathspath}${ps:+.$ps}${gn:+.$gn}" ] &&
+          echo "${mpathspath}${ps:+.$ps}${gn:+.$gn}" || :
+          [ -d "${mpathspath}.d${ps:+/$ps}${gn:+/$gn}" ] &&
+          echo "${mpathspath}.d${ps:+/$ps}${gn:+/$gn}"/* || :
         done
       done
     } 2>/dev/null)
@@ -32,13 +32,13 @@ do
     mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathsfile})"
   done
   unset mpathsfile
-done 2>/dev/null || :
+done || :
 
 # export new PATH
 eval $($pathconf MANPATH -s -a ${mpathsdirs})
 
 # Cleanup
 unset pathconf
-unset mpathsdirs paths_path
+unset mpathsdirs mpathspath
 
 # *eof*

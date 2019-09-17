@@ -7,34 +7,34 @@ pathconf="${bashrc_dir}/bin/pathconfig"
 # manpaths entry
 mpathsdirs=""
 
-for paths_path in \
+for mpathspath in \
 /etc/manpaths \
 {"${bashrc_dir}","${bash_local}"}/pathconfig.d/manpaths \
 {"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
 do
   for mpathsfile in $(
-    [ -n "${paths_path}" -a -d "${paths_path%/*}" ]  && {
-      for ps in "" ${os} ${osvendor} ${machine}
+    [ -n "${mpathspath}" -a -d "${mpathspath%/*}" ]  && {
+      for ps in "" "${os}" "${osvendor}" "${machine}"
       do
         for gn in "" ${usergroups}
         do
-          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
-          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
-          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
-          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
+          [ -f "${mpathspath}${ps:+.$ps}${gn:+.$gn}" ] &&
+          echo "${mpathspath}${ps:+.$ps}${gn:+.$gn}" || :
+          [ -d "${mpathspath}.d${ps:+/$ps}${gn:+/$gn}" ] &&
+          echo "${mpathspath}.d${ps:+/$ps}${gn:+/$gn}"/* || :
         done
       done
     } 2>/dev/null)
   do
-    [ -f "${mpathentry}" ] || continue
+    [ -f "${mpathsfile}" ] || continue
     mpathsdirs="${mpathsdirs+${mpathsdirs} }"
-    [ -x "${mpathentry}" ] &&
-    mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathentry})"
-    [ -x "${mpathentry}" ] ||
-    mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathentry})"
+    [ -x "${mpathsfile}" ] &&
+    mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathsfile} 2>/dev/null)"
+    [ -x "${mpathsfile}" ] ||
+    mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathsfile} 2>/dev/null)"
   done
   unset mpathsfile
-done 2>/dev/null || :
+done || :
 
 # export new PATH
 MANPATH=
@@ -42,7 +42,7 @@ eval $($pathconf MANPATH -s -a ${mpathsdirs})
 
 # Cleanup
 unset pathconf
-unset mpathsdirs paths_path
+unset mpathsdirs mpathspath
 
 # end
 return 0
