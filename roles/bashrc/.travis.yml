@@ -27,21 +27,24 @@ script:
   # Basic role syntax check, and tests-run
   - |
     set -x;
-    ansible_play="ansible-playbook -i inventory test.yml"
+    tests_test_run=""
     tests_case_ret=0;
+    ansible_play="ansible-playbook -i inventory test.yml"
     cd roles/bashrc/tests/ && {
       echo "ansible-playbook syntax-check." &&
       $ansible_play --syntax-check &&
       echo "ansible-playbook tests-run." &&
-      for tests_casename in $(
-        $ansible_play --list-tags 2>/dev/null |
-        sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[([^ ,]+).*\].*$@\1@gp' |
-        sort -u 2>/dev/null )
+      for tests_casename in $( {
+        $ansible_play --list-tags |
+        sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
+        sort -u; } 2>/dev/null )
       do
+        tests_test_run=yes
         echo "ansible-playbook tests-run [$tests_casename]."
         $ansible_play -e tests_run=yes -e tests_casename="${tests_casename}" ||
         tests_case_ret=$?
       done &&
+      [ -n "${tests_test_run}" ] &&
       [ ${tests_case_ret:-1} -eq 0 ];
     } &&
     : "OK";

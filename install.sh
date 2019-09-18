@@ -538,7 +538,7 @@ then
       symlnk_dst=$(echo "${symlnk_ent}"|cut -d: -f2 2>/dev/null)
 
       [ -e "${symlnk_src}" ] || continue
-      [ -n "${symlnk_dat}" ] || continue
+      [ -n "${symlnk_dst}" ] || continue
 
       [ "${symlnk_src}" != "${symlnk_dst}" ] || continue
 
