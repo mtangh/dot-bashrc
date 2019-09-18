@@ -98,7 +98,7 @@ script:
       echo "ansible-playbook tests-run." &&
       for tests_casename in $( {
         $ansible_play --list-tags |
-        sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
+        sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[([^ ,]+).*\].*$@\1@gp' |
         sort -u; } )
       do
         tests_test_run=yes
