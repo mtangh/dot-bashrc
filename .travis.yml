@@ -22,7 +22,7 @@ install:
   ## Create ansible.cfg with correct roles_path
   #- printf '[defaults]\nroles_path=../' >ansible.cfg
 
-ascript:
+script:
   # Scripts:
   - |
     set -x;
