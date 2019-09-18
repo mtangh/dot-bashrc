@@ -30,7 +30,7 @@ script:
     tests_test_run=""
     tests_case_ret=0;
     ansible_play="ansible-playbook -i inventory test.yml"
-    cd roles/bashrc/tests/ && {
+    cd tests/ && {
       echo "ansible-playbook syntax-check." &&
       $ansible_play --syntax-check &&
       echo "ansible-playbook list-tags." &&
@@ -43,7 +43,7 @@ script:
       do
         tests_test_run=yes
         echo "ansible-playbook tests-run [$tests_casename]."
-        $ansible_play -e tests_run=yes -e tests_casename="${tests_casename}" ||
+        $ansible_play -e tests_run=yes --tags "${tests_casename}" ||
         tests_case_ret=$?
       done &&
       [ -n "${tests_test_run}" ] &&
