@@ -33,11 +33,13 @@ script:
     cd roles/bashrc/tests/ && {
       echo "ansible-playbook syntax-check." &&
       $ansible_play --syntax-check &&
+      echo "ansible-playbook list-tags." &&
+      $ansible_play --list-tags &&
       echo "ansible-playbook tests-run." &&
       for tests_casename in $( {
         $ansible_play --list-tags |
         sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
-        sort -u; } 2>/dev/null )
+        sort -u; } )
       do
         tests_test_run=yes
         echo "ansible-playbook tests-run [$tests_casename]."

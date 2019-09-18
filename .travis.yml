@@ -65,7 +65,8 @@ script:
       bash -n install.sh &&
       sudo bash install.sh -G --install --source=$(pwd)/roles/bashrc && {
         ( for check_file in \
-            /etc/{bash.,}{bashrc,profile,bash_logout,bash.logout} \
+            /etc/{bash.,}{bashrc,profile} \
+            /etc/bash.bash{_logout,.logout} \
             /etc/bash.bashrc.d/vim/vimrc \
             /etc/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc};
           do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
@@ -92,11 +93,13 @@ script:
     cd roles/bashrc/tests/ && {
       echo "ansible-playbook syntax-check." &&
       $ansible_play --syntax-check &&
+      echo "ansible-playbook list-tags." &&
+      $ansible_play --list-tags &&
       echo "ansible-playbook tests-run." &&
       for tests_casename in $( {
         $ansible_play --list-tags |
         sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
-        sort -u; } 2>/dev/null )
+        sort -u; } )
       do
         tests_test_run=yes
         echo "ansible-playbook tests-run [$tests_casename]."
