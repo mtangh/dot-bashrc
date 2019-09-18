@@ -3,31 +3,37 @@
 
 - hosts: localhost
   connection: local
+  remote_user: "{{ lookup('pipe','id -un') }}"
+
   gather_facts: yes
 
-  tags:
-  - 01_default
-
   vars:
+    # The name of this testcase
+    testcase: 01_default
+    # bashrc variables
     bashrc_install_global: true
 
+  tags: "{{ [testcase] }}"
   roles:
-  - test-setup
-  - { role: ../.. }
-  - test-teardown
+  - { role: test-setup,    tags: "{{ [testcase] }}" }
+  - { role: ../..,         tags: "{{ [testcase] }}" }
+  - { role: test-teardown, tags: "{{ [testcase] }}" }
 
 - hosts: localhost
   connection: local
+  remote_user: "{{ lookup('pipe','id -un') }}"
+
   gather_facts: yes
 
-  tags:
-  - 02_for-user
-
   vars:
+    # The name of this testcase
+    testcase: 02_for-user
+    # bashrc variables
     bashrc_install_global: false
 
+  tags: "{{ [testcase] }}"
   roles:
-  - test-setup
-  - { role: ../.. }
-  - test-teardown
+  - { role: test-setup,    tags: "{{ [testcase] }}" }
+  - { role: ../..,         tags: "{{ [testcase] }}" }
+  - { role: test-teardown, tags: "{{ [testcase] }}" }
 

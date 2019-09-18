@@ -10,7 +10,7 @@
   - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Check the user homedir."
     fail:
       msg: "User '{{ bashrc_bash_user|d('???') }}' is not present in the this system."
-    when: bashrc_userhomedir_path|d('',true)|trim|length <= 0
+    when: bashrc_userhomedir_path|d('',true)|string|trim|length <= 0
           or bashrc_userhomedir_path|realpath|is_dir == false
 
   - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Build install path and owner and group."
