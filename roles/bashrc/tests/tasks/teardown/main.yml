@@ -26,15 +26,16 @@
 
   - name: "{{ tests_casename|d('noname',true) }} | test-teardown | load '{{ bashrc_install_for|d('system') }}' rc"
     shell: |
-      unset machine ostype osvendor
+      unset os vendor osvendor machine
       install_for_user="{{ (bashrc_install_for|d('local',true) == 'local')|ternary('yes','') }}";
       bash_bashrc_file="{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
       [ -r "${bash_bashrc_file}" ] && {
         . "${bash_bashrc_file}"
       } &&
-      { [ -n "${machine}" ]  && echo "${machine}";  } &&
-      { [ -n "${ostype}" ]   && echo "${ostype}";   } &&
+      { [ -n "${os}"       ] && echo "${os}";       } &&
       { [ -n "${osvendor}" ] && echo "${osvendor}"; } &&
+      { [ -n "${vendor}"   ] && echo "${vendor}";   } &&
+      { [ -n "${machine}"  ] && echo "${machine}";  } &&
       if [ -z "$install_for_user" ]
       then
         :;

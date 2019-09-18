@@ -32,21 +32,47 @@ script:
     } &&
     : "OK";
 
-  # Install shell
+  # Install shell for user
   - |
     set -x;
-    : "install.sh" && {
+    : "install.sh for user" && {
       bash -n install.sh &&
       bash install.sh --install --source=$(pwd)/roles/bashrc && {
         ( for check_file in \
-           ${HOME}/.config/bash.{bashrc,profile} \
-           ${HOME}/.config/bash.bashrc.d/vim/vimrc \
-           ${HOME}/.config/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc} \
-           ${HOME}/.bashrc ;
+            ${HOME}/.config/bash.{bashrc,profile,bash_logout,bash.logout} \
+            ${HOME}/.config/bash.bashrc.d/vim/vimrc \
+            ${HOME}/.config/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc} \
+            ${HOME}/.bashrc ;
           do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
           done; ) &&
-        ( . "${HOME}/.config/bash.bashrc" &&
+        ( unset os vendor osvendor machine
+          . "${HOME}/.config/bash.bashrc" &&
           echo "Load ${HOME}/.config/bash.bashrc" && {
+            [ -n "$os"       ] && echo "Found - os=$os"             &&
+            [ -n "$vendor"   ] && echo "Found - vendor=$vendor"     &&
+            [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
+            [ -n "$machine"  ] && echo "Found - machine=$machine"   &&
+            :;
+          }; )
+      }
+    } &&
+    : "OK";
+
+  # Install shell for global
+  - |
+    set -x;
+    : "install.sh for global" && {
+      bash -n install.sh &&
+      sudo bash install.sh -G --install --source=$(pwd)/roles/bashrc && {
+        ( for check_file in \
+            /etc/{bash.,}{bashrc,profile,bash_logout,bash.logout} \
+            /etc/bash.bashrc.d/vim/vimrc \
+            /etc/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc};
+          do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
+          done; ) &&
+        ( unset os vendor osvendor machine
+          . "/etc/bash.bashrc" &&
+          echo "Load /etc/bash.bashrc" && {
             [ -n "$os"       ] && echo "Found - os=$os"             &&
             [ -n "$vendor"   ] && echo "Found - vendor=$vendor"     &&
             [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
@@ -66,17 +92,16 @@ script:
       echo "ansible-playbook syntax-check." &&
       $ansible_play --syntax-check &&
       echo "ansible-playbook tests-run." &&
-      for tests_casename in $(
-        $ansible_play --list-tags 2>/dev/null |
-        egrep '^[ ]*play[ ]*.*[ ]*TAGS:' |
+      for tests_casename in $( {
+        $ansible_play --list-tags |
         sed -En 's@^[ ]*play[ ]*.*[ ]*TAGS:[ ]*\[\([^ ,]\+\).*\].*$@\1@gp' |
-        sort -u 2>/dev/null )
+        sort -u; } 2>/dev/null )
       do
         echo "ansible-playbook tests-run [$tests_casename]."
         $ansible_play -e tests_run=yes -e tests_casename="${tests_casename}" ||
         tests_case_ret=$?
       done &&
-      [ ${tests_case_ret:-1} =eq 0 ];
+      [ ${tests_case_ret:-1} -eq 0 ];
     } &&
     : "OK";
 
