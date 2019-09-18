@@ -18,13 +18,10 @@ tests_group: "{{
 # dirs.
 tests_root_dir: "{{
     (tests_run|d(false,true))|ternary((
-    '%s/%s'format(
-    (tests_root_dir|string|trim|match('^[.]'))|ternary(ansible_env.PWD,''),
-    tests_root_dir|string|trim|regex_replace('^[.](/$|$)',''))|realpath
-    if tests_root_dir|d('',true)|string|trim|length > 0 else
-    '%s/%s'format(
+    '%s/%s'|format(
     (playbook_dir|string|trim|match('^[.]'))|ternary(ansible_env.PWD,''),
-    playbook_dir|string|trim|regex_replace('^[.](/$|$)',''))|realpath
+    playbook_dir|string|trim|regex_replace('^[.](/$|$)','')
+    )|realpath
     if playbook_dir|d('',true)|string|trim|length > 0 else
     none
     ),none) }}"
