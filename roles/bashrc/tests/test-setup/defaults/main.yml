@@ -11,9 +11,9 @@ tests_casename: "{{
 
 # test owner and group
 tests_owner: "{{
-    (tests_run|d(false,true))|ternary(lookup('pipe','id -un'),none)) }}"
+    (tests_run|d(false,true))|ternary(lookup('pipe','id -un'),none) }}"
 tests_group: "{{
-    (tests_run|d(false,true))|ternary(lookup('pipe','id -gn'),none)) }}"
+    (tests_run|d(false,true))|ternary(lookup('pipe','id -gn'),none) }}"
 
 # dirs.
 tests_root_dir: "{{
