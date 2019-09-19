@@ -26,7 +26,7 @@
         if bashrc_install_user|d('',true)|string|trim|length > 0 else
         lookup('pipe','id -un') }}"
 
-  - name: "bashrc | Setup bashrc for '{{ bashrc_install_for }}'."
+  - name: "bashrc | Setup bashrc for '{{ bashrc_install_for|d('???',true) }}'."
     include: "{{ 'install_%s.yml'|format(bashrc_install_for) }}"
 
   tags:

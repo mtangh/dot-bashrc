@@ -15,9 +15,9 @@
 
   tags: "{{ [testcase] }}"
   roles:
-  - { role: test-setup,    tags: "{{ [testcase] }}" }
-  - { role: ../..,         tags: "{{ [testcase] }}" }
-  - { role: test-teardown, tags: "{{ [testcase] }}" }
+  - { role: test-setup    }
+  - { role: ../..         }
+  - { role: test-teardown }
 
 - hosts: localhost
   connection: local
@@ -33,7 +33,7 @@
 
   tags: "{{ [testcase] }}"
   roles:
-  - { role: test-setup,    tags: "{{ [testcase] }}" }
-  - { role: ../..,         tags: "{{ [testcase] }}" }
-  - { role: test-teardown, tags: "{{ [testcase] }}" }
+  - { role: test-setup    }
+  - { role: ../..         }
+  - { role: test-teardown }
 
