@@ -103,7 +103,7 @@ script:
       do
         tests_test_run=yes
         echo "ansible-playbook tests-run [$tests_casename]."
-        $ansible_play -e tests_run=yes --tags "${tests_casename}" ||
+        $ansible_play -e tests_run=yes -e tests_casename="${tests_casename}" --tags="${tests_casename}" ||
         tests_case_ret=$?
       done &&
       [ -n "${tests_test_run}" ] &&
