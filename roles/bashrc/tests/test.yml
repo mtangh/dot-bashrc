@@ -7,25 +7,18 @@
 
   gather_facts: yes
 
+  # The name of this testcase
+  tags:
+  - 01_default
+
   vars:
-    # The name of this testcase
-    testcase: 01_default
     # bashrc variables
     bashrc_install_global: true
 
-  tags:
-  - "{{ testcase }}"
   roles:
   - role: test-setup
-    tags:
-    - "{{ testcase }}"
   - role: ../..
-    tags:
-    - "{{ testcase }}"
   - role: test-teardown
-    tags:
-    - "{{ testcase }}"
-
 
 - hosts: localhost
   connection: local
@@ -33,22 +26,16 @@
 
   gather_facts: yes
 
+  # The name of this testcase
+  tags:
+  - 02_for-user
+
   vars:
-    # The name of this testcase
-    testcase: 02_for-user
     # bashrc variables
     bashrc_install_global: false
 
-  tags:
-  - "{{ testcase }}"
   roles:
   - role: test-setup
-    tags:
-    - "{{ testcase }}"
   - role: ../..
-    tags:
-    - "{{ testcase }}"
   - role: test-teardown
-    tags:
-    - "{{ testcase }}"
 
