@@ -50,7 +50,7 @@
 
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | Task for case."
     include_tasks:
-      file: "{{ tests_tasks_setup_file }}"
+      file: "{{ _t_tasks_setup_file }}"
     with_flattened: "{{ tests_tasks_setup_file_list|d([],true) }}"
     loop_control:
       loop_var: _t_tasks_setup_file
