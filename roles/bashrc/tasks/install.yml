@@ -23,7 +23,7 @@
       state: directory
       owner: "{{ bashrc_install_owner }}"
       group: "{{ bashrc_install_group }}"
-      mode: "550"
+      mode: "750"
     register: _backup_to_dir_mkdir
 
   - name: bashrc | install | backup | Backup the original files.

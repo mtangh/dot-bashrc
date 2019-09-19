@@ -19,14 +19,14 @@
 
   - name: "{{ tests_casename|d('noname',true) }} | test-teardown | Task for case."
     include_tasks:
-      file: "{{ tests_tasks_teardown_file }}"
+      file: "{{ _t_tasks_teardown_file }}"
     with_flattened: "{{ tests_tasks_teardown_file_list|d([],true) }}"
     loop_control:
-      loop_var: tests_tasks_teardown_file
+      loop_var: _t_tasks_teardown_file
     when: tests_tasks_teardown_file_list|d([],true)|length > 0
-          and tests_tasks_teardown_file|d('',true)|is_file == true
+          and _t_tasks_teardown_file|d('',true)|is_file == true
     no_log: "{{ tests_tasks_teardown_file_list|d([],true)|length <= 0
-                or tests_tasks_teardown_file|d('',true)|is_file == false  }}"
+                or _t_tasks_teardown_file|d('',true)|is_file == false  }}"
 
   when: tests_run|d(false,true)
         and tests_casename|d('',true)|string|trim|length > 0
