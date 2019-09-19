@@ -13,11 +13,19 @@
     # bashrc variables
     bashrc_install_global: true
 
-  tags: "{{ [testcase] }}"
+  tags:
+  - "{{ testcase }}"
   roles:
-  - { role: test-setup    }
-  - { role: ../..         }
-  - { role: test-teardown }
+  - role: test-setup
+    tags:
+    - "{{ testcase }}"
+  - role: ../..
+    tags:
+    - "{{ testcase }}"
+  - role: test-teardown
+    tags:
+    - "{{ testcase }}"
+
 
 - hosts: localhost
   connection: local
@@ -31,9 +39,16 @@
     # bashrc variables
     bashrc_install_global: false
 
-  tags: "{{ [testcase] }}"
+  tags:
+  - "{{ testcase }}"
   roles:
-  - { role: test-setup    }
-  - { role: ../..         }
-  - { role: test-teardown }
+  - role: test-setup
+    tags:
+    - "{{ testcase }}"
+  - role: ../..
+    tags:
+    - "{{ testcase }}"
+  - role: test-teardown
+    tags:
+    - "{{ testcase }}"
 
