@@ -6,7 +6,7 @@
 
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | Create a test user-homedir."
     file:
-      path: "{{ '%s%s'|format(tests_prefix_dir,lookup('env','HOME')) }}"
+      path: "{{ '%s%s'|format(tests_prefix_dir,lookup('env','HOME'))|replace('//','/') }}"
       state: directory
       owner: "{{ tests_owner }}"
       group: "{{ tests_group }}"

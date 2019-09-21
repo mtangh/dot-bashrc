@@ -56,8 +56,8 @@
       loop_var: _t_tasks_setup_file
     when: tests_tasks_setup_file_list|d([],true)|length > 0
           and _t_tasks_setup_file|d('',true)|is_file == true
-    no_log: "{{ tests_tasks_setup_file_list|d([],true)|length <= 0
-                or _t_tasks_setup_file|d('',true)|is_file == false  }}"
+#    no_log: "{{ tests_tasks_setup_file_list|d([],true)|length <= 0
+#                or _t_tasks_setup_file|d('',true)|is_file == false  }}"
 
   when: tests_run|d(false,true)
         and tests_casename|d('',true)|string|trim|length > 0

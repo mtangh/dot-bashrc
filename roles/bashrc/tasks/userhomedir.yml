@@ -4,7 +4,7 @@
 
 - block:
 
-  - name: "bashrc | userhomedir | Facts - user."
+  - name: "bashrc | userhomedir - {{ bashrc_bash_user|d('???',true) }} | Facts user."
     set_fact:
       bashrc_userhomedir_user: "{{
         tests_owner|d((
@@ -13,14 +13,14 @@
         lookup('pipe','id -un')
         ),true) }}"
 
-  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???',true) }} - Stat user."
+  - name: "bashrc | userhomedir - {{ bashrc_userhomedir_user|d('???',true) }} | Stat user."
     user:
       name: "{{ bashrc_userhomedir_user }}"
       state: present
     register: bashrc_userhomedir_user_st
     ignore_errors: yes
 
-  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???',true) }} - Stat user homedir."
+  - name: "bashrc | userhomedir - {{ bashrc_userhomedir_user|d('???',true) }} | Stat user homedir."
     stat:
       path: "{{
         '%s/%s'|format(tests_prefix_dir|d('',true),(
@@ -29,12 +29,12 @@
         (bashrc_distribution|match('^macos'))|ternary(
         '/home/%s','/Users/%s')|format(
         tests_prefix_dir|d('',true),tests_owner|d('test',true))
-        )) }}"
+        ))|replace('//','/') }}"
     register: bashrc_userhomedir_st
     ignore_errors: yes
     when: bashrc_userhomedir_user_st|d(none) is not none
 
-  - name: "bashrc | userhomedir | {{ bashrc_userhomedir_user|d('???',true) }} - Set fact user homedir."
+  - name: "bashrc | userhomedir - {{ bashrc_userhomedir_user|d('???',true) }} | Set fact user homedir."
     set_fact:
       bashrc_userhomedir_path: "{{
         '%s'|format((

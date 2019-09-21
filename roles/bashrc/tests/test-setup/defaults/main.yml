@@ -85,16 +85,16 @@ tests_files_setup_dir_list:
 - "{{ '%s/default'|format(tests_files_setup_dir|d('.',true)) }}"
 
 tests_tasks_file_list:
-- "{{ '%s/%s.yml'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
 - "{{ '%s/main.yml'|format(tests_tasks_dir) }}"
+- "{{ '%s/%s.yml'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
 
 tests_tasks_setup_file_list:
 - "{{ '%s/setup/main.yml'|format(tests_tasks_dir) }}"
-- "{{ '%s/setup/%s'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
+- "{{ '%s/setup/%s.yml'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
 - "{{ tests_tasks_file_list }}"
 
 tests_tasks_teardown_file_list:
 - "{{ '%s/teardown/main.yml'|format(tests_tasks_dir) }}"
-- "{{ '%s/teardown/%s'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
+- "{{ '%s/teardown/%s.yml'|format(tests_tasks_dir,tests_casename|d('default',true)) }}"
 - "{{ tests_tasks_file_list }}"
 

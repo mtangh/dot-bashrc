@@ -5,49 +5,62 @@ CDIR=$([ -n "${BASH_SOURCE%/*}" ] && cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 # Ansible playbook
 ansible_play="$(type -P ansible-playbook)"
 ansible_play="${ansible_play:+$ansible_play -i testcases test.yml}"
+ansible_opts="${TESTS_PLAY_OPTIONS:-}"
+
+# List of test-case
+testcaselist="$@"
 
 # Flags
-tests_test_run=0
-tests_case_ret=0
+testcase_run=0
+testcase_ret=0
 
+# Redirect to filter
 exec 1> >({
   cat|while IFS= read row_data
-  do echo "$THIS: $row_data"
-  done
+  do echo "$THIS: $row_data"; done
   } 2>/dev/null)
 
+# The tests
 cd "${CDIR}" &>/dev/null &&
 [ -n "${ansible_play}" -a -r "testcases" -a -r "test.yml" ] && {
 
-  echo "syntax-check." && {
+  [ -n "${testcaselist}" ] || {
+    testcaselist=$({
+       cat ./testcases |
+       sed -En 's@^[ ]*([0-9A-Za-z][-_.0-9A-Za-z]*)[ ]*(.+$|$)@\1@gp' |
+       sort -u
+       } 2>/dev/null)
+  }
 
-    $ansible_play --syntax-check
+  echo "Syntax check." && {
+
+    $ansible_play --syntax-check || testcase_ret=$?
+    echo
 
   } &&
-  echo "list-hosts." && {
+  [ ${testcase_ret:-1} -eq 0 ] &&
+  echo "Begin of the tests." && {
 
-    $ansible_play --list-hosts
+    echo
+    echo "The tests to run are as follows:"
+    echo "${testcaselist}"
+    echo
 
-  } &&
-  echo "begin tests-run." && {
-
-    for tests_casename in $( {
-      cat testcases |
-      sed -En 's@^[ ]*([0-9A-Za-z][-_.0-9A-Za-z]*)[ ]*(.+$|$)@\1@gp' |
-      sort -u 2>/dev/null; } )
+    for tests_casename in ${testcaselist}
     do
-      tests_test_run=$((++tests_test_run))
-      printf 'case #%03d [%s].' $tests_test_run "$tests_casename"; echo
-      $ansible_play -l "${tests_casename}" ||
-      tests_case_ret=$?
+      testcase_run=$((++testcase_run))
+      printf 'CASE #%03d [%s].' $testcase_run "$tests_casename"; echo
+      $ansible_play ${ansible_opts} -l "${tests_casename}" || testcase_ret=$?
+      echo
     done
 
   } &&
-  echo "end of tests-run."
-  [ ${tests_test_run:-0} -ne 0 ] &&
-  [ ${tests_case_ret:-1} -eq 0 ];
+  echo "End of the tests." &&
+  [ ${testcase_run:-0} -ne 0 ] &&
+  [ ${testcase_ret:-1} -eq 0 ]
 
 } &&
 echo "OK."
 
-exit $?
+# End
+exit ${testcase_ret:-1}
