@@ -33,15 +33,17 @@
       remote_src: true
       force: no
       backup: yes
-    ignore_errors: true
     with_items:
     - bashrc
     - profile
     - bash.bashrc
     - bash.profile
+    - bash.bash_logout
+    - bash.bash.logout
     loop_control:
       loop_var: _bashrc_backup_file
     when: _backup_to_dir_mkdir|changed
+          and ('%s/%s'|format(_backup_from_dir,_bashrc_backup_file))|is_file
 
   vars:
     _backup_from_dir: "{{ bashrc_install_path }}"

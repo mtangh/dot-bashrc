@@ -1,38 +1,11 @@
 ---
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
-- hosts: localhost
+- hosts: testcases
   connection: local
   remote_user: "{{ lookup('pipe','id -un') }}"
 
-  gather_facts: yes
-
-  # The name of this testcase
-  tags:
-  - 01_default
-
-  vars:
-    # bashrc variables
-    bashrc_install_global: true
-
-  roles:
-  - role: test-setup
-  - role: ../..
-  - role: test-teardown
-
-- hosts: localhost
-  connection: local
-  remote_user: "{{ lookup('pipe','id -un') }}"
-
-  gather_facts: yes
-
-  # The name of this testcase
-  tags:
-  - 02_for-user
-
-  vars:
-    # bashrc variables
-    bashrc_install_global: false
+  gather_facts: "{{ gather_facts_enabled|d(true,true) }}"
 
   roles:
   - role: test-setup
