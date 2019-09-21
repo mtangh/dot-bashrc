@@ -88,7 +88,7 @@ script:
   - |
     set -x;
     : "Run tests-all.sh" && {
-      bash -x tests/tests-all.sh
+      bash -x roles/bashrc/tests/tests-all.sh
     } &&
     : "OK";
 
