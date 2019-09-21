@@ -4,7 +4,7 @@
 
 - block:
 
-  - name: "bashrc | skel-copy [{{ _bashrc_skel_ent_src|d(???)|basename }}] | Make skel template directories."
+  - name: "bashrc | skel-copy [{{ _bashrc_skel_ent_src|d('???')|basename }}] | Make skel template directories."
     file:
       path: "{{
         (_bashrc_skel_ent_src|d('',true)|string|trim|is_dir)|ternary(
@@ -18,7 +18,7 @@
     when: _bashrc_skel_ent_src|d('',true)|string|trim|is_link == false
           and _bashrc_skel_ent_dest|d('',true)|string|trim|length > 0
 
-  - name: bashrc | skel-copy [{{ _bashrc_skel_ent_src|d(???)|basename }}] | Copy skel template files.
+  - name: bashrc | skel-copy [{{ _bashrc_skel_ent_src|d('???')|basename }}] | Copy skel template files.
     copy:
       src: "{{ _bashrc_skel_ent_src }}"
       dest: "{{ '%s%s'|format(_bashrc_skel_ent_dest,

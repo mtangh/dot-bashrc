@@ -43,7 +43,7 @@
 
   - name: "bashrc | {{ bashrc_bash_user|d('???') }} | Facts - Set the names of RC files and directories."
     set_fact:
-      bashrc_bashrcdir_name: "{{'%s%s'|format(__name_prefix,'bash.bashrc.d' }}"
+      bashrc_bashrcdir_name: "{{ '%s%s'|format(__name_prefix,'bash.bashrc.d') }}"
       bashrc_bashrc_name: "{{ '%s%s'|format(__name_prefix,'bash.bashrc') }}"
       bashrc_profile_name: "{{ '%s%s'|format(__name_prefix,'bash.profile') }}"
       bashrc_logout_name: "{{ '%s%s'|format(__name_prefix,'bash.bash_logout') }}"

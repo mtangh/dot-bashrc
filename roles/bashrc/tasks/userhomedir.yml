@@ -38,9 +38,9 @@
     set_fact:
       bashrc_userhomedir_path: "{{
         '%s'|format((
-        bashrc_userhomedir_st.path|string|trim
+        bashrc_userhomedir_st.stat.path|string|trim
         if ((bashrc_userhomedir_st|d({},true)).stat|d({},true)).isdir|d(false,true)
-        and (bashrc_userhomedir_st|d({},true)).path|d('',true)|string|trim|length > 0 else
+        and ((bashrc_userhomedir_st|d({},true)).stat|d({},true)).path|d('',true)|length > 0 else
         none
         )) }}"
       bashrc_userhomedir_owner: "{{
