@@ -10,7 +10,11 @@ ansible_play="${ansible_play:+$ansible_play -i testcases test.yml}"
 tests_test_run=0
 tests_case_ret=0
 
-exec 1> >(cat|while IFS= read row_data; do echo "$THIS: $row_data"; done)
+exec 1> >({
+  cat|while IFS= read row_data
+  do echo "$THIS: $row_data"
+  done
+  } 2>/dev/null)
 
 cd "${CDIR}" &>/dev/null &&
 [ -n "${ansible_play}" -a -r "testcases" -a -r "test.yml" ] && {
