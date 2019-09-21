@@ -3,15 +3,14 @@
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 tests_run: "{{
-    inventory_hostname|d('-',true)
-    in ((groups|d({},true)).testcases|d([],true) }}"
+    inventory_hostname_short|d('-',true)
+    in ((groups|d({},true)).testcases|d([],true)) }}"
 
 # test case name
 tests_casename: "{{
     (tests_run|d(false,true))|ternary((
     inventory_hostname_short|string|trim
-    if tests_run|d(false,true) == true
-    and inventory_hostname_short|d('',true)|string|trim|length > 0 else
+    if inventory_hostname_short|d('',true)|string|trim|length > 0 else
     lookup('pipe','mktemp -u testcase_XXXXXXXX')
     ),none) }}"
 
