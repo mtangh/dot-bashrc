@@ -39,7 +39,7 @@ script:
       bash -n install.sh &&
       bash install.sh --install --source=$(pwd)/roles/bashrc && {
         ( for check_file in \
-            ${HOME}/.config/bash.{bashrc,profile,bash_logout,bash.logout} \
+            ${HOME}/.config/bash.{bashrc,profile,bash_logout} \
             ${HOME}/.config/bash.bashrc.d/vim/vimrc \
             ${HOME}/.config/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc} \
             ${HOME}/.bashrc ;
