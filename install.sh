@@ -90,7 +90,7 @@ _process_template_file() {
       -e 's@{{[ ]*bashrc_logout_name[ ]*[^\}]*}}@'"${bashrclout}"'@g' \
       1>|"${_dst}" 2>/dev/null && {
     : && {
-      echo "Difference between ${_src##*/} and ${_dst##*/}."
+      echo "Difference between '${_src##*/}' and '${_dst##*/}'."
       diff -u "${_src}" "${_dst}" || :
       echo
     }
@@ -146,7 +146,7 @@ do
 done
 
 # Redirect to filter
-exec 1> >(_stdout)
+exec 1> >(BASH_XTRACEFD=2 _stdout 2>/dev/null)
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
