@@ -6,7 +6,7 @@ CDIR=$([ -n "${BASH_SOURCE%/*}" ] && cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 echo "[${tests_name}] install.sh for global" && {
 
   bash -n install.sh &&
-  sudo bash install.sh -G --install --source=$(pwd)/roles/bashrc && {
+  sudo bash install.sh -D -G --install --source=$(pwd)/roles/bashrc && {
     ( for check_file in \
         /etc/{bash.,}{bashrc,profile} \
         /etc/bash.bash{_logout,.logout} \
