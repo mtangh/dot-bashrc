@@ -14,7 +14,7 @@ echo "[${tests_name}] install.sh for global" && {
         /etc/bash.bashrc.d/skel.d/default/dot.{bashrc,inputrc,vimrc};
       do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
       done; ) &&
-    ( bash
+    ( PS1='\$ '
       unset os vendor osvendor machine
       . "/etc/bash.bashrc" &&
       echo "Load /etc/bash.bashrc" && {

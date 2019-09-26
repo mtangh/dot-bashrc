@@ -14,7 +14,7 @@ echo "[${tests_name}] install.sh for user" && {
         ${HOME}/.bashrc ;
       do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
       done; ) &&
-    ( bash
+    ( PS1='\$ '
       unset os vendor osvendor machine
       . "${HOME}/.config/bash.bashrc" &&
       echo "Load ${HOME}/.config/bash.bashrc" && {
