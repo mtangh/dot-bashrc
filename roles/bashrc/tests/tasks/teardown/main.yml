@@ -26,6 +26,7 @@
 
   - name: "{{ tests_casename|d('noname',true) }} | test-teardown | load '{{ bashrc_install_for|d('system') }}' rc"
     shell: |
+      [ -z "${PS1:-}" ] && PS1='\$ ' || :
       unset os vendor osvendor machine
       install_for_user="{{ (bashrc_install_for|d('local',true) == 'local')|ternary('yes','') }}";
       bash_bashrc_file="{{ '%s/%s'|format(bashrc_install_path,bashrc_bashrc_name) }}"
