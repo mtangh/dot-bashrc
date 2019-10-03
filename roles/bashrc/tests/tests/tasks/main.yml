@@ -1,0 +1,28 @@
+---
+# tests role tasks file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: "{{ tests_casename|d('noname',true) }} | Include 'setup' tasks."
+    include_tasks:
+      file: "tests-setup.yml"
+    no_log: yes
+    tags:
+    - 'tests/setup'
+    - 'tests'
+
+  - name: "{{ tests_casename|d('noname',true) }} | Include 'teardown' tasks."
+    include_tasks:
+      file: "tests-teardown.yml"
+    no_log: yes
+    tags:
+    - 'tests/teardown'
+    - 'tests'
+
+  when: tests_run|d(false,true)
+  tags:
+  - 'tests'
+  - 'tests/setup'
+  - 'tests/teardown'
+

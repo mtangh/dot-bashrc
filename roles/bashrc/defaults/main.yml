@@ -4,7 +4,7 @@
 
 # Meta data for this role.
 bashrc_meta: |
-    {{ lookup('file',('%s/meta/main.yml'|format(role_path)))|from_yaml }}
+  {{ lookup('file',('%s/meta/main.yml'|format(role_path)))|from_yaml }}
 
 # If necessary,
 # define a default value with a variable name beginning with "bashrc_" here.

@@ -1,4 +1,5 @@
 ---
+# test playbook
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 - hosts: testcases
@@ -8,7 +9,14 @@
   gather_facts: "{{ gather_facts_enabled|d(true,true) }}"
 
   roles:
-  - role: test-setup
-  - role: ../..
-  - role: test-teardown
+  # Setup
+  - role: tests
+    tags:
+    - 'tests/setup'
+  # Tests
+  - { role: ../.. }
+  # Teardown
+  - role: tests
+    tags:
+    - 'tests/teardown'
 
