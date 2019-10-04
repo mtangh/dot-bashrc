@@ -10,13 +10,9 @@
 
   roles:
   # Setup
-  - role: tests
-    tags:
-    - 'tests/setup'
+  - { role: tests, vars: { tests_tasks: setup } }
   # Tests
   - { role: ../.. }
   # Teardown
-  - role: tests
-    tags:
-    - 'tests/teardown'
+  - { role: tests, vars: { tests_tasks: teardown } }
 

@@ -4,25 +4,19 @@
 
 - block:
 
-  - name: "{{ tests_casename|d('noname',true) }} | Include 'setup' tasks."
+  - name: "{{ tests_casename|d('noname',true) }} | Include '{{ _tests_tasks_file|d('???') }}'."
     include_tasks:
-      file: "tests-setup.yml"
-    no_log: yes
-    tags:
-    - 'tests/setup'
-    - 'tests'
-
-  - name: "{{ tests_casename|d('noname',true) }} | Include 'teardown' tasks."
-    include_tasks:
-      file: "tests-teardown.yml"
-    no_log: yes
-    tags:
-    - 'tests/teardown'
-    - 'tests'
+      file: "{{ _tests_tasks_file }}"
+    when: _tests_tasks_file|d(none) is not none
+    no_log: "{{ _tests_tasks_file|d(none) is none }}"
 
   when: tests_run|d(false,true)
-  tags:
-  - 'tests'
-  - 'tests/setup'
-  - 'tests/teardown'
+        and tests_task|d(none,true) is string
+        and tests_task|trim|lower|match('^(setup|teardown)$')
+  vars:
+    _tests_tasks_file: "{{
+      'tests-%s.yml'|format(tests_task|trim|lower)
+      if tests_task|d(none,true) is string
+      and tests_task|trim|lower|match('^(setup|teardown)$') else
+      none }}"
 

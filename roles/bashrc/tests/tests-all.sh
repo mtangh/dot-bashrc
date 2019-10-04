@@ -15,21 +15,22 @@ testcase_run=0
 testcase_ret=0
 
 # Redirect to filter
-exec 1> >({
+exec 1> >( {
+  BASH_XTRACEFD=2; set +x
   cat|while IFS= read row_data
   do echo "$THIS: $row_data"; done
-  } 2>/dev/null)
+  } 2>/dev/null; )
 
 # The tests
 cd "${CDIR}" &>/dev/null &&
 [ -n "${ansible_play}" -a -r "testcases" -a -r "test.yml" ] && {
 
   [ -n "${testcaselist}" ] || {
-    testcaselist=$({
+    testcaselist=$( {
        cat ./testcases |
        sed -En 's@^[ ]*([0-9A-Za-z][-_.0-9A-Za-z]*)[ ]*(.+$|$)@\1@gp' |
        sort -u
-       } 2>/dev/null)
+       } 2>/dev/null; )
   }
 
   echo "Syntax check." && {
