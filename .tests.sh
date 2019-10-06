@@ -20,6 +20,7 @@ do
 
   echo "[${tests_name}] Start the test."
 
+  echo 2>/dev/null
   exec {fd}>"${xtrace_out}"
   BASH_XTRACEFD="${fd}" \
   tests_name="${tests_name}" \
@@ -31,7 +32,7 @@ do
   then
     echo "[${tests_name}] OK."
   else
-    tests_stat=$tests_rval
+    tests_stat=${tests_rval}
     echo
     echo "[${tests_name}] This test failed."
     echo "[${tests_name}] XTRACE is as follows:"

@@ -1,5 +1,5 @@
 ---
-# tests role defaults file
+# unit test role defaults file
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 tests_run: "{{
@@ -46,9 +46,9 @@ tests_files_dir: "{{
 tests_files_setup_dir: "{{
   (tests_run|d(false,true))|ternary(
   '%s/setup'|format(tests_files_dir),none) }}"
-tests_files_expects_dir: "{{
+tests_files_teardown_dir: "{{
   (tests_run|d(false,true))|ternary(
-  '%s/expects'|format(tests_files_dir),none) }}"
+  '%s/teardown'|format(tests_files_dir),none) }}"
 
 tests_tasks_dir: "{{
   (tests_run|d(false,true))|ternary(
