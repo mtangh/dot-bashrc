@@ -1,6 +1,6 @@
 ---
-# '01_default' vars file
+# This test case vars file.
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
-bashrc_install_global: true
+bashrc_install_global: false
 

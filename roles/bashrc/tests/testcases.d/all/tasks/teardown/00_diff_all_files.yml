@@ -1,0 +1,35 @@
+---
+# tasks/teardown tasks main file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+- block:
+
+  - name: "{{ tests_casename|d('noname',true) }} | test-terdown | validate"
+    shell: |
+      diff -Nur \
+        {{ _t_ignore_validation_files|d([],true)|join(" ")|trim }}\
+        -I '^# Ansible managed:.*$' \
+        "{{ _t_files_expects_dir_for_case }}" \
+        "{{ tests_prefix_dir }}"
+    vars:
+      _t_ignore_validation_files: |
+        {%- set o = [] -%}
+        {%- set l = tests_ignore_validation_files
+                if tests_ignore_validation_files|d(none,true) is not none
+                and tests_ignore_validation_files is iterable else
+                [(tests_ignore_validation_files|d('',true)|trim)] 
+                if tests_ignore_validation_files|d(none,true) is not none
+                and tests_ignore_validation_files|d('',true)|trim|length > 0 elae
+                [] -%}
+        {%- for v in l if v|d('',true)|string|trim|length > 0 -%}
+        {%-   set o = o + [('-x %s'|format(v|quote))] -%}
+        {%- endfor -%}
+        {{- o -}}
+    changed_when: no
+    no_log: "{{ _t_files_expects_dir_for_case|d('-',true)|is_dir == false }}"
+
+  when: _t_files_expects_dir_for_case|d('-',true)|is_dir
+  vars:
+    _t_files_expects_dir_for_case: "{{
+      '%s/%s'|format(tests_files_expects_dir|d('-',true),tests_casename|d('',true)) }}"
+

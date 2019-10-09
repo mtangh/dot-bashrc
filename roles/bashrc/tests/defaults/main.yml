@@ -1,0 +1,157 @@
+---
+# unit test role defaults file
+# vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
+
+tests_run: "{{
+  inventory_hostname_short|d('-',true)
+  in ((groups|d({},true)).testcases|d([],true)) }}"
+
+# test case name
+tests_casename: "{{
+  (tests_run|d(false,true))|ternary((
+  inventory_hostname_short|string|trim
+  if inventory_hostname_short|d('',true)|string|trim|length > 0 else
+  lookup('pipe','mktemp -u testcase_XXXXXXXX')
+  ),none) }}"
+
+# test owner and group
+tests_owner: "{{
+  (tests_run|d(false,true))|ternary(lookup('pipe','id -un'),none) }}"
+tests_group: "{{
+  (tests_run|d(false,true))|ternary(lookup('pipe','id -gn'),none) }}"
+
+# dirs.
+tests_root_dir: "{{
+  (tests_run|d(false,true))|ternary((
+  '%s/%s'|format(
+  (inventory_dir|string|trim|match('^[.]'))|ternary(ansible_env.PWD,''),
+  inventory_dir|string|trim|regex_replace('^[.](/$|$)','')
+  )|realpath
+  if inventory_dir|d('',true)|string|trim|length > 0 else
+  '%s/%s'|format(
+  (playbook_dir|string|trim|match('^[.]'))|ternary(ansible_env.PWD,''),
+  playbook_dir|string|trim|regex_replace('^[.](/$|$)','')
+  )|realpath
+  if playbook_dir|d('',true)|string|trim|length > 0 else
+  ansible_env.PWD
+  ),none) }}"
+
+tests_role_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s'|format(tests_root_dir),none) }}"
+
+tests_cases_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/testcases.d'|format(tests_root_dir),none) }}"
+
+tests_tmpl_files_dir_path:"{{
+  (tests_run|d(false,true))|ternary(
+  '%s/%%s/files'|format(tests_cases_dir),none) }}"
+tests_tmpl_tasks_dir_path:"{{
+  (tests_run|d(false,true))|ternary(
+  '%s/%%s/tasks'|format(tests_cases_dir),none) }}"
+tests_tmpl_vars_dir_path:"{{
+  (tests_run|d(false,true))|ternary(
+  '%s/%%s/vars'|format(tests_cases_dir),none) }}"
+
+tests_files_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  tests_tmpl_files_dir_path|format(
+  tests_casename|d('testcase',true)),none) }}"
+tests_files_setup_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/setup'|format(tests_files_dir),none) }}"
+tests_files_teardown_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/teardown'|format(tests_files_dir),none) }}"
+tests_files_expects_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/expects'|format(tests_files_teardown_dir),none) }}"
+
+tests_tasks_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  tests_tmpl_files_dir_path|format(
+  tests_casename|d('testcase',true)),none) }}"
+tests_tasks_setup_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/setup'|format(tests_tasks_dir),none) }}"
+tests_tasks_teardown_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/teardown'|format(tests_tasks_dir),none) }}"
+
+tests_vars_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  tests_tmpl_files_dir_path|format(
+  tests_casename|d('testcase',true)),none) }}"
+
+tests_target_dir: "{{
+  (tests_run|d(false,true))|ternary(
+  '%s/target'|format(tests_root_dir),none) }}"
+
+# root dir of test case
+tests_prefix_dir: "{{
+  (tests_run|d(false,true))|ternary((
+  prefix_dir|string|trim
+  if prefix_dir|d('',true)|string|trim|length > 0 else
+  '%s/%s'|format(tests_target_dir,tests_casename)
+  if tests_casename|d('',true)|string|trim|length > 0 else
+  none
+  ),none) }}"
+
+# lists
+tests_files_setup_dir_list: |
+  {%- set o = [] -%}
+  {%- set f = '%s/setup'|format(tests_tmpl_files_dir_path) -%}
+  {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set o = o + [(f|format(v))] -%}
+  {%- endfor -%}
+  {{- o -}}
+
+tests_files_teardown_dir_list: |
+  {%- set o = [] -%}
+  {%- set f = '%s/teardown'|format(tests_tmpl_files_dir_path) -%}
+  {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set o = o + [(f|format(v))] -%}
+  {%- endfor -%}
+  {{- o -}}
+
+tests_tasks_setup_dir_list: |
+  {%- set o = [] -%}
+  {%- set f = tests_tmpl_tasks_dir_path -%}
+  {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set e = f|format(v) -%}
+  {%-   set o = o + [e,('%s/setup'|format(e))] -%}
+  {%- endfor -%}
+  {{- o -}}
+
+tests_tasks_teardown_dir_list: |
+  {%- set o = [] -%}
+  {%- set f = tests_tmpl_tasks_dir_path -%}
+  {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set e = f|format(v) -%}
+  {%-   set o = o + [e,('%s/teardown'|format(e))] -%}
+  {%- endfor -%}
+  {{- o -}}
+
+tests_vars_setup_file_list: |
+  {%- set o = [] -%}
+  {%- set f = '%s/%%s.yml'|format(tests_tmpl_vars_dir_path) -%}
+  {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set o = o + [(f|format(v,'main'))] -%}
+  {%-   set o = o + [(f|format(v,'tests-setup'))] -%}
+  {%- endfor -%}
+  {{- o -}}
+
+tests_vars_teardown_file_list: |
+  {%- set o = [] -%}
+  {%- set f = '%s/%%s.yml'|format(tests_tmpl_vars_dir_path) -%}
+  {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set o = o + [(f|format(v,'main'))] -%}
+  {%-   set o = o + [(f|format(v,'tests-teardown'))] -%}
+  {%- endfor -%}
+  {{- o -}}
+
+# Ignore validations
+tests_ignore_validation_files:
+- '.git*'
+
