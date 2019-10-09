@@ -44,13 +44,13 @@ tests_cases_dir: "{{
   (tests_run|d(false,true))|ternary(
   '%s/testcases.d'|format(tests_root_dir),none) }}"
 
-tests_tmpl_files_dir_path:"{{
+tests_tmpl_files_dir_path: "{{
   (tests_run|d(false,true))|ternary(
   '%s/%%s/files'|format(tests_cases_dir),none) }}"
-tests_tmpl_tasks_dir_path:"{{
+tests_tmpl_tasks_dir_path: "{{
   (tests_run|d(false,true))|ternary(
   '%s/%%s/tasks'|format(tests_cases_dir),none) }}"
-tests_tmpl_vars_dir_path:"{{
+tests_tmpl_vars_dir_path: "{{
   (tests_run|d(false,true))|ternary(
   '%s/%%s/vars'|format(tests_cases_dir),none) }}"
 

@@ -146,7 +146,7 @@ do
 done
 
 # Redirect to filter
-exec 1> >(BASH_XTRACEFD=2 _stdout 2>/dev/null)
+exec 1> >(set +x; _stdout 2>/dev/null)
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
