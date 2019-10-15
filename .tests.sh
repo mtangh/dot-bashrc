@@ -22,14 +22,13 @@ do
   x_trace_fd=""
   xtrace_out="${tests_sh%.sh*}_xtrace.log"
 
-  echo "${tests_mark}: Start the test." && {
-    tests_name="${tests_name}" \
-    tests_wdir="${CDIR}" \
-    BASH_XTRACEFD=${x_trace_fd} \
-    bash -x "${tests_sh}"
-    tests_rval=$?
-  } {x_trace_fd}>"${xtrace_out}"
-  exec {x_trace_fd}>&-
+  echo "${tests_mark}: Start the test."
+
+  exec {x_trace_fd}>"${xtrace_out}" || :
+  BASH_XTRACEFD=${x_trace_fd} \
+  tests_name="${tests_name}" tests_wdir="${CDIR}" \
+  bash -x "${tests_sh}"; tests_rval=$?
+  exec {x_trace_fd}>&- || :
 
   if [ $tests_rval -eq 0 ]
   then

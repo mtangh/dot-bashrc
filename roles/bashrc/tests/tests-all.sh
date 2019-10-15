@@ -15,9 +15,8 @@ testcase_run=0
 testcase_ret=0
 
 # Redirect to filter
-exec 1> >( {
-  BASH_XTRACEFD=2; set +x
-  cat|while IFS= read row_data
+exec 1> >(set +x && {
+  cat | while IFS= read row_data
   do echo "$THIS: $row_data"; done
   } 2>/dev/null; )
 

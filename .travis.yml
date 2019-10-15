@@ -25,7 +25,7 @@ install:
 # Run
 script:
 
-  - bash -Cu .tests.sh
+  - bash -Cu -x .tests.sh
 
 # Notifications
 #notifications:
