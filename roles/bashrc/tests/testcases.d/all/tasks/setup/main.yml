@@ -7,7 +7,7 @@
   - name: "{{ tests_casename|d('noname',true) }} | test-setup | for macOS."
     shell: |
       cd {{ tests_prefix_dir|quote }} &&
-      mkdir -p ./private &&
+      mkdir -p ./private {{ './System/Library/User Template/Non_localized'|quote }} &&
       mv -f ./etc ./private/ &&
       ln -sf private/etc etc
     changed_when: no
