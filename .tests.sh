@@ -6,51 +6,46 @@ CDIR=$([ -n "${BASH_SOURCE%/*}" ] && cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 tests_stat=0
 # Ran tests
 tests_cseq=0
-
-# Open FD
-exec {x_trace_fd}>/dev/null
-BASH_XTRACEFD=${x_trace_fd}
+# Tests Dir
+tests_tdir=${TESTS_DIR_PATH:-${CDIR}/.tests.d}
 
 # Run tests
-for tests_sh in "${CDIR}"/.tests.d/*.sh
+for tests_sh in "${tests_tdir}"/*.sh
 do
-  
+
   tests_cseq=$((++tests_cseq))
   tests_name="${tests_sh##*/}"
   tests_name="${tests_name%.sh*}"
+  tests_mark="${THIS%.*}/${tests_name}"
   tests_rval=0
 
-  xtrace_out="${tests_sh%.sh*}.xtrace.log"
+  x_trace_fd=""
+  xtrace_out="${tests_sh%.sh*}_xtrace.log"
 
-  echo "[${tests_name}] Start the test."
-
-  exec {x_trace_fd}>"${xtrace_out}"
-  tests_name="${tests_name}" \
-  tests_wdir="${CDIR}" \
-  bash -x "${tests_sh}"; tests_rval=$?
-  exec {x_trace_fd}>/dev/null
+  echo "${tests_mark}: Start the test." && {
+    tests_name="${tests_name}" \
+    tests_wdir="${CDIR}" \
+    BASH_XTRACEFD=${x_trace_fd} \
+    bash -x "${tests_sh}"
+    tests_rval=$?
+  } {x_trace_fd}>"${xtrace_out}"
+  exec {x_trace_fd}>&-
 
   if [ $tests_rval -eq 0 ]
   then
-    echo "[${tests_name}] OK."
+    echo "${tests_mark}: OK."
   else
     tests_stat=${tests_rval}
-    echo
-    echo "[${tests_name}] This test failed."
-    echo "[${tests_name}] XTRACE is as follows:"
+    echo "${tests_mark}: {{{ This test failed. XTRACE is as follows:"
     cat "${xtrace_out}" 2>/dev/null
-    echo
-    echo "[${tests_name}] Exit with (${tests_rval:-1})."
-    echo
+    echo "${tests_mark}: }}} End of XTRACE."
+    echo "${tests_mark}: Exit with (${tests_rval:-1})."
   fi
 
 done &&
 [ ${tests_cseq:-0} -gt 0 ] &&
 [ ${tests_stat:-1} -eq 0 ]
 tests_stat=$?
-
-# Close FD
-exec {x_trace_fd}>&-
 
 # End
 exit ${tests_stat:-1}

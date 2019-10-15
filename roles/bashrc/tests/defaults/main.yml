@@ -44,45 +44,9 @@ tests_cases_dir: "{{
   (tests_run|d(false,true))|ternary(
   '%s/testcases.d'|format(tests_root_dir),none) }}"
 
-tests_tmpl_files_dir_path: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/%%s/files'|format(tests_cases_dir),none) }}"
-tests_tmpl_tasks_dir_path: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/%%s/tasks'|format(tests_cases_dir),none) }}"
-tests_tmpl_vars_dir_path: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/%%s/vars'|format(tests_cases_dir),none) }}"
-
-tests_files_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  tests_tmpl_files_dir_path|format(
-  tests_casename|d('testcase',true)),none) }}"
-tests_files_setup_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/setup'|format(tests_files_dir),none) }}"
-tests_files_teardown_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/teardown'|format(tests_files_dir),none) }}"
 tests_files_expects_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/expects'|format(tests_files_teardown_dir),none) }}"
-
-tests_tasks_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  tests_tmpl_files_dir_path|format(
-  tests_casename|d('testcase',true)),none) }}"
-tests_tasks_setup_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/setup'|format(tests_tasks_dir),none) }}"
-tests_tasks_teardown_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  '%s/teardown'|format(tests_tasks_dir),none) }}"
-
-tests_vars_dir: "{{
-  (tests_run|d(false,true))|ternary(
-  tests_tmpl_files_dir_path|format(
-  tests_casename|d('testcase',true)),none) }}"
+  (tests_run|d(false,true))|ternary('%s/%s/files/teardown/expects'|
+  format(tests_cases_dir,tests_casename|d('testcase',true)),none) }}"
 
 tests_target_dir: "{{
   (tests_run|d(false,true))|ternary(
@@ -101,53 +65,49 @@ tests_prefix_dir: "{{
 # lists
 tests_files_setup_dir_list: |
   {%- set o = [] -%}
-  {%- set f = '%s/setup'|format(tests_tmpl_files_dir_path) -%}
   {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set f = '%s/%s/files/setup'|format(tests_cases_dir,v) -%}
   {%-   set o = o + [(f|format(v))] -%}
   {%- endfor -%}
   {{- o -}}
 
 tests_files_teardown_dir_list: |
   {%- set o = [] -%}
-  {%- set f = '%s/teardown'|format(tests_tmpl_files_dir_path) -%}
   {%- for v in ['all',tests_casename|d('testcase',true)] -%}
+  {%-   set f = '%s/%s/files/teardown'|format(tests_cases_dir,v) -%}
   {%-   set o = o + [(f|format(v))] -%}
   {%- endfor -%}
   {{- o -}}
 
 tests_tasks_setup_dir_list: |
   {%- set o = [] -%}
-  {%- set f = tests_tmpl_tasks_dir_path -%}
   {%- for v in ['all',tests_casename|d('testcase',true)] -%}
-  {%-   set e = f|format(v) -%}
-  {%-   set o = o + [e,('%s/setup'|format(e))] -%}
+  {%-   set o = o + [('%s/%s/%s'|format(tests_cases_dir,v,'tasks'))] -%}
+  {%-   set o = o + [('%s/%s/%s'|format(tests_cases_dir,v,'tasks/setup'))] -%}
   {%- endfor -%}
   {{- o -}}
 
 tests_tasks_teardown_dir_list: |
   {%- set o = [] -%}
-  {%- set f = tests_tmpl_tasks_dir_path -%}
   {%- for v in ['all',tests_casename|d('testcase',true)] -%}
-  {%-   set e = f|format(v) -%}
-  {%-   set o = o + [e,('%s/teardown'|format(e))] -%}
+  {%-   set o = o + [('%s/%s/%s'|format(tests_cases_dir,v,'tasks'))] -%}
+  {%-   set o = o + [('%s/%s/%s'|format(tests_cases_dir,v,'tasks/teardown'))] -%}
   {%- endfor -%}
   {{- o -}}
 
 tests_vars_setup_file_list: |
   {%- set o = [] -%}
-  {%- set f = '%s/%%s.yml'|format(tests_tmpl_vars_dir_path) -%}
   {%- for v in ['all',tests_casename|d('testcase',true)] -%}
-  {%-   set o = o + [(f|format(v,'main'))] -%}
-  {%-   set o = o + [(f|format(v,'tests-setup'))] -%}
+  {%-   set o = o + [('%s/%s/vars/%s.yml'|format(tests_cases_dir,v,'main'))] -%}
+  {%-   set o = o + [('%s/%s/vars/%s.yml'|format(tests_cases_dir,v,'tests-setup'))] -%}
   {%- endfor -%}
   {{- o -}}
 
 tests_vars_teardown_file_list: |
   {%- set o = [] -%}
-  {%- set f = '%s/%%s.yml'|format(tests_tmpl_vars_dir_path) -%}
   {%- for v in ['all',tests_casename|d('testcase',true)] -%}
-  {%-   set o = o + [(f|format(v,'main'))] -%}
-  {%-   set o = o + [(f|format(v,'tests-teardown'))] -%}
+  {%-   set o = o + [('%s/%s/vars/%s.yml'|format(tests_cases_dir,v,'main'))] -%}
+  {%-   set o = o + [('%s/%s/vars/%s.yml'|format(tests_cases_dir,v,'tests-teardown'))] -%}
   {%- endfor -%}
   {{- o -}}
 
