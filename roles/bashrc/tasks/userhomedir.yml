@@ -23,13 +23,10 @@
   - name: "bashrc | userhomedir - {{ bashrc_userhomedir_user|d('???',true) }} | Stat user homedir."
     stat:
       path: "{{
-        '%s/%s'|format(tests_prefix_dir|d('',true),(
         bashrc_userhomedir_user_st.home
         if bashrc_userhomedir_user_st.home|d('-',true)|is_dir else
-        (bashrc_distribution|match('^macos'))|ternary(
-        '/home/%s','/Users/%s')|format(
-        tests_prefix_dir|d('',true),tests_owner|d('test',true))
-        ))|replace('//','/') }}"
+        (bashrc_distribution|match('^macos'))|ternary('/home/%s','/Users/%s')|
+        format(tests_owner|d('test',true)) }}"
     register: bashrc_userhomedir_st
     ignore_errors: yes
     when: bashrc_userhomedir_user_st|d(none) is not none
