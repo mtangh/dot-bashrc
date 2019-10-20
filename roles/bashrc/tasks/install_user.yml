@@ -80,8 +80,12 @@
     include: "skel_user.yml"
     when: ('%s/skel.d'|format(bashrc_bashrcdir_path))|is_dir
     vars:
-      bashrc_skel_dir: "{{ '%s/skel.d'|format(bashrc_bashrcdir_path) }}"
-      bashrc_skel_todir: "{{ bashrc_userhomedir_path }}"
+      bashrc_skel_dir: "{{
+        '%s/skel.d'|format(
+        bashrc_bashrcdir_path) }}"
+      bashrc_skel_todir: "{{
+        '%s%s'|format(tests_prefix_dir|d('',true),
+        bashrc_userhomedir_path) }}"
 
   tags:
   - bashrc-install-user

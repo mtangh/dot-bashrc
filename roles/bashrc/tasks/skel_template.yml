@@ -4,6 +4,12 @@
 
 - block:
 
+  - name: "bashrc | skel-template | Check the skel template source directory."
+    set_fact:
+      bashrc_skel_is_skel_template: "{{
+        bashrc_skel_template_path|d('',true)|string|trim|match(
+        '^%s/skel.d(?:/$|$)'|format(bashrc_bashrcdir_path)) }}"
+
   - name: "bashrc | skel-template | Lookup template files and dirs in {{ bashrc_skel_template_path|d('???',true) }}."
     include: 'skel_files.yml'
 
@@ -14,10 +20,18 @@
       loop_var: bashrc_skel_template_file
     ignore_errors: yes
     when: (bashrc_skel_template_file|d({},true)).path|d('',true)|string|trim|length > 0
+          and ( bashrc_skel_is_skel_template == false
+            or  bashrc_skel_template_file.path|string|trim|match(
+                bashrc_skel_skel_template_pattern) == false )
+    vars:
+      bashrc_skel_skel_template_pattern: "{{
+        '^%s/(?:default|%s|%s|%s_%s)%s'|format(
+        bashrc_skel_template_path,
+        bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
+        bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
+        '(?:/$|$)') }}"
 
   vars:
-    bashrc_skel_is_skel_template: "{{
-      bashrc_skel_dir|d('',true)|string|trim|is_dir == false }}"
     bashrc_skel_template_path: "{{
       '%s'|format((
       bashrc_skel_dir|string|trim

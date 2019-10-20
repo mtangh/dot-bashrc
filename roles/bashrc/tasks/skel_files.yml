@@ -28,7 +28,10 @@
     ignore_errors: yes
     vars:
       _bashrc_skel_is_skel_template: "{{
-        bashrc_skel_is_skel_template|d(false,true) }}"
+        bashrc_skel_is_skel_template|d((
+        bashrc_skel_template_path|string|trim|match(
+        '^%s/skel.d(?:/$|$)'|format(bashrc_bashrcdir_path))
+        ),true) }}"
       _bashrc_skel_tmpldir_def: "{{
         '%s/default'|format(
         bashrc_skel_template_path|string|trim) }}"

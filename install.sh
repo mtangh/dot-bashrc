@@ -390,30 +390,31 @@ _MSG_
 
 # Backup the original file
 [ -d "${dotbackdir}" ] || {
+  echo "Mkdir backup-dir."
+  mkdir -p "${dotbackdir}" &>/dev/null || :
+}
+[ "$(echo $(ls -1 ${dotbackdir} 2>/dev/null|wc -l))" != "0" ] || {
 
   echo "Create a backup."
 
-  mkdir -p "${dotbackdir}" &>/dev/null || :
-
   ( cd "${dotbackdir}" &&
     pwd &&
-    for file in \
+    for backupfile in \
       bashrc profile \
-      bash.bashrc bash.profile \
-      bash_profile bash_logout
+      bash.bashrc bash.profile bash.bash_logout bash.bash.logout \
+      bash_profile bash_logout \
+      bashrc_Apple_Terminal \
+      paths manpaths
     do
+      backup_src="" 
       if [ $INSTALL_GLOBAL -ne 0 ]
-      then
-        [ -e "${dotinstall}/${file}" ] && {
-          cp -prf ${dotinstall}/${file} ./ 2>/dev/null &&
-          echo "${dotinstall}/${file}: Backed to '${dotbackdir}'."
-        }
-      else
-        [ -e "${HOME}/.${file}" ] && {
-          cp -prfv ${dotinstall}/.${file} ./ 2>/dev/null &&
-          echo "${dotinstall}/.${file}: Backed to '${dotbackdir}'."
-        }
+      then backup_src="${dotinstall}/${backupfile}"
+      else backup_src="${HOME}/.${backupfile}"
       fi
+      [ -e "${backup_src}" ] && {
+        cp -prf "${backup_src}" "./${backupfile}" 2>/dev/null &&
+        echo "${backup_src}: Backed to '${dotbackdir}'."
+      } || :
     done; )
 
   echo "Backed up to '${dotbackdir}'."

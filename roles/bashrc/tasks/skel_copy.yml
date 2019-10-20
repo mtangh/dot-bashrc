@@ -4,7 +4,7 @@
 
 - block:
 
-  - name: "bashrc | skel-copy [{{ _bashrc_skel_ent_src|d('???')|basename }}] | Make skel template directories."
+  - name: "bashrc | skel-copy [{{ _bashrc_skel_ent_src|d('???',true)|basename }}] | Make skel template directories."
     file:
       path: "{{
         (_bashrc_skel_ent_src|d('',true)|string|trim|is_dir)|ternary(
@@ -14,11 +14,11 @@
       group: "{{ bashrc_skel_install_group }}"
       mode: "{{ bashrc_skel_dir_mode|d('0755',true) }}"
       recurse: yes
-    no_log: yes
+    no_log: "{{ tests_run|d(false,true) == false }}"
     when: _bashrc_skel_ent_src|d('',true)|string|trim|is_link == false
           and _bashrc_skel_ent_dest|d('',true)|string|trim|length > 0
 
-  - name: bashrc | skel-copy [{{ _bashrc_skel_ent_src|d('???')|basename }}] | Copy skel template files.
+  - name: bashrc | skel-copy [{{ _bashrc_skel_ent_src|d('???',true)|basename }}] | Copy skel template files.
     copy:
       src: "{{ _bashrc_skel_ent_src }}"
       dest: "{{ '%s%s'|format(_bashrc_skel_ent_dest,
@@ -42,13 +42,12 @@
       '%s/%s'|format(bashrc_skel_install_path|d('',true),(
       (bashrc_skel_template_file|d({},true)).path|d('',true)|
       string|trim|regex_replace('/dot[._]','/.')|regex_replace((
-      '^%s/(default|%s|%s|%s_%s)/(.+)$'|format(
+      '^%s/(?:default|%s|%s|%s_%s)/%s$'|format(
       bashrc_skel_template_path|d('',true),
       bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
-      bashrc_os_family|d('-',true),bashrc_distribution|d('-',true))
-      if bashrc_skel_is_skel_template|d(false,true) == true else
-      '^%s/(.+)$'|format(bashrc_skel_template_path|d('',true))
-      ),'\\2')|trim)) }}"
+      bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
+      '(.+)')
+      ),'\\1')|trim)) }}"
   tags:
   - bashrc-skel-copy
 

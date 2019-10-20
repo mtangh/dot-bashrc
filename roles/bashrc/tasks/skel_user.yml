@@ -19,16 +19,32 @@
 
 - block:
 
+  - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Check the skel template source directory."
+    set_fact:
+      bashrc_skel_is_skel_template: "{{
+        bashrc_skel_template_path|d('',true)|string|trim|match(
+        '^%s/skel.d(?:/$|$)'|format(bashrc_bashrcdir_path)) }}"
+
   - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Lookup template files and dirs in {{ bashrc_skel_user_template_path|d('???',true) }}."
     include: 'skel_files.yml'
 
-  - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Convert absolute path to relative path."
+  - name: "bashrc | skel({{ bashrc_bash_user|d('???') }}) | Copy files and directories."
     include: 'skel_copy.yml'
     ignore_errors: yes
     with_items: "{{ (bashrc_skel_files_result|d({},true)).files|d([],true) }}"
     loop_control:
       loop_var: bashrc_skel_template_file
     when: (bashrc_skel_template_file|d({},true)).path|d('',true)|trim|length > 0
+          and ( bashrc_skel_is_skel_template == false
+            or  bashrc_skel_template_file.path|trim|match(
+                bashrc_skel_skel_template_pattern) == false )
+    vars:
+      bashrc_skel_skel_template_pattern: "{{
+        '^%s/(?:default|%s|%s|%s_%s)%s'|format(
+        bashrc_skel_template_path,
+        bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
+        bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
+        '(?:/$|$)') }}"
 
   vars:
     bashrc_skel_template_path: "{{
@@ -45,7 +61,8 @@
       '%s'|format((
       bashrc_skel_todir|string|trim
       if bashrc_skel_todir|d('-',true)|string|trim|is_dir else
-      bashrc_userhomedir_path|d('',true)|string|trim
+      '%s%s'|format(tests_prefix_dir|d('',true),
+      bashrc_userhomedir_path|d('',true)|string|trim)
       ))|realpath }}"
   tags:
   - bashrc-skel-user
