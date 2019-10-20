@@ -8,6 +8,12 @@
     find:
       paths: "{{
         (_bashrc_skel_is_skel_template == true
+        and _bashrc_skel_tmpldir_os_dist|is_dir == true)|ternary(
+          [ _bashrc_skel_tmpldir_os_dist ],[])  +
+        (_bashrc_skel_is_skel_template == true
+        and _bashrc_skel_tmpldir_dist|is_dir == true)|ternary(
+          [ _bashrc_skel_tmpldir_dist ],[])  +
+        (_bashrc_skel_is_skel_template == true
         and _bashrc_skel_tmpldir_os|is_dir == true)|ternary(
           [ _bashrc_skel_tmpldir_os ],[])  +
         (_bashrc_skel_is_skel_template == true
@@ -22,8 +28,7 @@
     ignore_errors: yes
     vars:
       _bashrc_skel_is_skel_template: "{{
-        bashrc_skel_template_path|string|trim|match(
-        '/%s/skel.d/'|format(bashrc_bashrcdir_name)) }}"
+        bashrc_skel_is_skel_template|d(false,true) }}"
       _bashrc_skel_tmpldir_def: "{{
         '%s/default'|format(
         bashrc_skel_template_path|string|trim) }}"
@@ -31,6 +36,15 @@
         '%s/%s'|format(
         bashrc_skel_template_path|string|trim,
         bashrc_os_family|d('-',true)|string|trim) }}"
+      _bashrc_skel_tmpldir_dist: "{{
+        '%s/%s'|format(
+        bashrc_skel_template_path|string|trim,
+        bashrc_distribution|d('-',true)|string|trim) }}"
+      _bashrc_skel_tmpldir_os_dist: "{{
+        '%s/%s_%s'|format(
+        bashrc_skel_template_path|string|trim,
+        bashrc_os_family|d('-',true)|string|trim,
+        bashrc_distribution|d('-',true)|string|trim) }}"
 
   - name: "bashrc | skel-files | Stat {{ bashrc_skel_install_path|d('???',true) }}"
     stat:

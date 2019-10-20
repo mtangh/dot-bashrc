@@ -29,9 +29,13 @@ unset promptsdir
 # PROMPT_COMMAND
 if [ -z "$PROMPT_COMMAND" ]
 then
-  for prompt_cmd in $(declare -F|grep ' _pc_')
+  for prompt_cmd in $(
+    declare -F |
+    grep 'declare -f _pc_' |
+    while read _fnc
+    do echo "${_fnc##* -f }"
+    done; )
   do
-    prompt_cmd="${prompt_cmd##*-f }"
     PROMPT_COMMAND="${PROMPT_COMMAND}${PROMPT_COMMAND:+;}"
     PROMPT_COMMAND="${PROMPT_COMMAND}${prompt_cmd}"
   done

@@ -19,15 +19,13 @@ darwin*)
     then os=$(/usr/bin/sw_vers -productName)
     else os="darwin"
     fi || :
-    os="${os// /}";
-    echo "${os,,}"; )
+    echo "${os// /}"|tr '[:upper:]' '[:lower:]'; )
     ;;
 *-*)
-  os="${OSTYPE%%-*}"
-  os="${os,,}"
+  os=$(echo "${OSTYPE%%-*}"|tr '[:upper:]' '[:lower:]')
   ;;
 *)
-  os="${OSTYPE,,}"
+  os=$(echo "${OSTYPE}"|tr '[:upper:]' '[:lower:]')
   ;;
 esac
 
@@ -35,7 +33,7 @@ esac
 [ -z "${MACHTYPE:-}" ] ||
 if [[ "${MACHTYPE}" =~ ^([^-]+)-([^-]+)-([^-].*)$ ]]
 then
-  vendor="${BASH_REMATCH[2],,}"
+  vendor=$(echo "${BASH_REMATCH[2]}"|tr '[:upper:]' '[:lower:]')
   osvendor="${os}_${vendor}"
 fi
 
@@ -43,10 +41,9 @@ fi
 [ -z "${HOSTNAME:-}" ] ||
 if [[ "${HOSTNAME}" =~ ^([^.]+)([.].+$|$) ]]
 then
-  machine="${BASH_REMATCH[1],,}"
+  machine=$(echo "${BASH_REMATCH[1]}"|tr '[:upper:]' '[:lower:]')
 else
-  machine=$(/bin/hostname -s)
-  machine="${machine,,}"
+  machine=$(/bin/hostname -s|tr '[:upper:]' '[:lower:]')
 fi
 
 } &>/dev/null || :

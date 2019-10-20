@@ -16,6 +16,8 @@
     when: (bashrc_skel_template_file|d({},true)).path|d('',true)|string|trim|length > 0
 
   vars:
+    bashrc_skel_is_skel_template: "{{
+      bashrc_skel_dir|d('',true)|string|trim|is_dir == false }}"
     bashrc_skel_template_path: "{{
       '%s'|format((
       bashrc_skel_dir|string|trim

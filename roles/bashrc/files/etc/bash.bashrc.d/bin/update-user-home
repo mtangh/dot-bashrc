@@ -17,7 +17,7 @@ declare -r os_type_name=$(
   then os=$(sw_vers -productName)
   else os=$(uname -s)
   fi 2>/dev/null
-  os="${os// /}";  echo "${os,,}" || :; )
+  echo "${os// /}"|tr '[:upper:]' '[:lower:]' || :; )
 
 # Users
 usernamelist=""
@@ -33,7 +33,7 @@ updatesystem=0
 # Flags: Force update
 force_update=0
 # Flags: Dry run
-mode_dry_run=0
+dry_run_mode=0
 # Flags: Debug on
 dehugrun_flg=0
 
@@ -98,7 +98,9 @@ getuserhomedir() {
 }
 
 skel_get_ents() {
-  ( cd "${1:-$skel_userdir}/" 2>/dev/null &&
+  local _dir="${1:-$skel_userdir}"
+  local _row=""
+  ( cd "${_dir}/" 2>/dev/null &&
     case "$(pwd)/" in
     ${skeltmpltdir}/)
       find . -type f 2>/dev/null |
@@ -111,7 +113,15 @@ skel_get_ents() {
       egrep -v '^([ ]*|[.]+|[.]+/)$' 2>/dev/null |
       sort -u
       ;;
-    esac; )
+    esac; ) |
+  while IFS= read _row
+  do
+    case "${_row}" in
+    ./*) echo "${_row#*./}" ;;
+    /*)  echo "${_row#/}" ;;
+    *)   echo "${_row}" ;;
+    esac
+  done
   return $?
 }
 
@@ -121,6 +131,9 @@ skel_get_populate_path() {
   _ent="${_ent#default/}"
   _ent="${_ent#${os_type_name}/}"
   case "${_ent}" in
+  dot.*)
+    _ent=".${_ent##*dot.}"
+    ;;
   */dot.*)
     _ent="${_ent//\/dot.//.}"
     ;;
@@ -146,6 +159,7 @@ skel_get_dirpath() {
 skel_files_update() {
   local _usr="$1"; shift
   local _tag="$_usr"
+  local _std=""
   local _uhd=""
   local _row=""
   local _src=""
@@ -156,9 +170,11 @@ skel_files_update() {
   case "${_usr}" in
   SKEL)
     _usr="root"
+    _std="${skeltmpltdir}"
     _uhd="${skel_userdir}"
     ;;
   *)
+    _std="${skel_userdir}"
     if [ -n "$(id -un $_usr 2>/dev/null)" ]
     then _uhd="$(getuserhomedir $_usr 2>/dev/null)"
     else return 1
@@ -167,29 +183,29 @@ skel_files_update() {
   esac
 
   # Print
-  echo "$_tag: to-dir='$_uhd'."
+  echo "$_tag: from-to-dir='$_std' to '$_uhd'."
 
   # Each files
-  ( cd "$_uhd" 2>/dev/null &&
+  ( cd "${_uhd}" 2>/dev/null &&
     cat |
     while IFS= read _row
     do
 
-      _src="$_row"
-      _dst=$(skel_get_populate_path "$_src")
+      _src="${_row}"
+      _dst=$(skel_get_populate_path "${_src}")
       _dir=$(
-        if [ ! -d "$_src" ]
-        then skel_get_dirpath "$_dst"
+        if [ ! -d "${_std}/${_src}" ]
+        then skel_get_dirpath "${_dst}"
         else echo "${_dst}"
         fi; )
 
-      [ -n "$_dir" -a ! -d "$_dir" ] &&
-      skel_mkdir "$_usr" "$_dir" && {
+      [ -n "${_dir}" -a ! -d "${_dir}" ] &&
+      skel_mkdir "${_usr}" "${_dir}" && {
         echo "$_tag: Mkdir '$_dir'."
       } || :
 
-      [ ! -d "$_src" ] &&
-      skel_copy "$_usr" "$_src" "$_dst" && {
+      [ ! -d "${_std}/${_src}" ] &&
+      skel_copy "${_usr}" "${_std}/${_src}" "${_dst}" && {
         echo "$_tag: Copying '$_src' to '$_dst'."
       } || :
 
@@ -239,15 +255,15 @@ skel_copy() {
   [ -n "$_dst" ] ||
     return 22
 
-  if [ $force_update -ne 0 -o ! -e "$_dst" ]
+  if [ ${force_update} -ne 0 -o ! -e "${_dst}" ]
   then
-    command_run cp -f "$_src" "$_dst" 2>/dev/null
+    command_run cp -f "${_src}" "${_dst}" 2>/dev/null
   else :
   fi && {
     if [ "${run_user_uid}" = "0" ]
     then
-      _grp="$(id -gn $_usr 2>/dev/null)"
-      command_run chown "${_usr}:${_grp}" "$_dst" 2>/dev/null
+      _grp="$(id -gn ${_usr} 2>/dev/null)"
+      command_run chown "${_usr}:${_grp}" "${_dst}" 2>/dev/null
     else :
     fi || :
   }

@@ -4,7 +4,7 @@ NAME="${THIS%.*}"
 CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 
 # Path
-PATH=/usr/bin:/bin; export PATH
+PATH=/usr/bin:/usr/sbin:/bin:/sbin; export PATH
 
 # dot-bashrc URL
 DOT_BASHRC_URL="${DOT_BASHRC_URL:-https://github.com/mtangh/dot-bashrc.git}"
@@ -288,7 +288,7 @@ _MSG_
 
     cat <<_MSG_
 #
-# run - bash ./$THIS $installoption
+# run - bash ./$THIS $dotbashrcopts
 #
 _MSG_
 
@@ -508,11 +508,11 @@ echo "Grant and revoke on 'bash.bashrc.d' files."
 # Set installation file permissions
 ( : && {
     cd "${dotbasedir}" 2>/dev/null &&
-    chown -R "${bashrcuser}:${bashrc_grp}" . 2>/dev/null &&
-    find . -type d -print -exec chmod u=rwx,go=rx {} \; 2>/dev/null &&
-    find . -type f -print -exec chmod u=rw,go=r {} \; 2>/dev/null &&
-    find . -type f -a -name "*.sh*" -print -exec chmod a+x {} \; 2>/dev/null &&
-    find ./bin -type f -print -exec chmod a+x {} \; 2>/dev/null &&
+    chown -R "${bashrcuser}:${bashrc_grp}" . &&
+    find . -type d -print -exec chmod u=rwx,go=rx {} \; &&
+    find . -type f -print -exec chmod u=rw,go=r {} \;  &&
+    find . -type f -a -name "*.sh*" -print -exec chmod a+x {} \; &&
+    find ./bin -type f -print -exec chmod a+x {} \; &&
     echo ||
     exit 1
   }; )

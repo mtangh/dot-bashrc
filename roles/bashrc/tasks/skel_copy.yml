@@ -22,7 +22,7 @@
     copy:
       src: "{{ _bashrc_skel_ent_src }}"
       dest: "{{ '%s%s'|format(_bashrc_skel_ent_dest,
-                (_bashrc_skel_ent_dest|exists)|ternary('.skel','.')) }}"
+                (_bashrc_skel_ent_dest|exists)|ternary('.skel','')) }}"
       remote_src: yes
       owner: "{{ bashrc_skel_install_owner }}"
       group: "{{ bashrc_skel_install_group }}"
@@ -39,16 +39,16 @@
     _bashrc_skel_ent_src: "{{
       (bashrc_skel_template_file|d({},true)).path|d(none) }}"
     _bashrc_skel_ent_dest: "{{
-      '%s/%s'|format(
-      bashrc_skel_install_path|d('',true),(
-      (bashrc_skel_template_file|d({},true)).path|d('',true)|string|trim|
-      regex_replace((
-      '^%s/(default/|%s/|)(.*)$'|format(
+      '%s/%s'|format(bashrc_skel_install_path|d('',true),(
+      (bashrc_skel_template_file|d({},true)).path|d('',true)|
+      string|trim|regex_replace('/dot[._]','/.')|regex_replace((
+      '^%s/(default|%s|%s|%s_%s)/(.+)$'|format(
       bashrc_skel_template_path|d('',true),
-      bashrc_os_family|d('-',true)
-      )),'\\2')|
-      regex_replace('/[.]dot[._]','.')|trim
-      )) }}"
+      bashrc_os_family|d('-',true),bashrc_distribution|d('-',true),
+      bashrc_os_family|d('-',true),bashrc_distribution|d('-',true))
+      if bashrc_skel_is_skel_template|d(false,true) == true else
+      '^%s/(.+)$'|format(bashrc_skel_template_path|d('',true))
+      ),'\\2')|trim)) }}"
   tags:
   - bashrc-skel-copy
 

@@ -17,9 +17,9 @@ do
     [ -f "${lsclr_file}" ] || {
       continue
     }
-    [ -x "${lscolorssh}" ] &&
-    LSCOLORS=$(bash ${lscolorssh} 2>/dev/null) ||
-    LSCOLORS=$(cat ${lscolorssh} 2>/dev/null)
+    [ -x "${lsclr_file}" ] &&
+    LSCOLORS=$(bash ${lsclr_file} 2>/dev/null) ||
+    LSCOLORS=$(cat ${lsclr_file} 2>/dev/null)
     [ -n "${LSCOLORS:-}" ] && {
       export LSCOLORS
       break 2
