@@ -6,7 +6,7 @@ CDIR=$([ -n "${BASH_SOURCE%/*}" ] && cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 echo "[${tests_name}] install.sh for user" && {
 
   bash -n install.sh &&
-  bash -x install.sh --install --source=$(pwd)/roles/bashrc && {
+  bash -x install.sh --install --source=$(pwd) && {
     ( for check_file in \
         ${HOME}/.config/bash.{bashrc,profile,bash_logout} \
         ${HOME}/.config/bash.bashrc.d/vim/vimrc \

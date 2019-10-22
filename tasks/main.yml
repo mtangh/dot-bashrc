@@ -14,7 +14,7 @@
   - name: "bashrc | bashrc for ..."
     set_fact:
       bashrc_install_for: "{{
-        (bashrc_install_global|d(false,true))|ternary('global','user') }}"
+        (bashrc_install_global|d(false,true)|bool)|ternary('global','user') }}"
       bashrc_install_skel: "{{
         bashrc_with_skel|d(none) }}"
       bashrc_install_prefix: "{{

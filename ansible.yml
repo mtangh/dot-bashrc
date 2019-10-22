@@ -3,7 +3,7 @@
 
 - hosts: localhost
   connection: local
-  become: yes
+  become: "{{ global|d(false,true)|bool }}"
 
   gather_facts: yes
 
@@ -11,23 +11,11 @@
   - dot-bashrc
 
   vars:
-    # Current UID
-    current_user: "{{ c_user|d(lookup('env','USER')|d(lookup('pipe','id -un')) }}"
-    # Current dir.
-    current_dir: "{{ c_dir|d(lookup('pipe','pwd -P')) }}"
-    # User
-    user_name: "{{ user|d(c_user) }}"
-    user_group: "{{ group|d(lookup('pipe','id -gn %s'|format(user_name))) }}"
-    user_homedir: "{{ home_dir|d(lookup('env','HOME')) }}"
-    user_confdir: "{{ '%s/.config'|format(user_homedir) }}"
-    # bashrc install type
-    dot_bashrc_install_for: "{{ 'system' if system|d(true) else 'user' }}"
-    # bashrc install prefix
-    dot_bashrc_install_prefix: "{{
-      install_dir if install_dir|d('')|length > 0 else
-      user_confdir if system|d(true) == false else
-      none }}"
+    # Global install
+    bashrc_install_global: "{{ global|d(false,true)|bool }}"
+    # Swtup SKEL
+    bashrc_install_skel: "{{ skel|d(false,true)|bool }}"
 
   roles:
-  - bashrc
+  - { role: ./.. }
 

@@ -1,7 +1,7 @@
 # bashrc
-roles/bashrc/files/etc/bash.bashrc
-roles/bashrc/files/etc/bash.profile
-roles/bashrc/files/etc/bashrc
-roles/bashrc/files/etc/profile
+files/etc/bash.bashrc
+files/etc/bash.profile
+files/etc/bashrc
+files/etc/profile
 # vimrc
-roles/bashrc/files/etc/bash.bashrc.d/vim/vimrc
+files/etc/bash.bashrc.d/vim/vimrc

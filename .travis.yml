@@ -19,14 +19,26 @@ install:
   - bash --version
   # Install ansible
   - pip install ansible; ansible --version
+  ## Create an inventory
+  #- printf '[testcases]\nlocalhost\n' >tests/testcases
+  ## Create ansible.cfg with correct roles_pat
+  #- printf '[defaults]\ninventory=tests/testcases\nroles_path=./\n' >ansible.cfg
 
-# Run
 script:
+
+  ## Basic role syntax check, and tests-run
+  #- |
+  #  set -x;
+  #  : "Run tests-all.sh" && {
+  #    bash -x tests/tests-all.sh
+  #  } &&
+  #  : "OK";
 
   - bash -Cu -x .tests.sh
 
 # Notifications
 #notifications:
+#  webhooks: https://galaxy.ansible.com/api/v1/notifications/
 #  email:
 #  - your@emailaddress
 

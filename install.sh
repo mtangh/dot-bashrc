@@ -201,7 +201,6 @@ fi
 if [ $BASHRC_INSTALL -eq 0 ]
 then
 
-  dotbashrcpath="roles/bashrc"
   dotbashrc_git="$(type -P git)"
   dotbashrcplay="$(type -P ansible-playbook)"
   dotbashrcopts=""
@@ -215,11 +214,10 @@ then
     _abort 1 "Can not find the 'git' command."
   }
 
-  if [ ! -d "${DOT_BASHRC_SRC}" ]
+  if [ -z "${DOT_BASHRC_SRC}" -o ! -d "${DOT_BASHRC_SRC}" ]
   then
 
-    if [ -d "${CDIR}/${dotbashrcpath}/files" -a \
-         -d "${CDIR}/${dotbashrcpath}/templates" ]
+    if [ -d "${CDIR}/files" -a -d "${CDIR}/templates" ]
     then
 
       [ -d "${CDIR}/.git" ] && {
@@ -227,21 +225,22 @@ then
         _abort 1 "Failed command: 'git pull'."
       }
 
+      DOT_BASHRC_SRC="${CDIR}"
+
     else
 
-      ( cd "${DOT_BASHRC_TMP}" 2>/dev/null &&
-        ${dotbashrc_git} clone "${DOT_BASHRC_URL}" &&
-        cd "./${dotbashrcpath}" 2>/dev/null; ) ||
+      ( cd "${DOT_BASHRC_TMP}" &&
+        ${dotbashrc_git} clone "${DOT_BASHRC_URL}"; ) 2>/dev/null ||
       _abort 1 "Failed command: 'git clone'."
 
-      cd "${DOT_BASHRC_TMP}/${DOT_BASHRC_PRJ}/" 2>/dev/null ||
+      ( cd "${DOT_BASHRC_TMP}/${DOT_BASHRC_PRJ}/"; ) 2>/dev/null ||
       _abort 2 "'dot-bashrc': no such file or directory."
 
-    fi # if [ -d "${CDIR}/${dotbashrcproj}" -a ...
+      DOT_BASHRC_SRC=$(
+        cd "${DOT_BASHRC_TMP}/${DOT_BASHRC_PRJ}" 2>/dev/null &&
+        pwd)
 
-    DOT_BASHRC_SRC=$(
-      cd "./${dotbashrcpath}" 2>/dev/null &&
-      pwd)
+    fi # if [ -d "${CDIR}/${dotbashrcproj}" -a ...
 
   fi # if [ ! -d "${DOT_BASHRC_SRC}" ]
 
@@ -251,17 +250,17 @@ then
 #
 _MSG_
 
-  if [ -x "${dotbashrcplay}" -a -r "./ansible.yml" ]
+  if [ -x "${dotbashrcplay}" -a -r "${DOT_BASHRC_SRC}/ansible.yml" ]
   then
 
-    dotbashrcopts=""
+    dotbashrcopts="-D"
 
     [ $INSTALL_GLOBAL -eq 0 ] ||
-    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e bashrc_install_global=true"
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e global=true"
     [ $SETUP_SKELETON -eq 0 ] ||
-    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e bashrc_install_skel=true"
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e skel=true"
     [ $ENABLE_DRY_RUN -eq 0 ] ||
-    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-D"
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-C"
 
     cat <<_MSG_
 #
@@ -269,7 +268,8 @@ _MSG_
 #
 _MSG_
 
-    ${dotbashrcplay} ${dotbashrcopts} ./ansible.yml
+    ( cd "${DOT_BASHRC_SRC}" &&
+      ${dotbashrcplay} ${dotbashrcopts} ./ansible.yml; )
     dotbashrc_ret=$?
 
   else
@@ -406,7 +406,7 @@ _MSG_
       bashrc_Apple_Terminal \
       paths manpaths
     do
-      backup_src="" 
+      backup_src=""
       if [ $INSTALL_GLOBAL -ne 0 ]
       then backup_src="${dotinstall}/${backupfile}"
       else backup_src="${HOME}/.${backupfile}"
