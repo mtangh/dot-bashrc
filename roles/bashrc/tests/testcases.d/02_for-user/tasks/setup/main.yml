@@ -1,5 +1,5 @@
 ---
-# This test case setup-tasks file.
+# The tasks file for this test case.
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 - block:

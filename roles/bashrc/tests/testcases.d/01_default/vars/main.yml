@@ -1,5 +1,5 @@
 ---
-# vars file
+# The vars file for this test case.
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 bashrc_install_global: true

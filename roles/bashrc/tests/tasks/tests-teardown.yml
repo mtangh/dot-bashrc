@@ -1,5 +1,5 @@
 ---
-# ut/teardown tasks file
+# tests/teardown tasks file
 # vim: set ff=unix ts=2 sw=2 sts=2 et : This line is VIM modeline
 
 - block:
