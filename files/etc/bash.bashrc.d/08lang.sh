@@ -11,9 +11,9 @@ for i18npath in \
 do
   for i18nfile in $(
     [ -n "${i18npath}" -a -d "${i18npath%/*}" ]  && {
-      for ps in "" "${os}" "${osvendor}" "${machine}"
+      for ps in "${os}" "${osvendor}" "${machine}" ""
       do
-        for gn in "" ${usergroups}
+        for gn in ${usergroups} ""
         do
           [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
           echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
@@ -23,12 +23,19 @@ do
       done
     } 2>/dev/null)
   do
-    [ -f "${i18n_file}" ] && {
-      . "${i18n_file}" && break 2
+    [ -f "${i18nfile}" ] && {
+      . "${i18nfile}" && break 2
     } || :
   done
-  unset i18nfile
 done
+
+if [ -z "${LANG:-}" ]
+then
+  if [ -r "${bashrc_dir}/i18n.d/default" ]
+  then
+    . "${bashrc_dir}/i18n.d/default"
+  fi || :
+fi
 
 # GDM Lang
 if [ -n "${GDM_LANG:-}" ]

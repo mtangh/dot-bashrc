@@ -3,3 +3,5 @@
 /usr/local/sbin
 /usr/sbin
 /sbin
+/Library/Apple/usr/sbin
+/Library/Apple/sbin
