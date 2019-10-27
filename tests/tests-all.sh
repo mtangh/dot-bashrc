@@ -32,6 +32,17 @@ cd "${CDIR}" &>/dev/null &&
        } 2>/dev/null; )
   }
 
+  # Cleanup ?
+  case "${testcaselist:-}" in
+  clean*)
+    [ -d "./target" ] && {
+      echo rm  -rf ./target
+      rm  -rf ./target
+    }
+    exit 0
+    ;;
+  esac
+
   echo "Syntax check." && {
 
     $ansible_play --syntax-check || testcase_ret=$?
