@@ -48,12 +48,13 @@ SETUP_SKELETON=1
 
 # Stdout
 _stdout() {
+  local rowlanel="${1:-$THIS}"
   local row_data=""
   cat | while IFS= read row_data
   do
-    if [[ "${row_data}" =~ ${THIS}: ]]
+    if [[ "${row_data}" =~ ^${rowlanel}: ]]
     then printf "%s" "${row_data}"
-    else printf "$THIS: %s" "${row_data}"
+    else printf "${rowlanel}: %s" "${row_data}"
     fi; echo
   done
   return 0
@@ -159,7 +160,7 @@ do
 done
 
 # Redirect to filter
-exec 1> >(set +x; _stdout 2>/dev/null)
+exec 1> >(set +x; _stdout "${DOT_BASHRC_PRJ}/${THIS}" 2>/dev/null)
 
 # Prohibits overwriting by redirect and use of undefined variables.
 set -Cu
