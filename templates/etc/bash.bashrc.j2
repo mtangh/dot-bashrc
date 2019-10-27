@@ -11,8 +11,8 @@
 
 # Block recursive call !
 [[ "${BASH_SOURCE[@]}" \
-  =~ .*\ ${BASH_SOURCE}(\ .*|\ *)$ ]] &&
-  return 127
+   =~ .*\ (${BASH_SOURCE}|/etc(/bash.|/)bashrc)(\ .*|\ *)$ ]] &&
+  return 0
 
 # Treat unset variables as an error when
 # performing parameterr expansion.
