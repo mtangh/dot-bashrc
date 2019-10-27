@@ -1,7 +1,10 @@
 #!/bin/bash
 THIS="${BASH_SOURCE##*/}"
-NAME="${THIS%.*}"
 CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
+
+# Name
+THIS="${THIS:-install.sh}"
+NAME="${THIS%.*}"
 
 # Path
 PATH=/usr/bin:/usr/sbin:/bin:/sbin; export PATH
@@ -11,7 +14,7 @@ DOT_BASHRC_URL="${DOT_BASHRC_URL:-https://github.com/mtangh/dot-bashrc.git}"
 # dot-bashrc Installation source
 DOT_BASHRC_SRC="${DOT_BASHRC_SRC:-}"
 # dot-bashrc Working dir
-DOT_BASHRC_TMP=""
+DOT_BASHRC_TMP="${DOT_BASHRC_TMP:-}"
 # dot-bashrc project name
 DOT_BASHRC_PRJ="${DOT_BASHRC_URL##*/}"
 DOT_BASHRC_PRJ="${DOT_BASHRC_PRJ%.*}"
@@ -47,7 +50,12 @@ SETUP_SKELETON=1
 _stdout() {
   local row_data=""
   cat | while IFS= read row_data
-  do printf "$THIS: %s" "${row_data}"; echo; done
+  do
+    if [[ "${row_data}" =~ ${THIS}: ]]
+    then printf "%s" "${row_data}"
+    else printf "$THIS: %s" "${row_data}"
+    fi; echo
+  done
   return 0
 }
 
@@ -64,9 +72,14 @@ _abort() {
 
 # Cleanup
 _cleanup() {
-  [ -z "${DOT_BASHRC_TMP}" ] || {
-    rm -rf "${DOT_BASHRC_TMP}" 1>/dev/null 2>&1
-  } || :
+  if [ $ENABLE_DRY_RUN -eq 0 ]
+  then
+    [ -z "${DOT_BASHRC_TMP}" ] || {
+      rm -rf "${DOT_BASHRC_TMP}" 1>/dev/null 2>&1
+    } || :
+  else
+    echo rm -rf "${DOT_BASHRC_TMP}"
+  fi
   return 0
 }
 
@@ -191,11 +204,11 @@ fi
 }
 
 # Trap
-[ $ENABLE_DRY_RUN -eq 0 ] && {
+: && {
   # Set trap
   trap "_cleanup" SIGTERM SIGHUP SIGINT SIGQUIT
   trap "_cleanup" EXIT
-}
+} || :
 
 # Run
 if [ $BASHRC_INSTALL -eq 0 ]
@@ -309,7 +322,7 @@ cat <<_MSG_
 _MSG_
 
 # Installation Tag
-dotbashtag="${DOT_BASHRC_PRJ}/${THIS}, $(date)"
+dotbashtag="${DOT_BASHRC_PRJ}/${THIS}, $(LANG=C date)"
 
 # Installation source path
 dotfilesrc="files/etc/bash.bashrc.d"
@@ -320,7 +333,7 @@ cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
 }
 
 # Confirm existence of source to be installed
-[ -d "./${dotfilesrc}" ] || {
+[ -d "${dotfilesrc}" ] || {
   _abort 2 "'DOT_BASHRC_SRC/${dotfilesrc:-???}': no such file or dorectory."
 }
 
@@ -421,12 +434,11 @@ _MSG_
 
 }
 
-# Print message
-echo "Install the 'bash.bashrc.d' to '${dotbasedir}'."
-
 # Install the file
 if [ ! -e "${dotbasedir}" -o -z "$(type -P patch)" ]
 then
+
+  echo "Install the 'bash.bashrc.d' to '${dotbasedir}'."
 
   [ -e "${dotbasedir}" ] && {
     mv -f "${dotbasedir}" \
@@ -446,6 +458,8 @@ then
   fi
 
 else
+
+  echo "Update the 'bash.bashrc.d' to '${dotbasedir}'."
 
   ( cd "${dotbasedir}" && {
       diff -Nur . "${DOT_BASHRC_SRC}/${dotfilesrc}" |patch -p0 ||
