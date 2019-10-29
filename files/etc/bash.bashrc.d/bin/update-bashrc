@@ -17,11 +17,13 @@ shellopts="-x ${shellopts}"
 scriptget=""
 [ -z "${scriptget}" ] &&
 [ -n "$(type -P curl 2>/dev/null)" ] &&
-scriptget="$(type -P curl 2>/dev/null) -sL"
+scriptget="$(type -P curl 2>/dev/null) -sL" || :
 [ -z "${scriptget}" ] &&
 [ -n "$(type -P wget 2>/dev/null)" ] &&
-scriptget="$(type -P wget 2>/dev/null) -qO -"
+scriptget="$(type -P wget 2>/dev/null) -qO -" || :
 # Run
-${scriptget} "${installsh}" 2>/dev/null |/bin/bash $shellopts "$@"
+[ -n "${scriptget}" ] && {
+  ${scriptget} "${installsh}" 2>/dev/null |/bin/bash $shellopts "$@"
+}
 # End
 exit $?

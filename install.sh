@@ -112,10 +112,31 @@ _process_template_file() {
   return $?
 }
 
+_usage() {
+  cat <<_USAGE_
+Usage: $DOT_BASHRC_PRJ/$THIS [OPTIONS]
+
+OPTIONS:
+
+-G, --global
+  Install in the global scope.
+-U, --user
+  Install in the user environment.
+--skel
+  Update the system user template (SKEL).
+-D, --debug
+  Enable debug output.
+-n, --dry-run
+  Dry run mode
+
+_USAGE_
+  return 0
+}
+
 # Parsing command line options
 while [ $# -gt 0 ]
 do
-  case "$1" in
+  case "${1}" in
   --install)
     BASHRC_INSTALL=1
     ;;
@@ -148,6 +169,7 @@ do
     ENABLE_DRY_RUN=1
     ;;
   -h|--help)
+    _usage; exit 0
     ;;
   -*)
     _abort 22 "Illegal option '${1}'."
