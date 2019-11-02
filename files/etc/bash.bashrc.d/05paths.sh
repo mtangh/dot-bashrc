@@ -30,7 +30,7 @@ do
     } 2>/dev/null)
   do
     [ -f "${paths_file}" ] || continue
-    paths_dirs="${paths_dirs+${paths_dirs} }"
+    paths_dirs="${paths_dirs:+${paths_dirs} }"
     [ -x "${paths_file}" ] &&
     paths_dirs="${paths_dirs}$(/bin/bash ${paths_file} 2>/dev/null)"
     [ -x "${paths_file}" ] ||
