@@ -25,11 +25,11 @@ do
     } 2>/dev/null)
   do
     [ -f "${mpathsfile}" ] || continue
-    mpathsdirs="${mpathsdirs+${mpathsdirs} }"
+    mpathsdirs="${mpathsdirs:+${mpathsdirs} }"
     [ -x "${mpathsfile}" ] &&
-    mpathsdirs="${mpathsdirs}$(/bin/bash ${mpathsfile})"
+    mpathsdirs="${mpathsdirs}$(echo $(/bin/bash ${mpathsfile} 2>/dev/null))"
     [ -x "${mpathsfile}" ] ||
-    mpathsdirs="${mpathsdirs}$(/bin/cat ${mpathsfile})"
+    mpathsdirs="${mpathsdirs}$(echo $(/bin/cat ${mpathsfile} 2>/dev/null))"
   done
   unset mpathsfile
 done || :

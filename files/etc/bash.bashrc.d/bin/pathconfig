@@ -30,8 +30,7 @@ _remove_trail_slash() {
 # Convert relative path to absolute path
 _relative_to_absolute_path() {
   local _dir=$(_remove_trail_slash "$1"); shift
-  ( cd "${_dir}" 1>/dev/null 2>&1 &&
-    pwd || echo "${_dir}"; )
+  ( cd "${_dir}" 1>/dev/null 2>&1 && pwd; )
   return $?
 }
 
