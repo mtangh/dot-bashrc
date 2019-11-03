@@ -12,28 +12,28 @@
     [[ "${BASH_SOURCE[@]}" \
       =~ .*\ ${dot_bashrc}(\ .*|\ *)$ ]] &&
       continue
-    . "${dot_bashrc}"
+    . "${dot_bashrc}" &&
+      break
   done
+  unset dot_bashrc
 
   # Load scripts under the 'bash_profile.d' dir
-  for bash_profile_dir in \
+  for dot_profiles_dir in \
   "${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}{bash_,}profile.d \
   "${HOME}"/.{bash_,}profile.d
   do
-    if [ -d "${bash_profile_dir}" ]
+    if [ -d "${dot_profiles_dir}" ]
     then
-      for bash_profile_scr in \
-      "${bash_profile_dir}"/*.sh{.${os},.${osvendor},.${machine},}
+      for dot_profiles_scr in $( {
+      /bin/ls "${dot_profiles_dir}"/*.sh{,.${os},.${osvendor},.${machine}}
+      } 2>/dev/null; )
       do
-        [ -x "${bash_profile_scr}" ] &&
-        . "${bash_profile_scr}" || :
+        [ -x "${dot_profiles_scr}" ] && . "${dot_profiles_scr}" || :
       done
-      unset bash_profile_scr
+      unset dot_profiles_scr
     fi
   done
-
-  unset dot_bashrc
-  unset bash_profile_dir
+  unset dot_profiles_dir
 
 } || :
 

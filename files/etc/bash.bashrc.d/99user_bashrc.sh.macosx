@@ -4,22 +4,21 @@
 : "user_bashrc for macOS" && {
 
   # Load scripts under the 'bash_profile.d' dir
-  for bash_profile_dir in \
+  for dot_profiles_dir in \
   "${HOME}"/.{macOS,MacOSX}/{etc/,}{bash_,}profile.d
   do
-    if [ -d "${bash_profile_dir}" ]
+    if [ -d "${dot_profiles_dir}" ]
     then
-      for bash_profile_scr in \
-      "${bash_profile_dir}"/*.sh{.${machine},}
+      for dot_profiles_scr in $( {
+      /bin/ls "${dot_profiles_dir}"/*.sh{,.${machine}}
+      } 2>/dev/null; )
       do
-        [ -x "${bash_profile_scr}" ] &&
-        . "${bash_profile_scr}" || :
+        [ -x "${dot_profiles_scr}" ] && . "${dot_profiles_scr}" || :
       done
-      unset bash_profile_scr
+      unset dot_profiles_scr
     fi
   done
-
-  unset bash_profile_dir
+  unset dot_profiles_dir
 
 } 1>/dev/null 2>&1 || :
 

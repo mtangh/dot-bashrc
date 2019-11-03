@@ -2,17 +2,18 @@
 # System-wide profile for sh(1)
 # {{ ansible_managed }}
 
-[ -z "$USER" ]    && USER="`id -un`"  || :
-[ -z "$LOGNAME" ] && LOGNAME=$USER    || :
-[ -z "$UID" ]     && UID=`id -ru`     || :
-[ -z "$EUID" ]    && EUID=`id -u`     || :
+[ -z "$USER" ]    && USER="`id -un`" || :
+[ -z "$LOGNAME" ] && LOGNAME=$USER   || :
+[ -z "$UID" ]     && UID=`id -ru`    || :
+[ -z "$EUID" ]    && EUID=`id -u`    || :
 
 export USER LOGNAME UID EUID
 
 # bash ?
-if [ -n "$BASH" -a -e "{{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}" ]
-then . "{{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}"
-elif [ -n "$BASH" -a -e "/etc/bashrc" ]
+[ -n "$BASH" ] &&
+if [ -e "${bashrcfile:={{ bashrc_bash_rc_file_path|d('/etc/bash.bashrc',true) }}}" ]
+then . "${bashrcfile}"; unset bashrcfile
+elif [ -e "/etc/bashrc" ]
 then . /etc/bashrc
 fi || :
 

@@ -36,14 +36,14 @@ done || :
 unset paths_path
 
 # User bin dir
-for paths_file in "${HOME}"/{.macOS,.MacOSX}/{s,}bin
+for userbindir in "${HOME}"/{.macOS,.MacOSX}/{s,}bin
 do
-  [ -d "${paths_file}" ] && {
+  [ -d "${userbindir}" ] && {
     paths_dirs="${paths_dirs:+${paths_dirs} }"
-    paths_dirs="${paths_dirs}${paths_file}"
+    paths_dirs="${paths_dirs}${userbindir}"
   } || :
 done || :
-unset paths_file
+unset userbindir
 
 # export new PATH
 eval $($pathconf PATH -s -a ${paths_dirs})

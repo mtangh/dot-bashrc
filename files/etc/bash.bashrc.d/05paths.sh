@@ -58,14 +58,14 @@ then
 fi || :
 
 # for ${HOME}/bin
-for paths_file in {${HOME},${XDG_CONFIG_HOME:-$HOME/.config}}/{s,.s,,.}bin
+for userbindir in {${HOME},${XDG_CONFIG_HOME:-$HOME/.config}}/{s,.s,,.}bin
 do
-  [ -d "${paths_file}" ] && {
+  [ -d "${userbindir}" ] && {
     paths_dirs="${paths_dirs:+${paths_dirs} }"
-    paths_dirs="${paths_dirs}${paths_file}"
+    paths_dirs="${paths_dirs}${userbindir}"
   } || :
 done || :
-unset paths_file
+unset userbindir
 
 # export new PATH
 PATH=

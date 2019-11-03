@@ -10,12 +10,11 @@
   return 0
 
 # Load scripts under '${profiledir}' dir
-for profile_sh in \
-"${bashrc_dir}"/profile.d/[0-9][0-9]*.sh{,".${os}",".${osvendor}"}
+for profile_sh in $( {
+/bin/ls "${bashrc_dir}"/profile.d/[0-9][0-9]*.sh{,".${os}",".${osvendor}"}
+} 2>/dev/null; )
 do
-  [ -x "${profile_sh}" ] && {
-    . "${profile_sh}"
-  } || :
+  [ -x "${profile_sh}" ] && . "${profile_sh}" || :
 done
 
 # Cleanup

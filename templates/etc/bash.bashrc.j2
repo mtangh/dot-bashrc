@@ -35,8 +35,9 @@ usergroups="$(id -Gn 2>/dev/null)"
 PS1='\u@\h \W\$ '
 
 # Load to the 'bash.bashrc.d' scripts
-for bashrcsh in \
-"${bashrc_dir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
+for bashrcsh in $( {
+/bin/ls "${bashrc_dir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
+} 2>/dev/null; )
 do
   [ ! -x "$bashrcsh" ] || . "$bashrcsh"
 done

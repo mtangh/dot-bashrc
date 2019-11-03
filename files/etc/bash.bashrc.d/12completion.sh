@@ -8,13 +8,12 @@ for completdir in \
 do
   if [ -d "${completdir}" ]
   then
-    for complet_sh in \
-    "${completdir}"/*.sh{,.${os},.${osvendor},.${machine}} \
-    "${completdir}"/{"${osvendor}","${os}"}/*.sh{,.${machine}}
+    for complet_sh in $( {
+    /bin/ls "${completdir}"/*.sh{,.${os},.${osvendor},.${machine}}
+    /bin/ls "${completdir}"/{"${osvendor}","${os}"}/*.sh{,.${machine}}
+    } 2>/dev/null; )
     do
-      [ -x "${complet_sh}" ] && {
-        . "${complet_sh}"
-      } || :
+      [ -x "${complet_sh}" ] && . "${complet_sh}" || :
     done
     unset complet_sh
   fi

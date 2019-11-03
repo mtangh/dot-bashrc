@@ -35,14 +35,15 @@ do
   done
   unset mpathsfile
 done || :
+unset mpathspath
 
-# export new PATH
+# export new MANPATH
 MANPATH=
 eval $($pathconf MANPATH -s -a ${mpathsdirs})
 
 # Cleanup
 unset pathconf
-unset mpathsdirs mpathspath
+unset mpathsdirs
 
 # end
 return 0
