@@ -18,7 +18,7 @@ install:
   # Check bash version
   - bash --version
   # Install ansible
-  - pip install ansible; ansible --version
+  - pip install ansible==2.8.5; ansible --version
   ## Create an inventory
   #- printf '[testcases]\nlocalhost\n' >tests/testcases
   ## Create ansible.cfg with correct roles_pat
