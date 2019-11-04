@@ -7,8 +7,8 @@ do
   if [ -d "${completdir}" ]
   then
     for complet_sh in $( {
-    /bin/ls "${completdir}"/*.sh{,.${machine}}
-    } 2>/dev/null; )
+    __pf_rc_loader "${completdir}"/*.sh
+    } 2>/dev/null || :; )
     do
       [ -x "${complet_sh}" ] && . "${complet_sh}" || :
     done

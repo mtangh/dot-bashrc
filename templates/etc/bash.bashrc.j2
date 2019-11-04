@@ -36,10 +36,10 @@ PS1='\u@\h \W\$ '
 
 # Load to the 'bash.bashrc.d' scripts
 for bashrcsh in $( {
-/bin/ls "${bashrc_dir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
-} 2>/dev/null; )
+__pf_rc_loader "${bashrc_dir}"/[0-9][0-9]*.sh
+} 2>/dev/null || :; )
 do
-  [ ! -x "$bashrcsh" ] || . "$bashrcsh"
+  [ ! -x "${bashrcsh}" ] || . "${bashrcsh}"
 done
 
 # cleanup

@@ -9,9 +9,9 @@ do
   if [ -d "${completdir}" ]
   then
     for complet_sh in $( {
-    /bin/ls "${completdir}"/*.sh{,.${os},.${osvendor},.${machine}}
+    __pf_rc_loader "${completdir}"/*.sh
     /bin/ls "${completdir}"/{"${osvendor}","${os}"}/*.sh{,.${machine}}
-    } 2>/dev/null; )
+    } 2>/dev/null || :; )
     do
       [ -x "${complet_sh}" ] && . "${complet_sh}" || :
     done

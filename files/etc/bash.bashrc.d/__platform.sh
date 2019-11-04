@@ -46,6 +46,44 @@ else
   machine=$(/bin/hostname -s|tr '[:upper:]' '[:lower:]')
 fi
 
+## RC Loader
+__pf_rc_loader() {
+  local suffixes=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}")
+  local _in_file=""
+  local _rc_file=""
+  local _rc_suff=""
+  local _rc_load=""
+  for _in_file in "${@}"
+  do
+    case "${_in_file}" in
+    -n) suffixes=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}") ;;
+    -r) suffixes=("${machine:--}" "${vendor:--}" "${osvendor:--}" "${os:--}" "") ;;
+    *)
+      for _rc_suff in "${suffixes[@]}"
+      do
+        if [ -d "${_in_file}${_rc_suff:+/${_rc_suff}}" ]
+        then
+          for _rc_file in "${_in_file}${_rc_suff:+/${_rc_suff}}"/*
+          do
+            [ -f "${_rc_file}" ] && echo "${_rc_file}" || :
+          done
+        elif [ -r "${_in_file}${_rc_suff:+.${_rc_suff}}" ]
+        then
+          echo "${_in_file}${_rc_suff:+.${_rc_suff}}" &&
+          _rc_load="yes"
+        elif [ -r "${_in_file}${_rc_suff:+_${_rc_suff}}" ]
+        then
+          echo "${_in_file}${_rc_suff:+_${_rc_suff}}" &&
+          _rc_load="yes"
+        fi || :
+      done
+      ;;
+    esac
+  done || :
+  [ -n "${_rc_load}" ]
+  return $?
+}
+
 } &>/dev/null || :
 
 # End

@@ -5,29 +5,28 @@ inputrc_path=""
 inputrc_file=""
 
 # INPUTRC for macOS
-MAC_INPUTRC=""
+INPUTRC_MACOS=""
 
 # Find inputrc file in
 for inputrc_path in "${HOME}"/{.macOS,.MacOSX}/{etc/,}inputrc
 do
-  for inputrc_file in \
-  "${inputrc_path}"{.d/${TERM},.d/default,.${TERM},}{.${machine},.${osvendor},.${os},}
+  for inputrc_file in "${inputrc_path}"{.d/${TERM},.d/default,.${TERM},}
   do
     [ -r "${inputrc_file}" ] && {
-      MAC_INPUTRC="${inputrc_file}" &&
+      INPUTRC_MACOS="${inputrc_file}" &&
       break
     } || :
   done
 done 2>/dev/null || :
 
 # Export
-[ -n "${MAC_INPUTRC:-}" ] && {
-  INPUTRC="${MAC_INPUTRC}"; export INPUTRC
+[ -n "${INPUTRC_MACOS:-}" ] && {
+  INPUTRC="${INPUTRC_MACOS}"; export INPUTRC
 } || :
 
 # Cleanup
 unset inputrc_path inputrc_file
-unset MAC_INPUTRC
+unset INPUTRC_MACOS
 
 # end
 return 0

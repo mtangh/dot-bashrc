@@ -6,13 +6,12 @@ inputrc_file=""
 
 # Lookup inputrc file in
 for inputrc_path in \
-"${XDG_CONFIG_HOME:-${HOME}/.config}/inputrc" \
-"${HOME}/.inputrc" \
-"${bash_local}/inputrc" \
-"${bashrc_dir}/inputrc"
+{"${XDG_CONFIG_HOME:-${HOME}/.config}"/,"${HOME}"/.}inputrc \
+{"${bash_local}","${bashrc_dir}"}/inputrc
 do
-  for inputrc_file in \
-  "${inputrc_path}"{.d/${TERM},.d/default,.${TERM},}{.${machine},.${osvendor},.${os},}
+  for inputrc_file in $( {
+  __pf_rc_loader -r "${inputrc_path}"{.d/${TERM},.d/default,.${TERM},}
+  } 2>/dev/null || :; )
   do
     [ -r "${inputrc_file}" ] && {
       INPUTRC="${inputrc_file}" &&

@@ -10,18 +10,18 @@ for i18npath in \
 {"${bash_local}","${bashrc_dir}"}/i18n
 do
   for i18nfile in $(
-    [ -n "${i18npath}" -a -d "${i18npath%/*}" ]  && {
-      for ps in "${os}" "${osvendor}" "${machine}" ""
+    [ -n "${i18npath}" -a -d "${i18npath%/*}" ] && {
+      for ps in "${machine}" "${osvendor}" "${os}" ""
       do
         for gn in ${usergroups} ""
         do
-          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
-          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
-          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
-          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
+          [ -f "${i18npath}${ps:+.$ps}${gn:+.$gn}" ] &&
+          echo "${i18npath}${ps:+.$ps}${gn:+.$gn}" || :
+          [ -d "${i18npath}.d${ps:+/$ps}${gn:+/$gn}" ] &&
+          echo "${i18npath}.d${ps:+/$ps}${gn:+/$gn}"/* || :
         done
       done
-    } 2>/dev/null)
+    } 2>/dev/null || :; )
   do
     [ -f "${i18nfile}" ] && {
       . "${i18nfile}" && break 2

@@ -91,4 +91,9 @@ fi 2>/dev/null || :
 # Cleanup
 unset _hex_uid _cf_file
 
+# Homebrew
+HOMEBREW_CASK_OPTS="--appdir=/Applications"
+export HOMEBREW_CASK_OPTS
+
+
 # *eof*

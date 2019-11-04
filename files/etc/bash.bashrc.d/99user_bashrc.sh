@@ -18,22 +18,21 @@
   unset dot_bashrc
 
   # Load scripts under the 'bash_profile.d' dir
-  for dot_profiles_dir in \
+  for dot_prof_dir in \
   "${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}{bash_,}profile.d \
   "${HOME}"/.{bash_,}profile.d
   do
-    if [ -d "${dot_profiles_dir}" ]
-    then
-      for dot_profiles_scr in $( {
-      /bin/ls "${dot_profiles_dir}"/*.sh{,.${os},.${osvendor},.${machine}}
-      } 2>/dev/null; )
-      do
-        [ -x "${dot_profiles_scr}" ] && . "${dot_profiles_scr}" || :
-      done
-      unset dot_profiles_scr
-    fi
+    [ -d "${dot_prof_dir}" ] ||
+      continue
+    for dot_prof_scr in $( {
+    __pf_rc_loader "${dot_prof_dir}"/*.sh
+    } 2>/dev/null || :; )
+    do
+      [ -x "${dot_prof_scr}" ] && . "${dot_prof_scr}" || :
+    done
+    unset dot_prof_scr
   done
-  unset dot_profiles_dir
+  unset dot_prof_dir
 
 } || :
 
