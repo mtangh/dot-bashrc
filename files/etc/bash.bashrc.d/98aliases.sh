@@ -21,8 +21,22 @@ alias ll="ls -l"
 alias lla="ls -la"
 
 # Reloading bashrc
-trap "source /etc/bash.bashrc" USR1
-alias reload-bashrc-all="pkill -USR1 bash"
+[ -r "/etc/bash.bashrc" ] && {
+  trap "source /etc/bash.bashrc" USR1
+  alias reload-bashrc-all="pkill -USR1 bash"
+} || :
+
+# load aliases
+for aliases_file in $( {
+__pf_rc_loader \
+{"${bash_local}","${bashrc_dir}"}/aliases
+} 2>/dev/null || :; )
+do
+  [ -f "${aliases_file}" ] &&
+  [ -r "${aliases_file}" ] &&
+  . "${aliases_file}" 2>/dev/null || :
+done || :
+unset aliases_file
 
 # *eof*
 

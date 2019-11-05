@@ -5,26 +5,20 @@
 PROMPT_COMMAND=""
 
 # Lookup PROMPT_COMMAND
-for promptsdir in \
-{"${bashrc_dir}","${bash_local}"}/prompt.d \
-{"${XDG_CONFIG_HOME:-${HOME}/.config}/","${HOME}/."}bash_prompt.d
+for prompts_sh in $( {
+__pf_rc_loader \
+{"${bashrc_dir}","${bash_local}"}/prompt.d/{$TERM/,}[0-9][0-9]*.sh \
+"${XDG_CONFIG_HOME:-${HOME}/.config}/"bash_prompt.d/{$TERM/,}[0-9][0-9]*.sh \
+"${HOME}/."bash_prompt.d/{$TERM/,}[0-9][0-9]*.sh
+} 2>/dev/null || :; )
 do
-  if [ -d "${promptsdir}" ]
-  then
-    for prompts_sh in "${promptsdir}"/{$TERM/,}[0-9][0-9]*.sh
-    do
-      [ -x "$prompts_sh" ] &&
-      . "$prompts_sh" &&
-      [ -n "$PROMPT_COMMAND" ] &&
-      break 2 || :
-    done
-    unset prompts_sh
-  fi
-  [ -n "$PROMPT_COMMAND" ] && {
-    break
-  } || :
-done &>/dev/null || :
-unset promptsdir
+  [ -f "$prompts_sh" ] &&
+  [ -x "$prompts_sh" ] &&
+  . "$prompts_sh" &&
+  [ -n "$PROMPT_COMMAND" ] &&
+  break || :
+done
+unset prompts_sh
 
 # PROMPT_COMMAND
 if [ -z "$PROMPT_COMMAND" ]

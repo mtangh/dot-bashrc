@@ -12,30 +12,21 @@ for mpathspath in \
 {"${bashrc_dir}","${bash_local}"}/pathconfig.d/manpaths \
 {"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
 do
-  for mpathsfile in $(
-    [ -n "${mpathspath}" -a -d "${mpathspath%/*}" ]  && {
-      for ps in "" "${os}" "${osvendor}" "${machine}"
-      do
-        for gn in "" ${usergroups}
-        do
-          [ -f "${mpathspath}${ps:+.$ps}${gn:+.$gn}" ] &&
-          echo "${mpathspath}${ps:+.$ps}${gn:+.$gn}" || :
-          [ -d "${mpathspath}.d${ps:+/$ps}${gn:+/$gn}" ] &&
-          echo "${mpathspath}.d${ps:+/$ps}${gn:+/$gn}"/* || :
-        done
-      done
-    } 2>/dev/null)
-  do
-    [ -f "${mpathsfile}" ] || continue
-    mpathsdirs="${mpathsdirs:+${mpathsdirs} }"
-    [ -x "${mpathsfile}" ] &&
-    mpathsdirs="${mpathsdirs}$(echo $(/bin/bash ${mpathsfile} 2>/dev/null))"
-    [ -x "${mpathsfile}" ] ||
-    mpathsdirs="${mpathsdirs}$(echo $(/bin/cat ${mpathsfile} 2>/dev/null))"
-  done
-  unset mpathsfile
+for mpathsfile in $( {
+__pf_rc_loader \
+/etc/manpaths \
+{"${bashrc_dir}","${bash_local}"}/pathconfig.d/manpaths \
+{"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
+} 2>/dev/null || :; )
+do
+  [ -f "${mpathsfile}" ] || continue
+  mpathsdirs="${mpathsdirs:+${mpathsdirs} }"
+  [ -x "${mpathsfile}" ] &&
+  mpathsdirs="${mpathsdirs}$(echo $(/bin/bash ${mpathsfile} 2>/dev/null))"
+  [ -x "${mpathsfile}" ] ||
+  mpathsdirs="${mpathsdirs}$(echo $(/bin/cat ${mpathsfile} 2>/dev/null))"
 done || :
-unset mpathspath
+unset mpathsfile
 
 # export new MANPATH
 MANPATH=

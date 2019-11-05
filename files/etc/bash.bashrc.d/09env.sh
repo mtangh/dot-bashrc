@@ -19,14 +19,14 @@
 [ -z "${PAGER:-}" ] && unset  PAGER || :
 
 # RSYNC
-[ -x "$(type -p rsync)" -a -x "$(type -p ssh)" ] && {
-  RSYNC_RSH="$(type -p ssh)"
+[ -x "$(type -P rsync)" -a -x "$(type -P ssh)" ] && {
+  RSYNC_RSH="$(type -P ssh)"
   export RSYNC_RSH
 } || :
 
 # CVS
-[ -x "$(type -p cvs)" -a -x "$(type -p ssh)" ] && {
-  CVS_RSH="$(type -p ssh)"
+[ -x "$(type -P cvs)" -a -x "$(type -P ssh)" ] && {
+  CVS_RSH="$(type -P ssh)"
   export CVS_RSH
 } || :
 

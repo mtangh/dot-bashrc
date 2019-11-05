@@ -5,37 +5,22 @@
 # we want to re-read settings in case we're running in CJKI and
 # have been defaulted to English on the console.
 
-for i18npath in \
+for i18nfile in $( {
+__pf_rc_loader -r \
 {"${XDG_CONFIG_HOME:-${HOME}/.config}/","${HOME}/."}i18n \
 {"${bash_local}","${bashrc_dir}"}/i18n
+} 2>/dev/null || :; )
 do
-  for i18nfile in $(
-    [ -n "${i18npath}" -a -d "${i18npath%/*}" ] && {
-      for ps in "${machine}" "${osvendor}" "${os}" ""
-      do
-        for gn in ${usergroups} ""
-        do
-          [ -f "${i18npath}${ps:+.$ps}${gn:+.$gn}" ] &&
-          echo "${i18npath}${ps:+.$ps}${gn:+.$gn}" || :
-          [ -d "${i18npath}.d${ps:+/$ps}${gn:+/$gn}" ] &&
-          echo "${i18npath}.d${ps:+/$ps}${gn:+/$gn}"/* || :
-        done
-      done
-    } 2>/dev/null || :; )
-  do
-    [ -f "${i18nfile}" ] && {
-      . "${i18nfile}" && break 2
-    } || :
-  done
+  [ -f "${i18nfile}" ] && {
+    . "${i18nfile}" && break
+  } || :
 done
 
-if [ -z "${LANG:-}" ]
+if [ -z "${LANG:-}" ] &&
+   [ -r "${bashrc_dir}/i18n.d/default" ]
 then
-  if [ -r "${bashrc_dir}/i18n.d/default" ]
-  then
-    . "${bashrc_dir}/i18n.d/default"
-  fi || :
-fi
+  . "${bashrc_dir}/i18n.d/default"
+fi || :
 
 # GDM Lang
 if [ -n "${GDM_LANG:-}" ]

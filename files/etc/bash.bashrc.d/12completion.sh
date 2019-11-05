@@ -2,24 +2,17 @@
 # $Id$
 
 # completion dierctory
-for completdir in \
-{"${bashrc_dir}","${bash_local}"}/completion.d \
-{"${XDG_CONFIG_HOME:-${HOME}/.config}/","${HOME}/."}bash_completion.d
+for complet_sh in $( {
+__pf_rc_loader \
+{"${bashrc_dir}","${bash_local}"}/completion.d/*.sh \
+"${XDG_CONFIG_HOME:-${HOME}/.config}/"bash_completion.d/*.sh
+"${HOME}/."bash_completion.d/*.sh
+} 2>/dev/null || :; )
 do
-  if [ -d "${completdir}" ]
-  then
-    for complet_sh in $( {
-    __pf_rc_loader "${completdir}"/*.sh
-    /bin/ls "${completdir}"/{"${osvendor}","${os}"}/*.sh{,.${machine}}
-    } 2>/dev/null || :; )
-    do
-      [ -x "${complet_sh}" ] && . "${complet_sh}" || :
-    done
-    unset complet_sh
-  fi
+  [ -f "${complet_sh}" ] &&
+  [ -x "${complet_sh}" ] &&
+  . "${complet_sh}" || :
 done 2>/dev/null || :
-
-# Cleanup
-unset completdir
+unset complet_sh
 
 # *eof*

@@ -39,11 +39,14 @@ for bashrcsh in $( {
 __pf_rc_loader "${bashrc_dir}"/[0-9][0-9]*.sh
 } 2>/dev/null || :; )
 do
-  [ ! -x "${bashrcsh}" ] || . "${bashrcsh}"
+  [ -f "${bashrcsh}" ] &&
+  [ -x "${bashrcsh}" ] &&
+  . "${bashrcsh}" || :
 done
+unset bashrcsh
 
 # cleanup
-unset bashrcdir bashlocal usergroups bashrcsh
+unset bashrcdir bashlocal usergroups
 
 # unset 'u'
 set +u

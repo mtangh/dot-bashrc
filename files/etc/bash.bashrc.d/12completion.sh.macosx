@@ -2,21 +2,14 @@
 # $Id$
 
 # completion dierctory
-for completdir in "${HOME}"/{.macOS,.MacOSX}/{etc/,}bash_completion.d
+for complet_sh in $( {
+__pf_rc_loader \
+"${HOME}"/{.macOS,.MacOSX}/{etc/,}bash_completion.d/*.sh
 do
-  if [ -d "${completdir}" ]
-  then
-    for complet_sh in $( {
-    __pf_rc_loader "${completdir}"/*.sh
-    } 2>/dev/null || :; )
-    do
-      [ -x "${complet_sh}" ] && . "${complet_sh}" || :
-    done
-    unset complet_sh
-  fi
+  [ -f "${complet_sh}" ] &&
+  [ -x "${complet_sh}" ] &&
+  . "${complet_sh}" || :
 done 2>/dev/null || :
-
-# Cleanup
-unset completdir
+unset complet_sh
 
 # *eof*

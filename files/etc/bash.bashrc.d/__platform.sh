@@ -48,39 +48,54 @@ fi
 
 ## RC Loader
 __pf_rc_loader() {
-  local suffixes=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}")
-  local _in_file=""
-  local _rc_file=""
-  local _rc_suff=""
-  local _rc_load=""
-  for _in_file in "${@}"
+  local _sfx=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}")
+  local _grp=("" ${usergroups:--})
+  local _arg=""
+  local _rcf=""
+  local _plt=""
+  local _ugn=""
+  local _cnt=0
+  for _arg in "${@}"
   do
-    case "${_in_file}" in
-    -n) suffixes=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}") ;;
-    -r) suffixes=("${machine:--}" "${vendor:--}" "${osvendor:--}" "${os:--}" "") ;;
+    [ -z "${_arg}" ] ||
+    case "${_arg}" in
+    -n) 
+      _sfx=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}")
+      _grp=("" ${usergroups:--})
+      ;;
+    -r)
+      _sfx=("${machine:--}" "${vendor:--}" "${osvendor:--}" "${os:--}" "")
+      _grp=(${usergroups:--} "")
+      ;;
     *)
-      for _rc_suff in "${suffixes[@]}"
-      do
-        if [ -d "${_in_file}${_rc_suff:+/${_rc_suff}}" ]
-        then
-          for _rc_file in "${_in_file}${_rc_suff:+/${_rc_suff}}"/*
+      [ -n "${_arg}" -a -d "${_arg%/*}" ] &&
+      for _rcf in $( {
+        for _plt in "${_sfx[@]}"
+        do
+          for _ugn in "${_grp[@]}"
           do
-            [ -f "${_rc_file}" ] && echo "${_rc_file}" || :
+            if [ -f "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}" ]
+            then echo "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}"
+            fi || :
+            if [ -d "${_arg}.d/${_plt:--}/${_ugn:--}" ]
+            then echo "${_arg}.d/${_plt}/${_ugn}"/*
+            elif [ -d "${_arg}.d/${_plt:--}" ]
+            then echo "${_arg}.d/${_plt}"/*"${_ugn:+.$_ugn}"
+            elif [ -d "${_arg}.d" -a -n "${_plt:-}${_ugn:-}" ]
+            then echo "${_arg}.d"/*${_plt:+.$_plt}${_ugn:+.$_ugn}
+            fi || :
           done
-        elif [ -r "${_in_file}${_rc_suff:+.${_rc_suff}}" ]
-        then
-          echo "${_in_file}${_rc_suff:+.${_rc_suff}}" &&
-          _rc_load="yes"
-        elif [ -r "${_in_file}${_rc_suff:+_${_rc_suff}}" ]
-        then
-          echo "${_in_file}${_rc_suff:+_${_rc_suff}}" &&
-          _rc_load="yes"
-        fi || :
+        done
+      } 2>/dev/null || :; )
+      do
+        [ -f "${_rcf}" ] && {
+          echo "${_rcf}" && _cnt=$((++_cnt))
+        } || :
       done
       ;;
     esac
   done || :
-  [ -n "${_rc_load}" ]
+  [ ${_cnt} -gt 0 ]
   return $?
 }
 

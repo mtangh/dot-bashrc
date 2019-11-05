@@ -8,37 +8,21 @@ pathconf="${bashrc_dir}/bin/pathconfig"
 paths_dirs=""
 
 # lookup paths file(s)
-for paths_path in \
+for paths_file in $( {
+__pf_rc_loader \
 /etc/paths \
 {"${bashrc_dir}","${bash_local}"}/pathconfig.d/paths \
 {"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}paths
+} 2>/dev/null || :; )
 do
-  for paths_file in $(
-    [ -n "${paths_path}" -a -d "${paths_path%/*}" ]  && {
-      for ps in "" ${os} ${osvendor} ${machine}
-      do
-        for gn in "" ${usergroups}
-        do
-          [ -f "${paths_path}${ps:+.$ps}${gn:+.$gn}" ] &&
-          echo "${paths_path}${ps:+.$ps}${gn:+.$gn}" || :
-          [ -d "${paths_path}.d${ps:+/$ps}" ] &&
-          echo "${paths_path}.d${ps:+/$ps}"/*"${gn:+.$gn}" || :
-          [ -d "${paths_path}.d${ps:+/$ps}${gn:+/$gn}" ] &&
-          echo "${paths_path}.d${ps:+/$ps}${gn:+/$gn}"/* || :
-        done
-      done
-    } 2>/dev/null)
-  do
-    [ -f "${paths_file}" ] || continue
-    paths_dirs="${paths_dirs:+${paths_dirs} }"
-    [ -x "${paths_file}" ] &&
-    paths_dirs="${paths_dirs}$(echo $(/bin/bash ${paths_file} 2>/dev/null))"
-    [ -x "${paths_file}" ] ||
-    paths_dirs="${paths_dirs}$(echo $(/bin/cat ${paths_file} 2>/dev/null))"
-  done
-  unset paths_file
+  [ -f "${paths_file}" ] || continue
+  paths_dirs="${paths_dirs:+${paths_dirs} }"
+  [ -x "${paths_file}" ] &&
+  paths_dirs="${paths_dirs}$(echo $(/bin/bash ${paths_file} 2>/dev/null))"
+  [ -x "${paths_file}" ] ||
+  paths_dirs="${paths_dirs}$(echo $(/bin/cat ${paths_file} 2>/dev/null))"
 done || :
-unset paths_path
+unset paths_file
 
 # Set default if dirs is empty
 if [ -z "${paths_dirs}" ]

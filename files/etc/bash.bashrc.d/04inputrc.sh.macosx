@@ -1,32 +1,32 @@
 # ${bashrc_dir}/04inputrc.sh.macosx
 # $Id$
 
-inputrc_path=""
 inputrc_file=""
 
 # INPUTRC for macOS
-INPUTRC_MACOS=""
+INPUTRC_OS_X=""
 
 # Find inputrc file in
-for inputrc_path in "${HOME}"/{.macOS,.MacOSX}/{etc/,}inputrc
+for inputrc_file in $( {
+__pf_rc_loader \
+"${HOME}"/{.macOS,.MacOSX}/{etc/,}inputrc
+} 2>/dev/null || :; )
 do
-  for inputrc_file in "${inputrc_path}"{.d/${TERM},.d/default,.${TERM},}
-  do
-    [ -r "${inputrc_file}" ] && {
-      INPUTRC_MACOS="${inputrc_file}" &&
-      break
-    } || :
-  done
-done 2>/dev/null || :
+  [ -f "${inputrc_file}" -a -r "${inputrc_file}" ] && {
+    INPUTRC_OS_X="${inputrc_file}" &&
+    break
+  } || :
+done || :
+unset inputrc_file
 
 # Export
-[ -n "${INPUTRC_MACOS:-}" ] && {
-  INPUTRC="${INPUTRC_MACOS}"; export INPUTRC
+[ -n "${INPUTRC_OS_X:-}" ] && {
+  INPUTRC="${INPUTRC_OS_X}"
+  export INPUTRC
 } || :
 
 # Cleanup
-unset inputrc_path inputrc_file
-unset INPUTRC_MACOS
+unset INPUTRC_OS_X
 
 # end
 return 0
