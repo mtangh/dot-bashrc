@@ -7,14 +7,9 @@ pathconf="${bashrc_dir}/bin/pathconfig"
 # manpaths entry
 mpathsdirs=""
 
-for mpathspath in \
-/etc/manpaths \
-{"${bashrc_dir}","${bash_local}"}/pathconfig.d/manpaths \
-{"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
-do
+# lookup manpaths file(s)
 for mpathsfile in $( {
-__pf_rc_loader \
-/etc/manpaths \
+__pf_rc_loader /etc/manpaths \
 {"${bashrc_dir}","${bash_local}"}/pathconfig.d/manpaths \
 {"${HOME}/.","${XDG_CONFIG_HOME:-${HOME}/.config}/"}manpaths
 } 2>/dev/null || :; )
