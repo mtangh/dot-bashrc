@@ -7,7 +7,7 @@
   for dot_prof_scr in $( {
   __pf_rc_loader \
   "${HOME}"/.{macOS,MacOSX}/{etc/,}{bash_,}profile.d
-  } 2>/dev/null || :; }
+  } 2>/dev/null || :; )
   do
     [ -f "${dot_prof_scr}" ] &&
     [ -x "${dot_prof_scr}" ] &&
