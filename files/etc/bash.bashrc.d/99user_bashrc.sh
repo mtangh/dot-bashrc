@@ -30,7 +30,7 @@
     . "${dot_prof_scr}" || :
   done
   unset dot_prof_scr
-´
+
 } || :
 
 # *eof*

@@ -5,29 +5,27 @@
 ## color-ls For macOS
 ##
 
+# User config dir.
+usrconfdir="${XDG_CONFIG_HOME:-${HOME}/.config}"
+
 # color-ls
-for lsclr_path in \
-"${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}lscolors \
-"${HOME}/.lscolors" \
-{"${bash_local}","${bashrc_dir}"}/colors.d/${os}/LSCOLORS
+for lsclr_file in $( {
+__pf_rc_loader \
+"${usrconfdir}"/{etc/,}lscolors{/${TERM},.${TERM},} \
+"${HOME}/.lscolors"{/${TERM},.${TERM},} \
+{"${bash_local}","${bashrc_dir}"}/colors.d/${os:+$os/}LSCOLORS{.${TERM},}
+} 2>/dev/null || :; )
 do
-  for lsclr_file in \
-  "${lsclr_path}"{/${TERM},.${TERM},}{.${machine},.${vendor},}
-  do
-    [ -f "${lsclr_file}" ] || {
-      continue
-    }
-    [ -x "${lsclr_file}" ] &&
-    LSCOLORS=$(bash ${lsclr_file} 2>/dev/null) ||
-    LSCOLORS=$(cat ${lsclr_file} 2>/dev/null)
-    [ -n "${LSCOLORS:-}" ] && {
-      export LSCOLORS
-      break 2
-    } || :
-  done
-  [ -z "${LSCOLORS:-}" ] || {
+  [ -f "${lsclr_file}" ] ||
+    continue
+  [ -x "${lsclr_file}" ] &&
+  LSCOLORS=$(bash ${lsclr_file} 2>/dev/null)
+  [ -x "${lsclr_file}" ] ||
+  LSCOLORS=$(cat ${lsclr_file} 2>/dev/null)
+  [ -n "${LSCOLORS:-}" ] && {
+    export LSCOLORS
     break
-  }
+  } || :
 done
 
 # Setup ls aliases
@@ -39,6 +37,7 @@ alias lsacl="ls -le"
 alias lsattr="ls -l@"
 
 # Cleanup
-unset lsclr_path lsclr_file
+unset usrconfdir
+unset lsclr_file
 
 # *eof*

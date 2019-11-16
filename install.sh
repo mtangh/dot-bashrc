@@ -37,11 +37,11 @@ case "${DEBUG:-NO}" in
 esac || :
 
 # Set flags from environment variables
-[ -n "$DOT_BASHRC_SYSTEM" ] &&
+[ -n "${DOT_BASHRC_SYSTEM:-}"  ] &&
 INSTALL_GLOBAL=1
-[ -n "$DOT_BASHRC_SKEL" ] &&
+[ -n "${DOT_BASHRC_SKEL:-}" ] &&
 SETUP_SKELETON=1
-[ -n "$DOT_BASHRC_DEBUG" ] && {
+[ -n "${DOT_BASHRC_DEBUG:-}" ] && {
   ENABLE_DRY_RUN=1
   ENABLE_X_TRACE=1
 }
@@ -337,28 +337,34 @@ _MSG_
 
 fi # if [ $BASHRC_INSTALL -eq 0 ]
 
-# Installation will start.
-cat <<_MSG_
-#---------------------------------------
-# dot-bashrc/install.sh
-#---------------------------------------
-_MSG_
-
 # Installation Tag
 dotbashtag="${DOT_BASHRC_PRJ}/${THIS}, $(LANG=C date)"
 
 # Installation source path
 dotfilesrc="files/etc/bash.bashrc.d"
 
+# DOT_BASHRC_SRC
+if [ -z "${DOT_BASHRC_SRC:-}" ]
+then
+  DOT_BASHRC_SRC="$(pwd)"
+fi
+
 # Change the current directory to install-source
 cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
-  _abort 2 "'${DOT_BASHRC_SRC}': no such file or dorectory."
+  _abort 2 "'${DOT_BASHRC_SRC:-.}': no such file or dorectory."
 }
 
 # Confirm existence of source to be installed
-[ -d "${dotfilesrc}" ] || {
+[ -d "${DOT_BASHRC_SRC}/${dotfilesrc}" ] || {
   _abort 2 "'DOT_BASHRC_SRC/${dotfilesrc:-???}': no such file or dorectory."
 }
+
+# Installation will start.
+cat <<_MSG_
+#---------------------------------------
+# dot-bashrc/install.sh
+#---------------------------------------
+_MSG_
 
 # Installation settings
 if [ $INSTALL_GLOBAL -ne 0 ]
