@@ -13,7 +13,8 @@ for lsclr_file in $( {
 __pf_rc_loader \
 "${usrconfdir}"/{etc/,}lscolors{/${TERM},.${TERM},} \
 "${HOME}/.lscolors"{/${TERM},.${TERM},} \
-{"${bash_local}","${bashrc_dir}"}/colors.d/${os:+$os/}LSCOLORS{.${TERM},}
+"${bash_local}"/colors.d/${vendor:+$vendor/}LSCOLORS{.${TERM},} \
+"${bashrc_dir}"/colors.d/${os:+$os/}LSCOLORS{.${TERM},}
 } 2>/dev/null || :; )
 do
   [ -f "${lsclr_file}" ] ||

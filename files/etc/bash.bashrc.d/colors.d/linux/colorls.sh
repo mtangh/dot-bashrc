@@ -20,7 +20,8 @@ for lsclr_file in $( {
 __pf_loader \
 "${usrconfdir}"/{etc/,}dir{_,}colors{/${TERM},.${TERM},} \
 "${HOME}"/.dir{_,}colors{/${TERM},.${TERM},} \
-{"${bash_local}","${bashrc_dir}"}/colors.d/${os:+$os/}DIR_COLORS{.${TERM},}
+"${bash_local}"/colors.d/${vendor:+$vendor/}DIR_COLORS{.${TERM},} \
+"${bashrc_dir}"/colors.d/${os:+$os/}DIR_COLORS{.${TERM},}
 } 2>/dev/null || :; )
 do
   [ -f "${lsclr_file}" ] && {
@@ -33,7 +34,7 @@ done
 alias ls="ls ${ls_options}"
 
 # setup dircolors
-[ ! -f "${dir_colors}" ] ||
+[ ! -f "${dir_colors}" -o ! -r "${dir_colors}" ] ||
 egrep -qi "^COLOR.*none" "${dir_colors}" &>/dev/null || {
 
   eval $(dircolors --sh "${dir_colors}" 2>/dev/null)

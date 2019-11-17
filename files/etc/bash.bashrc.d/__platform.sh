@@ -70,19 +70,24 @@ __pf_rc_loader() {
     *)
       [ -n "${_arg}" -a -d "${_arg%/*}" ] &&
       for _rcf in $( {
+        _bpn="${_arg%.*}"
         for _plt in "${_sfx[@]}"
         do
           for _ugn in "${_grp[@]}"
           do
             if [ -f "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}" ]
             then echo "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}"
+            elif [ -f "${_arg}${_plt:+_$_plt}${_ugn:+_$_ugn}" ]
+            then echo "${_arg}${_plt:+_$_plt}${_ugn:+_$_ugn}"
+            elif [ -f "${_bpn}.d/${_plt:+$_plt}${_plt:+.}${_ugn:+$_ugn}" ]
+            then echo "${_bpn}.d/${_plt:+$_plt}${_plt:+.}${_ugn:+$_ugn}"
             fi || :
-            if [ -d "${_arg}.d/${_plt:--}/${_ugn:--}" ]
-            then echo "${_arg}.d/${_plt}/${_ugn}"/*
-            elif [ -d "${_arg}.d/${_plt:--}" ]
-            then echo "${_arg}.d/${_plt}"/*"${_ugn:+.$_ugn}"
-            elif [ -d "${_arg}.d" -a -n "${_plt:-}${_ugn:-}" ]
-            then echo "${_arg}.d"/*${_plt:+.$_plt}${_ugn:+.$_ugn}
+            if [ -d "${_bpn}.d/${_plt:--}/${_ugn:--}" ]
+            then echo "${_bpn}.d/${_plt}/${_ugn}"/*
+            elif [ -d "${_bpn}.d/${_plt:--}" ]
+            then echo "${_bpn}.d/${_plt}"/*"${_ugn:+.$_ugn}"
+            elif [ -d "${_bpn}.d" -a -n "${_plt:-}${_ugn:-}" ]
+            then echo "${_bpn}.d"/*${_plt:+.$_plt}${_ugn:+.$_ugn}
             fi || :
           done
         done

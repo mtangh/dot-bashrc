@@ -21,7 +21,7 @@ echo "[${tests_name}] install.sh for user" && {
         do [ -e "${check_file}" ] && echo "Found - ${check_file}" || exit 1
         done; ) &&
       ( [ -z "${PS1:-}" ] && PS1='\$ ' || :
-        unset os vendor osvendor machine
+        unset os vendor osvendor machine LS_COLORS LSCOLORS
         . "${HOME}/.config/bash.bashrc" &&
         echo "Load ${HOME}/.config/bash.bashrc" && {
           [ -n "$os"       ] && echo "Found - os=$os"             &&

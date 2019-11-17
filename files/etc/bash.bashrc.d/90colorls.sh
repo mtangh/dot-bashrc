@@ -6,17 +6,17 @@
 ##
 
 # load color ls settings
-for lscolors_d in \
-{"${bash_local}","${bashrc_dir}"}/colors.d{/${os},/${osvendor},}
+for lscolorssh in $( {
+__pf_rc_loader \
+"${bash_local}"/colors.d/${vendor:+$vendor/}colorls.sh \
+"${bashrc_dir}"/colors.d/${os:+$os/}colorls.sh \
+"${bashrc_dir}"/colors.d/colorls.sh
+} 2>/dev/null || :; )
 do
-  [ -f "${lscolors_d}/colorls.sh" ] &&
-  [ -x "${lscolors_d}/colorls.sh" ] && {
-    . "${lscolors_d}/colorls.sh" 2>/dev/null &&
-    break
+  [ -f "${lscolorssh}" -a -x "${lscolorssh}" ] && {
+    . "${lscolorssh}" && break
   } || :
 done || :
-
-# Cleanup
-unset lscolors_d
+unset lscolorssh
 
 # *eof*
