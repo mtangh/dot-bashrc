@@ -17,7 +17,7 @@ ls_options="-A ${ls_options}" || :
 
 # color-ls
 for lsclr_file in $( {
-__pf_loader \
+__pf_rc_loader \
 "${usrconfdir}"/{etc/,}dir{_,}colors{/${TERM},.${TERM},} \
 "${HOME}"/.dir{_,}colors{/${TERM},.${TERM},} \
 "${bash_local}"/colors.d/${vendor:+$vendor/}DIR_COLORS{.${TERM},} \
