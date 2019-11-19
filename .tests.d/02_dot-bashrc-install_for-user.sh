@@ -28,7 +28,7 @@ echo "[${tests_name}] install.sh for user" && {
           [ -n "$vendor"   ] && echo "Found - vendor=$vendor"     &&
           [ -n "$osvendor" ] && echo "Found - osvendor=$osvendor" &&
           [ -n "$machine"  ] && echo "Found - machine=$machine"   &&
-          [ -n "$LS_COLORS" -o "$LSCOLORS" ] &&
+          [ -n "$LS_COLORS" -o -n "$LSCOLORS" ] &&
           echo "Found - LS_COLORS or LSCOLORS" &&
           :;
         }; )
