@@ -11,7 +11,8 @@ echo "[${tests_name}] install.sh for user" && {
   bash -n install.sh &&
   for n in 1 2
   do
-    echo "No.$n"
+    run_inst=$n
+    echo "${THIS}.${n}"
     bash -x install.sh --install --source=$(pwd) && {
       ( for check_file in \
           ${HOME}/.config/bash.{bashrc,profile,bash_logout} \
