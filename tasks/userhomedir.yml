@@ -20,6 +20,10 @@
     register: bashrc_userhomedir_user_st
     ignore_errors: yes
 
+  - name: "debug"
+    debug:
+      msg: "{{ bashrc_userhomedir_user_st.home }} is_dir {{ bashrc_userhomedir_user_st.home|is_dir }}"
+
   - name: "bashrc | userhomedir - {{ bashrc_userhomedir_user|d('???',true) }} | Stat user homedir."
     stat:
       path: "{{

@@ -6,6 +6,11 @@ CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 THIS="${THIS:-install.sh}"
 NAME="${THIS%.*}"
 
+# Commands
+dotbashrc_git="$(type -P git)"
+dotbashrcplay="$(type -P ansible-playbook)"
+dotbash_patch="$(type -P patch)"
+
 # Path
 PATH=/usr/bin:/usr/sbin:/bin:/sbin; export PATH
 
@@ -18,6 +23,14 @@ DOT_BASHRC_TMP="${DOT_BASHRC_TMP:-}"
 # dot-bashrc project name
 DOT_BASHRC_PRJ="${DOT_BASHRC_URL##*/}"
 DOT_BASHRC_PRJ="${DOT_BASHRC_PRJ%.*}"
+DOT_BASHRC_PRJ="${DOT_BASHRC_PRJ:-dot-bashrc}"
+
+# Install method
+INSTALL_METHOD="${INSTALL_METHOD:-}"
+
+# Installation source path
+dotfilesrc="files/etc/bash.bashrc.d"
+dottmpldir="templates/etc/bash.bashrc.d"
 
 # Flags
 BASHRC_INSTALL=0
@@ -124,6 +137,8 @@ OPTIONS:
   Install in the user environment.
 --skel
   Update the system user template (SKEL).
+-Mmethod
+  install method; ansible or bash.
 -D, --debug
   Enable debug output.
 -n, --dry-run
@@ -161,6 +176,20 @@ do
     ;;
   -without-skel|--without-skel)
     SETUP_SKELETON=0
+    ;;
+  -M*)
+    if [ -n "${1%%*-M}" ]
+    then INSTALL_METHOD="${1%%*-M}"
+    elif [ -z "${2%%-*}" ]
+    then INSTALL_METHOD="${2:-}"; shift
+    else INSTALL_METHOD=""
+    fi
+    case "${INSTALL_METHOD:-}" in
+    ansible|bash)
+      ;;
+    *)
+      INSTALL_METHOD=""
+    esac
     ;;
   -D*|-debug*|--debug*)
     ENABLE_X_TRACE=1
@@ -234,11 +263,9 @@ fi
 } || :
 
 # Run
-if [ $BASHRC_INSTALL -eq 0 ]
+if [ ${BASHRC_INSTALL} -eq 0 ]
 then
 
-  dotbashrc_git="$(type -P git)"
-  dotbashrcplay="$(type -P ansible-playbook)"
   dotbashrcopts=""
   dotbashrc_ret=0
 
@@ -250,18 +277,18 @@ then
     _abort 1 "Can not find the 'git' command."
   }
 
-  if [ -z "${DOT_BASHRC_SRC}" -o ! -d "${DOT_BASHRC_SRC}" ]
+  if [ ! -d "${DOT_BASHRC_SRC:-_EMPTY_}" ]
   then
 
-    if [ -d "${CDIR}/files" -a -d "${CDIR}/templates" ]
+    if [ -d "${CDIR}/${dotfilesrc}" -a -d "${CDIR}/${dottmpldir}" ]
     then
+
+      DOT_BASHRC_SRC="${CDIR}"
 
       [ -d "${CDIR}/.git" ] && {
         ${dotbashrc_git} pull ||
-        _abort 1 "Failed command: 'git pull'."
+        echo "Failed command: 'git pull'."
       }
-
-      DOT_BASHRC_SRC="${CDIR}"
 
     else
 
@@ -280,14 +307,34 @@ then
 
   fi # if [ ! -d "${DOT_BASHRC_SRC}" ]
 
+  # Install method
+  case "${INSTALL_METHOD:-}" in
+  ansible)
+    [ -x "${dotbashrcplay}" -a -r "${DOT_BASHRC_SRC}/ansible.yml" ] || {
+      _abort 1 "Command or playbook or not found."
+    }
+    ;;
+  bash)
+    ;;
+  *)
+    if [ -x "${dotbashrcplay}" -a -r "${DOT_BASHRC_SRC}/ansible.yml" ]
+    then INSTALL_METHOD="ansible"
+    else INSTALL_METHOD="bash"
+    fi
+    ;;
+  esac
+
+  # Install
   cat <<_MSG_
 #
-# dot-bashrc/install.sh
+# dot-bashrc/install.sh${INSTALL_METHOD:+ [${INSTALL_METHOD}]}
 #
 _MSG_
 
-  if [ -x "${dotbashrcplay}" -a -r "${DOT_BASHRC_SRC}/ansible.yml" ]
-  then
+  # Install method
+  case "${INSTALL_METHOD:-}" in
+
+  ansible)
 
     dotbashrcopts="-D"
 
@@ -295,6 +342,8 @@ _MSG_
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e global=true"
     [ $SETUP_SKELETON -eq 0 ] ||
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-e skel=true"
+    [ $ENABLE_X_TRACE -eq 0 ] ||
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-vvv"
     [ $ENABLE_DRY_RUN -eq 0 ] ||
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }-C"
 
@@ -307,8 +356,11 @@ _MSG_
     ( cd "${DOT_BASHRC_SRC}" &&
       ${dotbashrcplay} ${dotbashrcopts} ./ansible.yml; )
     dotbashrc_ret=$?
+    sleep 1
 
-  else
+    ;;
+
+  bash)
 
     dotbashrcopts=""
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }--install"
@@ -319,6 +371,8 @@ _MSG_
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }--global"
     [ $SETUP_SKELETON -ne 0 ] &&
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }--with-skel"
+    [ $ENABLE_X_TRACE -eq 0 ] ||
+    dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }--debug"
     [ $ENABLE_DRY_RUN -ne 0 ] &&
     dotbashrcopts="${dotbashrcopts:+$dotbashrcopts }--dry-run"
 
@@ -331,7 +385,13 @@ _MSG_
     /bin/bash ./$THIS $dotbashrcopts
     dotbashrc_ret=$?
 
-  fi
+    ;;
+
+  *)
+    _abort "Unknown install method '${INSTALL_METHOD:-}'."
+    ;;
+
+  esac
 
   exit $dotbashrc_ret
 
@@ -340,9 +400,6 @@ fi # if [ $BASHRC_INSTALL -eq 0 ]
 # Installation Tag
 dotbashtag="${DOT_BASHRC_PRJ}/${THIS}, $(LANG=C date)"
 
-# Installation source path
-dotfilesrc="files/etc/bash.bashrc.d"
-
 # DOT_BASHRC_SRC
 if [ -z "${DOT_BASHRC_SRC:-}" ]
 then
@@ -350,13 +407,18 @@ then
 fi
 
 # Change the current directory to install-source
-cd "${DOT_BASHRC_SRC}" 2>/dev/null || {
+cd "${DOT_BASHRC_SRC:-_EMPTY_}" 2>/dev/null || {
   _abort 2 "'${DOT_BASHRC_SRC:-.}': no such file or dorectory."
 }
 
 # Confirm existence of source to be installed
-[ -d "${DOT_BASHRC_SRC}/${dotfilesrc}" ] || {
+[ -d "${DOT_BASHRC_SRC:-_EMPTY_}/${dotfilesrc}" ] || {
   _abort 2 "'DOT_BASHRC_SRC/${dotfilesrc:-???}': no such file or dorectory."
+}
+
+# Confirm existence of templates-dir to be installed
+[ -d "${DOT_BASHRC_SRC:-_EMPTY_}/${dottmpldir}" ] || {
+  _abort 2 "'DOT_BASHRC_SRC/${dottmpldir:-???}': no such file or dorectory."
 }
 
 # Installation will start.
@@ -464,7 +526,7 @@ _MSG_
 }
 
 # Install the file
-if [ ! -e "${dotbasedir}" -o -z "$(type -P patch)" ]
+if [ ! -e "${dotbasedir}" -o -z "${dotbash_patch:-}" ]
 then
 
   echo "Install the 'bash.bashrc.d' to '${dotbasedir}'."
@@ -491,7 +553,7 @@ else
   echo "Update the 'bash.bashrc.d' to '${dotbasedir}'."
 
   ( cd "${dotbasedir}" && {
-      diff -Nur . "${DOT_BASHRC_SRC}/${dotfilesrc}" |patch -p0 ||
+      diff -Nur . "${DOT_BASHRC_SRC}/${dotfilesrc}" |"${dotbash_patch}" -p0 ||
       exit 1
     }; )
 
@@ -663,8 +725,17 @@ then
 
 fi # if [ $INSTALL_GLOBAL -eq 0 ]
 
+# Print
+[ $ENABLE_DRY_RUN -ne 0 ] && {
+  ( cd "${dotinstall}" 2>/dev/null && {
+    echo "pwd=$(pwd)"
+    find . | sort
+  }; )
+}
+
 # Finish installation
 echo "Done."
+sleep 1
 
 # End
 exit 0

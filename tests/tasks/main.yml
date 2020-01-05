@@ -6,8 +6,7 @@
   fail:
     msg: "Cannot run tests: tests_run=[{{ tests_run|d(none) }}], tests_task=[{{ tests_task|d('???',true) }}]."
   when: tests_run|d(false,true) == false
-        and (tests_task|d(none,true) is not string
-          or tests_task|trim|lower|match('^(setup|teardown)$') == false)
+        and tests_task|d(none)|tests_task_valid == false
 
 - block:
 
@@ -18,12 +17,10 @@
     no_log: "{{ _tests_tasks_file|d(none) is none }}"
 
   when: tests_run|d(false,true)
-        and tests_task|d(none,true) is string
-        and tests_task|trim|lower|match('^(setup|teardown)$')
+        and tests_task|d(none)|tests_task_valid
   vars:
     _tests_tasks_file: "{{
       'tests-%s.yml'|format(tests_task|trim|lower)
-      if tests_task|d(none,true) is string
-      and tests_task|trim|lower|match('^(setup|teardown)$') else
+      if tests_task|d(none)|tests_task_valid else
       none }}"
 
