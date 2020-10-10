@@ -4,12 +4,12 @@
 # completion dierctory
 for complet_sh in $( {
 __pf_rc_loader \
-"${HOME}"/{.macOS,.MacOSX}/{etc/,}bash_completion.d/*.sh
+"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{etc/,}bash_completion.d/*.sh
 } 2>/dev/null || :; )
 do
-  [ -f "${complet_sh}" ] &&
-  [ -x "${complet_sh}" ] &&
-  . "${complet_sh}" || :
+  [ -f "${complet_sh}" -a -x "${complet_sh}" ] && {
+    . "${complet_sh}"
+  } || :
 done 2>/dev/null || :
 unset complet_sh
 

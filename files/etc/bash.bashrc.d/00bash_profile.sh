@@ -14,9 +14,9 @@ for profile_sh in $( {
 __pf_rc_loader "${bashrc_dir}"/profile.d/[0-9][0-9]*.sh
 } 2>/dev/null || :; )
 do
-  [ -f "${profile_sh}" ] &&
-  [ -x "${profile_sh}" ] &&
-  . "${profile_sh}" || :
+  [ -f "${profile_sh}" -a -x "${profile_sh}" ] && {
+    . "${profile_sh}"
+  } || :
 done
 
 # Cleanup

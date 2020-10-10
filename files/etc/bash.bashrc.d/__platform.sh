@@ -42,7 +42,8 @@ fi
 if [[ "${HOSTNAME}" =~ ^([^.]+)([.].+$|$) ]]
 then
   machine=$(echo "${BASH_REMATCH[1]}"|tr '[:upper:]' '[:lower:]')
-else
+elif [ -x "/bin/hostname" ]
+then
   machine=$(/bin/hostname -s|tr '[:upper:]' '[:lower:]')
 fi
 
@@ -57,9 +58,10 @@ __pf_rc_loader() {
   local _cnt=0
   for _arg in "${@}"
   do
-    [ -z "${_arg}" ] ||
+    _arg="${_arg%/}"
+    [ -z "${_arg:-}" ] ||
     case "${_arg}" in
-    -n) 
+    -n)
       _sfx=("" "${os:--}" "${osvendor:--}" "${vendor:--}" "${machine:--}")
       _grp=("" ${usergroups:--})
       ;;
@@ -70,24 +72,40 @@ __pf_rc_loader() {
     *)
       [ -n "${_arg}" -a -d "${_arg%/*}" ] &&
       for _rcf in $( {
-        _bpn="${_arg%.*}"
+        _bpn="${_arg##*/}"
+        _bpn="${_arg%/*}/${_bpn%.*}"
         for _plt in "${_sfx[@]}"
         do
           for _ugn in "${_grp[@]}"
           do
-            if [ -f "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}" ]
+            if [ -e "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}" ]
             then echo "${_arg}${_plt:+.$_plt}${_ugn:+.$_ugn}"
-            elif [ -f "${_arg}${_plt:+_$_plt}${_ugn:+_$_ugn}" ]
+            elif [ -e "${_arg}${_plt:+_$_plt}${_ugn:+_$_ugn}" ]
             then echo "${_arg}${_plt:+_$_plt}${_ugn:+_$_ugn}"
-            elif [ -f "${_bpn}.d/${_plt:+$_plt}${_plt:+.}${_ugn:+$_ugn}" ]
-            then echo "${_bpn}.d/${_plt:+$_plt}${_plt:+.}${_ugn:+$_ugn}"
+            elif [ -e "${_arg}" -a -z "${_plt:-}${_ugn:-}" ]
+            then echo "${_arg}"
             fi || :
+            [ -n "${_bpn}" ] &&
+            if [ -e "${_bpn}${_plt:+.$_plt}${_ugn:+.$_ugn}" ]
+            then echo "${_bpn}${_plt:+.$_plt}${_ugn:+.$_ugn}"
+            elif [ -e "${_bpn}${_plt:+_$_plt}${_ugn:+_$_ugn}" ]
+            then echo "${_bpn}${_plt:+_$_plt}${_ugn:+_$_ugn}"
+            fi || :
+            [ -d "${_bpn:--}.d/" ] &&
             if [ -d "${_bpn}.d/${_plt:--}/${_ugn:--}" ]
-            then echo "${_bpn}.d/${_plt}/${_ugn}"/*
-            elif [ -d "${_bpn}.d/${_plt:--}" ]
-            then echo "${_bpn}.d/${_plt}"/*"${_ugn:+.$_ugn}"
-            elif [ -d "${_bpn}.d" -a -n "${_plt:-}${_ugn:-}" ]
-            then echo "${_bpn}.d"/*${_plt:+.$_plt}${_ugn:+.$_ugn}
+            then echo "${_bpn}.d/${_plt:--}/${_ugn:--}"/*
+            elif [ -d "${_bpn}.d/${_plt:--}.${_ugn:--}" ]
+            then echo "${_bpn}.d/${_plt:--}.${_ugn:--}"/*
+            elif [ -d "${_bpn}.d/${_plt:--}_${_ugn:--}" ]
+            then echo "${_bpn}.d/${_plt:--}_${_ugn:--}"/*
+            fi || :
+            [ -d "${_bpn:--}.d/" ] &&
+            if [ -d "${_bpn}.d/${_plt:--}" -a -z "${_ugn:-}" ]
+            then echo "${_bpn}.d/${_plt:--}"/*
+            fi || :
+            [ -d "${_bpn:--}.d/" ] &&
+            if [ -z "${_plt:-}${_ugn:-}" ]
+            then echo "${_bpn}.d"/*
             fi || :
           done
         done

@@ -6,10 +6,12 @@
   # load the /etc/profiled.*.sh
   for profile_sh in /etc/profile.d/*.sh
   do
-    [ -f "$profile_sh" ] && 
-    [ -x "$profile_sh" ] &&
-    . "$profile_sh" || :
+    [ -f "$profile_sh" -a -x "$profile_sh" ] && {
+      . "$profile_sh"
+    } || :
   done
+
+  # Cleanup
   unset profile_sh
 
 } || :

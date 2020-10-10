@@ -8,8 +8,8 @@ INPUTRC_OS_X=""
 
 # Find inputrc file in
 for inputrc_file in $( {
-__pf_rc_loader \
-"${HOME}"/{.macOS,.MacOSX}/{etc/,}inputrc
+__pf_rc_loader -r \
+"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{etc/,}inputrc
 } 2>/dev/null || :; )
 do
   [ -f "${inputrc_file}" -a -r "${inputrc_file}" ] && {

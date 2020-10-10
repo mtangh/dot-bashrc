@@ -9,7 +9,8 @@ paths_dirs=""
 
 # lookup paths file(s)
 for paths_file in $( {
-__pf_rc_loader "${HOME}"/{.macOS,.MacOSX}/{etc/,}paths
+__pf_rc_loader \
+"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{etc/,}paths
 } 2>/dev/null || :; )
 do
   [ -f "${paths_file}" ] || continue
@@ -22,7 +23,8 @@ done || :
 unset paths_file
 
 # User bin dir
-for userbindir in "${HOME}"/{.macOS,.MacOSX}/{s,}bin
+for userbindir in \
+"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{s,}bin
 do
   [ -d "${userbindir}" ] && {
     paths_dirs="${paths_dirs:+${paths_dirs} }"

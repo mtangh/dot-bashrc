@@ -94,8 +94,16 @@ unset _hex_uid _cf_file
 # Homebrew
 [ -n "$(type -P brew 2>/dev/null)" ] && {
 
-  HOMEBREW_CASK_OPTS="--appdir=/Applications"
-  export HOMEBREW_CASK_OPTS
+  for homebrewrc in $( {
+  __pf_rc_loader \
+  "${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{etc/,}homebrew.rc
+  } 2>/dev/null || :; )
+  do
+    [ -f "${homebrewrc}" ] && {
+      . "${homebrewrc}"
+    } || :
+  done
+  unset homebrewrc
 
 } || :
 

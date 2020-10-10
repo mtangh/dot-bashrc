@@ -1,0 +1,11 @@
+# ${HOME}/.profile for sh(1)
+# {{ ansible_managed }}
+
+if [ "${BASH-no}" != "no" -a -r "{{ bashrc_bash_profile_path|d('/etc/bash.profile',true) }}" ]
+then . "{{ bashrc_bash_profile_path|d('/etc/bash.profile',true) }}"
+elif [ -r "/etc/profile" ]
+then . "/etc/profile"
+fi
+
+
+# *eof*

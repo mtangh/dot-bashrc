@@ -9,7 +9,8 @@ mpathsdirs=""
 
 # lookup manpaths file(s)
 for mpathsfile in $( {
-__pf_rc_loader "${HOME}"/{.macOS,.MacOSX}/{etc/,}manpaths
+__pf_rc_loader \
+"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{etc/,}manpaths
 } 2>/dev/null || :; )
 do
   [ -f "${mpathsfile}" ] || continue

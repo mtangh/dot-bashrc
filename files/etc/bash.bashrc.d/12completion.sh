@@ -9,9 +9,9 @@ __pf_rc_loader \
 "${HOME}/."bash_completion.d/*.sh
 } 2>/dev/null || :; )
 do
-  [ -f "${complet_sh}" ] &&
-  [ -x "${complet_sh}" ] &&
-  . "${complet_sh}" || :
+  [ -f "${complet_sh}" -a -x "${complet_sh}" ] && {
+    . "${complet_sh}"
+  } || :
 done 2>/dev/null || :
 unset complet_sh
 

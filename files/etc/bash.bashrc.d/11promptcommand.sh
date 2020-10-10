@@ -12,9 +12,9 @@ __pf_rc_loader \
 "${HOME}/."bash_prompt.d/{$TERM/,}[0-9][0-9]*.sh
 } 2>/dev/null || :; )
 do
-  [ -f "$prompts_sh" ] &&
-  [ -x "$prompts_sh" ] &&
-  . "$prompts_sh" &&
+  [ -f "${prompts_sh}" -a -x "${prompts_sh}" ] && {
+    . "${prompts_sh}"
+  } &&
   [ -n "$PROMPT_COMMAND" ] &&
   break || :
 done

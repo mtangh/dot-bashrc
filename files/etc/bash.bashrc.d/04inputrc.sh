@@ -5,7 +5,7 @@ inputrc_file=""
 
 # Lookup inputrc file in
 for inputrc_file in $( {
-__pf_rc_loader \
+__pf_rc_loader -r \
 {"${XDG_CONFIG_HOME:-${HOME}/.config}"/,"${HOME}"/.}inputrc \
 {"${bash_local}","${bashrc_dir}"}/inputrc
 } 2>/dev/null || :; )

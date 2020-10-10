@@ -21,13 +21,13 @@
   # Load scripts under the 'bash_profile.d' dir
   for dot_prof_scr in $( {
   __pf_rc_loader \
-  "${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}{bash_,}profile.d/*.sh \
-  "${HOME}"/.{bash_,}profile.d/*.sh
+  "${XDG_CONFIG_HOME:-${HOME}/.config}"/{etc/,}{bash_,}profile.d \
+  "${HOME}"/.{bash_,}profile.d
   } 2>/dev/null || :; )
   do
-    [ -f "${dot_prof_scr}" ] &&
-    [ -x "${dot_prof_scr}" ] &&
-    . "${dot_prof_scr}" || :
+    [ -f "${dot_prof_scr}" -a -x "${dot_prof_scr}" ] && {
+      . "${dot_prof_scr}"
+    } || :
   done
   unset dot_prof_scr
 
