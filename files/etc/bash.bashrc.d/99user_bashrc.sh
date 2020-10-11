@@ -14,7 +14,7 @@
       =~ .*\ ${dot_bashrc}(\ .*|\ *)$ ]] &&
       continue
     . "${dot_bashrc}" &&
-    break
+    break || :
   done
   unset dot_bashrc
 
