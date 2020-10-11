@@ -1,7 +1,76 @@
 # ${bashrc_dir}/70java.sh.macosx
 # $Id$
 
-JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
-export JAVA_TOOL_OPTIONS
+# java_home command
+java_home_cmd=$(type -P java_home 2>/dev/null)
+
+# Java Versions
+java_versions=""
+
+# java_home ?
+[ -x "${java_home_cmd:-x}" ] && {
+
+  JAVA_HOME=""
+
+  # Load Java-Versions
+  for java_vers_file in \
+  "${HOME}"/{Library/Apple,Library/Apple/usr}/{etc/,}java_vers \
+  "${HOME}"/{.macOS,.MacOSX,.}/{etc/,}java_vers
+  do
+    java_versions=""
+    [ -f "${java_vers_file}" ] ||
+    continue
+    [ -x "${java_vers_file}" ] &&
+    java_versions=$(/bin/bash "${java_vers_file}" 2>/dev/null) || :
+    [ -x "${java_vers_file}" ] ||
+    java_versions=$(/bin/cat "${java_vers_file}" 2>/dev/null) || :
+    [ -n "${java_versions}" ] &&
+    break || :
+  done
+  unset java_vers_file
+
+  # Find
+  for java_ver in ${java_versions}
+  do
+    JAVA_HOME=$(${java_home_cmd} -F -v "${java_ver}" 2>/dev/null) &&
+    break || JAVA_HOME=""
+  done
+  unset java_ver
+
+  [ -n "${JAVA_HOME:-}" ] || {
+    JAVA_HOME=$(${java_home_cmd} 2>/dev/null)
+  }
+  [ -n "${JAVA_HOME:-}" ] && {
+    # Export JAVA_HOME
+    export JAVA_HOME
+    # PATH
+    eval $(${bashrc_dir}/bin/pathconfig PATH -s -f -i ${JAVA_HOME}/bin)
+  }
+
+} &>/dev/null || :
+
+# Java TOOLS Options
+[ -n "${JAVA_HOME:-}" ] && {
+
+  JAVA_TOOL_OPTIONS=""
+
+  # file.encoding
+  case "${LANG:-}" in
+  *.UTF8|*.UTF-8|*.utf8|*.utf-8)
+    JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-}${JAVA_TOOL_OPTIONS:+ }"
+    JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-}-Dfile.encoding=UTF-8"
+    ;;
+  *)
+    ;;
+  esac
+
+  [ -n "${JAVA_TOOL_OPTIONS:-}" ] && {
+    export JAVA_TOOL_OPTIONS
+  }
+
+} &>/dev/null || :
+
+# Cleanup
+unset java_home_cmd java_versions
 
 # *eof*

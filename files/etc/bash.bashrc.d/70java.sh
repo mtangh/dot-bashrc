@@ -3,13 +3,6 @@
 
 [ -z "${JAVA_HOME:-}" ] && {
 
-  [ -x "/usr/libexec/java_home" ] &&
-  JAVA_HOME="$(/usr/libexec/java_home)"
-
-} 2>/dev/null || :
-
-[ -z "${JAVA_HOME:-}" ] && {
-
   java_cmd=$(type -p java)
 
   [ -n "${java_cmd}" -a -n "$(type -P readlink)" ] && {
@@ -32,7 +25,7 @@
     }
   done
 
-  unset jhomedir jsdk_cmd
+  unset java_cmd jhomedir jsdk_cmd
 
 } || :
 

@@ -12,7 +12,7 @@ gopaths_dirs=""
 # lookup paths file(s)
 for gopaths_file in $( {
 __pf_rc_loader \
-"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX}/{etc/,}gopaths
+"${HOME}"/{Library/Apple,Library/Apple/usr,.macOS,.MacOSX,.}/{etc/,}gopaths
 } 2>/dev/null || :; )
 do
   [ -f "${gopaths_file}" ] || continue
