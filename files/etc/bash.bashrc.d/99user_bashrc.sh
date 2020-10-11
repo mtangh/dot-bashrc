@@ -3,6 +3,9 @@
 
 : "user_bashrc" && {
 
+  # No Unset Off
+  set +u
+
   # User local .bashrc file(s)
   for dot_bashrc in $( {
   __pf_rc_loader -r "${HOME}"/{.bash,}.bashrc
@@ -30,6 +33,9 @@
     } || :
   done
   unset dot_prof_scr
+
+  # No Unset On
+  set -u
 
 } || :
 

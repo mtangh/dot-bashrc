@@ -3,6 +3,9 @@
 
 : "user_bashrc for macOS" && {
 
+  # No Unset Off
+  set +u
+
   # User local .bashrc file(s)
   for dot_bashrc in $( {
   __pf_rc_loader -r \
@@ -29,6 +32,9 @@
     } || :
   done
   unset dot_prof_scr
+
+  # No Unset On
+  set -u
 
 } 1>/dev/null 2>&1 || :
 

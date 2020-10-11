@@ -15,7 +15,7 @@ __pf_rc_loader "${bashrc_dir}"/profile.d/[0-9][0-9]*.sh
 } 2>/dev/null || :; )
 do
   [ -f "${profile_sh}" -a -x "${profile_sh}" ] && {
-    . "${profile_sh}"
+    set +u; . "${profile_sh}"; set -u
   } || :
 done
 
