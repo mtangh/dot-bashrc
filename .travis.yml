@@ -34,7 +34,7 @@ script:
   #  } &&
   #  : "OK";
 
-  - bash -Cu -x .tests.sh
+  - bash -C -x .tests.sh
 
 # Notifications
 #notifications:
