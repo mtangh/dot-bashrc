@@ -8,41 +8,44 @@ This is a bash dot file.
 A system with bash installed.
 The bash version will not be confirmed. It may not work with very old bash versions.
 
-
 Role Variables
 --------------
 
+``` yaml
 bashrc_install_global: true|false
 bashrc_install_skel: true|false
-
+```
 
 Dependencies
 ------------
 
 There are no other roles to depend on.
 
-
 Example Playbook
 ----------------
 
 The method of using a roll is as follows:
 
-```
-    - hosts: servers
-      roles:
-      - role: dot-bashrc
-        vars:
-          bashrc_install_global: true
-          bashrc_install_skel: true
+System-wide installation:
+
+``` yaml
+- hosts: servers
+  roles:
+  - role: dot-bashrc
+  vars:
+    bashrc_install_global: true
+    bashrc_install_skel: true
 ```
 
-```
-    - hosts: servers
-      roles:
-      - role: dot-bashrc
-        vars:
-          bashrc_install_global: false
-          bashrc_install_skel: true
+User local installation:
+
+``` yaml
+- hosts: servers
+  roles:
+  - role: dot-bashrc
+  vars:
+    bashrc_install_global: false
+    bashrc_install_skel: true
 ```
 
 License
@@ -50,9 +53,7 @@ License
 
 BSD
 
-
 Author Information
 ------------------
 
 MT
-
