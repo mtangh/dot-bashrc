@@ -1,10 +1,10 @@
 #!/bin/bash
 THIS="${BASH_SOURCE##*/}"
+NAME="${THIS%.*}"
 CDIR=$(cd "${BASH_SOURCE%/*}" &>/dev/null; pwd)
 
-# Name
-THIS="${THIS:-install.sh}"
-NAME="${THIS%.*}"
+# Prohibits overwriting by redirect and use of undefined variables.
+set -Cu
 
 # Commands
 dotbashrc_git="$(type -P git)"
@@ -76,7 +76,7 @@ _stdout() {
 # Abort
 _abort() {
   local exitcode=1 &>/dev/null
-  [[ ${1} =~ ^[0-9]+$ ]] && {
+  [[ ${1:-} =~ ^[0-9]+$ ]] && {
     exitcode="$1"; shift;
   } &>/dev/null
   echo "ERROR: $@" "(${exitcode:-1})" |_stdout 1>&2
@@ -89,7 +89,7 @@ _cleanup() {
   if [ $ENABLE_DRY_RUN -eq 0 ]
   then
     [ -z "${DOT_BASHRC_TMP}" ] || {
-      rm -rf "${DOT_BASHRC_TMP}" 1>/dev/null 2>&1
+      rm -rf "${DOT_BASHRC_TMP}" &>/dev/null
     } || :
   else
     echo rm -rf "${DOT_BASHRC_TMP}"
@@ -151,7 +151,7 @@ _USAGE_
 # Parsing command line options
 while [ $# -gt 0 ]
 do
-  case "${1}" in
+  case "${1:-}" in
   --install)
     BASHRC_INSTALL=1
     ;;
@@ -201,20 +201,17 @@ do
     _usage; exit 0
     ;;
   -*)
-    _abort 22 "Illegal option '${1}'."
+    _abort 22 "Illegal option '${1:-}'."
     ;;
   *)
-    _abort 22 "Illegal argument '${1}'."
+    _abort 22 "Illegal argument '${1:-}'."
     ;;
   esac
   shift
 done
 
 # Redirect to filter
-exec 1> >(set +x; _stdout "${DOT_BASHRC_PRJ}/${THIS}" 2>/dev/null)
-
-# Prohibits overwriting by redirect and use of undefined variables.
-set -Cu
+exec 1>| >(set +x; _stdout "${DOT_BASHRC_PRJ}/${THIS}" 2>/dev/null)
 
 # Enable trace, verbose
 [ $ENABLE_X_TRACE -eq 0 ] || {
@@ -252,7 +249,7 @@ fi
 # Create a working directory if does not exist.
 [ -d "${DOT_BASHRC_TMP}" ] || {
   mkdir -p "${DOT_BASHRC_TMP}" &&
-  chmod 0700 "${DOT_BASHRC_TMP}" 1>/dev/null 2>&1
+  chmod 0700 "${DOT_BASHRC_TMP}" &>/dev/null
 }
 
 # Trap
@@ -536,7 +533,7 @@ then
           "${dotbasedir}.$(date +'%Y%m%d_%H%M%S')"
   }
 
-  mkdir -p "${dotbasedir}" 1>/dev/null 2>&1
+  mkdir -p "${dotbasedir}" &>/dev/null
 
   ( cd "${DOT_BASHRC_SRC}/${dotfilesrc}" && {
       tar -c . |tar -C "${dotbasedir}/" -xvf - ||
