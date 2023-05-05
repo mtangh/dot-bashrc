@@ -21,7 +21,7 @@ XTRC=0
 
 # Remove trailing separator
 _remove_trail_slash() {
-  local _lst="${1}"; shift
+  local _lst="${1:-}"; shift
   _lst="${_lst//\/\//\/}"; _lst="${_lst%/}"; _lst="${_lst//\/:/:}"
   echo "${_lst}"
   return $?
@@ -29,21 +29,21 @@ _remove_trail_slash() {
 
 # Convert relative path to absolute path
 _relative_to_absolute_path() {
-  local _dir=$(_remove_trail_slash "$1"); shift
+  local _dir=$(_remove_trail_slash "${1:-}"); shift
   ( cd "${_dir}" 1>/dev/null 2>&1 && pwd; )
   return $?
 }
 
 # Check exist path string
 _path_exist() {
-  _path_remove "${1}" "${2}" 1>/dev/null 2>&1
+  _path_remove "${1:-}" "${2:-}" 1>/dev/null 2>&1
   return $?
 }
 
 # Path remove
 _path_remove() {
-  local _lst=$(_remove_trail_slash "$1"); shift
-  local _dir=$(_relative_to_absolute_path "$1"); shift
+  local _lst=$(_remove_trail_slash "${1:-}"); shift
+  local _dir=$(_relative_to_absolute_path "${1:-}"); shift
   local newp="${_lst}"
   newp="${newp#$_dir:}"
   newp="${newp//:${_dir}:/:}"
@@ -55,39 +55,39 @@ _path_remove() {
 
 # Add path string
 add_path() {
-  local _lst=$(_remove_trail_slash "$1"); shift
+  local _lst=$(_remove_trail_slash "${1:-}"); shift
   local _dir=""
   local newp="${_lst}"
   while [ $# -gt 0 ]
   do
-    _dir=$(_relative_to_absolute_path "${1}"); shift
+    _dir=$(_relative_to_absolute_path "${1:-}"); shift
     [ -n "${_dir}" ] || {
       continue; }
-    [ $FRCE -eq 0 ] || {
+    [ ${FRCE} -eq 0 ] || {
       newp=$(_path_remove "${newp}" "${_dir}"); }
     _path_exist "$newp" "${_dir}" || {
       newp="${newp:+${newp}:}${_dir}"; }
   done
-  echo "$newp"
+  echo "${newp}"
   [ "${_lst}" != "${newp}" ]
   return $?
 }
 
 # Insert path
 ins_path() {
-  local _lst=$(_remove_trail_slash "$1"); shift
+  local _lst=$(_remove_trail_slash "${1:-}"); shift
   local _dir=""
   local newp="${_lst}"
   local insp=""
   while [ $# -gt 0 ]
   do
-    _dir=$(_relative_to_absolute_path "${1}"); shift
+    _dir=$(_relative_to_absolute_path "${1:-}"); shift
     [ -d "${_dir}" ] || {
       continue; }
-    [ $FRCE -eq 0 ] || {
+    [ ${FRCE} -eq 0 ] || {
       newp=$(_path_remove "${newp}" "${_dir}"); }
-    _path_exist "$newp" "${_dir}" ||
-    _path_exist "$insp" "${_dir}" || {
+    _path_exist "${newp}" "${_dir}" ||
+    _path_exist "${insp}" "${_dir}" || {
       insp="${insp:+${insp}:}${_dir}"; }
   done
   [ -n "${insp}" ] && {
@@ -100,50 +100,50 @@ ins_path() {
 
 # Delete path
 del_path() {
-  local _lst=$(_remove_trail_slash "$1"); shift
+  local _lst=$(_remove_trail_slash "${1:-}"); shift
   local _dir=""
   local newp="${_lst}"
   while [ $# -gt 0 ]
   do
-    _dir=$(_relative_to_absolute_path "${1}"); shift
+    _dir=$(_relative_to_absolute_path "${1:-}"); shift
     newp=$(_path_remove "${newp}" "${_dir}")
   done
-  echo "$newp"
+  echo "${newp}"
   [ "${_lst}" != "${newp}" ]
   return $?
 }
 
 # Modify path environment
 mod_path_env() {
-  local mode="$1"; shift
-  local list="$1"; shift
-  case $mode in
-  a) add_path "$list" "$@" ;;
-  i) ins_path "$list" "$@" ;;
-  d) del_path "$list" "$@" ;;
-  *) echo "$list" ;;
+  local mode="${1:-}"; shift
+  local list="${1:-}"; shift
+  case ${mode} in
+  a) add_path "${list}" "$@" ;;
+  i) ins_path "${list}" "$@" ;;
+  d) del_path "${list}" "$@" ;;
+  *) echo "${list}" ;;
   esac
   return $?
 }
 
 # Print path list
 path_list() {
-  local _IFS="$IFS"
+  local _IFS="${IFS:- }"
   local _ent=""
   IFS=":"
-  for _ent in ${1}; do
+  for _ent in ${1:-}; do
     _remove_trail_slash "${_ent%/}"
   done
-  IFS="$_IFS"
+  IFS="${_IFS}"
   return 0
 }
 
 # Usage
 usage() {
-  cat <<__EOF__
+cat <<__EOF__
 Configuration for PATH environment
 
-Usage: $THIS env_name [OPTION] {-a|-i|-d} path_string ...
+Usage: ${THIS} env_name [OPTION] {-a|-i|-d} path_string ...
 
 [OPTIONS]
 -s	shell format
@@ -161,11 +161,11 @@ __EOF__
 ##
 for ARGV in "$@"
 do
-  case "$ARGV" in
+  case "${ARGV}" in
   -s|-sh|--sh|-c|-csh|--csh|-l|-list|--list)
-    if [ -z "$PRNT" ]
+    if [ -z "${PRNT}" ]
     then PRNT="${ARGV#*-}"
-    else echo "$THIS: ERROR: Illegal option '$ARGV'" 1>&2; usage; exit 1
+    else echo "${THIS}: ERROR: Illegal option '${ARGV}'." 1>&2; usage; exit 1
     fi
     ;;
   -f|-force|--force) FRCE=1 ;;
@@ -173,7 +173,7 @@ do
   -x|-debug|--debug) XTRC=1 ;;
   -a|-i|-d)          break ;;
   -*)
-    echo "$THIS: ERROR: Illegal option '$ARGV'" 1>&2; usage; exit 1
+    echo "${THIS}: ERROR: Illegal option '${ARGV}'." 1>&2; usage; exit 1
     ;;
   *)
     ;;
@@ -183,8 +183,8 @@ done
 ##
 ## First argument
 ##
-if [ -n "$1" ]
-then TARG="$1"; NEWP="${!TARG}"; shift
+if [ -n "${1:-}" ]
+then TARG="${1:-}"; NEWP="${!TARG}"; shift
 else usage; exit 1
 fi
 
@@ -192,7 +192,7 @@ fi
 set -Cu
 
 # Enable trace, verbose
-[ $XTRC -eq 0 ] || {
+[ ${XTRC} -eq 0 ] || {
   PS4='>(${THIS}:${LINENO:--})${FUNCNAME:+:$FUNCNAME()}: '
   export PS4
   set -xv
@@ -203,24 +203,24 @@ set -Cu
 ##
 while [ $# -gt 0 ]
 do
-  case "${1}" in
+  case "${1:-}" in
   -a|-i|-d)
-    [ -z "$BUFF" ] || {
-    NEWP=$(mod_path_env $MODE "$NEWP" $BUFF); }
+    [ -z "${BUFF}" ] || {
+    NEWP=$(mod_path_env ${MODE} "${NEWP}" ${BUFF}); }
     MODE="${1#*-}"
     BUFF=""
     ;;
   -*)
     ;;
   *)
-    if [ -n "$MODE" ]
+    if [ -n "${MODE}" ]
     then
-      BUFF="${BUFF:+$BUFF }${1}"
+      BUFF="${BUFF:+$BUFF }${1:-}"
       [ $# -le 1 ] && {
-        NEWP=$(mod_path_env $MODE "$NEWP" $BUFF)
+        NEWP=$(mod_path_env ${MODE} "${NEWP}" ${BUFF})
       } || :
     else
-      echo "$THIS: ERROR: Illegal option '$1'" 1>&2; usage; exit 1
+      echo "${THIS}: ERROR: Illegal option '${1:-}'." 1>&2; usage; exit 1
     fi
     ;;
   esac
@@ -230,11 +230,11 @@ done
 ##
 ## Print new value
 ##
-case "$PRNT" in
-s|sh)   echo "$TARG="'"'"$NEWP"'"'"; export $TARG" ;;
-c|csh)  echo "setenv $TARG "'"'"$NEWP"'"' ;;
-l|list) path_list $NEWP ;;
-*)      echo "$NEWP" ;;
+case "${PRNT}" in
+s|sh)   echo "${TARG}="'"'"${NEWP}"'"'"; export ${TARG}" ;;
+c|csh)  echo "setenv ${TARG} "'"'"${NEWP}"'"' ;;
+l|list) path_list ${NEWP} ;;
+*)      echo "${NEWP}" ;;
 esac
 
 # end of shell

@@ -15,6 +15,8 @@ do
     break
   } || :
 done || :
+
+# unset
 unset inputrc_file
 
 # Export

@@ -23,7 +23,7 @@ scriptget="$(type -P curl 2>/dev/null) -sL" || :
 scriptget="$(type -P wget 2>/dev/null) -qO -" || :
 # Run
 [ -n "${scriptget}" ] && {
-  ${scriptget} "${installsh}" 2>/dev/null |/bin/bash $shellopts "$@"
+  ${scriptget} "${installsh}" 2>/dev/null |/bin/bash ${shellopts} "$@"
 }
 # End
 exit $?

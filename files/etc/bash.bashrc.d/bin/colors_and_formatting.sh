@@ -1,6 +1,6 @@
 #!/bin/bash -u
 THIS="${BASH_SOURCE##*/}"
-BASE="${THIS%.*}"
+NAME="${THIS%.*}"
 CDIR=$([ -n "${BASH_SOURCE%/*}" ] && cd "${BASH_SOURCE%/*}" 2>/dev/null; pwd)
 
 # Background
