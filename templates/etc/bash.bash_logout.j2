@@ -11,9 +11,8 @@ do
     for bash_logout_sh in \
     "${bash_logoutdir}"/[0-9][0-9]*.sh{,.${os},.${osvendor},.${machine}}
     do
-      [ -x "${bash_logout_sh}" ] && {
-         . "${bash_logout_sh}"
-      } || :
+      [ -x "${bash_logout_sh}" ] &&
+      . "${bash_logout_sh}" || :
     done
   fi
 done 2>/dev/null
