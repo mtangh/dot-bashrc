@@ -1,9 +1,61 @@
 "*****************************************************************************
 "
-" Configuration file for vim
+" Configuration file for vim v20240701-r01
 " {{ ansible_managed }}
 "
 "*****************************************************************************
+scriptencoding utf-8
+"
+" Platform
+let s:is_windows = has('win16') || has('win32') || has('win64')
+let s:is_macos = has('mac')
+"
+" VIM Functions
+function! s:mkdir_if_not_exists(dir_path) abort
+  if !isdirectory(a:dir_path)
+    call mkdir(a:dir_path,'p')
+  endif
+endfunction
+function! s:set_directory(property,dir_path) abort
+  call s:mkdir_if_not_exists(a:dir_path)
+  execute 'set '.a:property.'='.a:dir_path
+endfunction
+"
+" VIM Files and Cache Dir.
+if s:is_windows
+  " When set, a forward slash is used when expanding file names.
+  " This is useful when a Unix-like shell is used instead of
+  " cmd.exe, pwsh.exe, or powershell.exe.
+  " Backward slashes can still be typed, but they are changed to
+  " forward slashes by Vim.
+  set shellslash
+  " When set case is ignored when using file names and directories.
+  set fileignorecase
+  " vimfiles dir
+  let s:vimfiles_dir = expand('~/vimfiles')
+  " vim cache dir
+  let s:vimcache_dir = expand('~/vimfiles/cache')
+else
+  if isdirectory(expand('~/.config'))
+    let s:vimfiles_dir = expand('~/.config/vim')
+    let s:vimcache_dir = expand('~/.config/vim/cache')
+  else
+    let s:vimfiles_dir = expand('~/.vim')
+    let s:vimcache_dir = expand('~/.vim/cache')
+  endif
+endif
+" Make dir if not exists.
+call s:mkdir_if_not_exists(s:vimfiles_dir)
+call s:mkdir_if_not_exists(s:vimcache_dir)
+"
+" VIN Info file
+let s:vim_viminfo   = s:vimcache_dir.'/viminfo'
+"
+" VIM Directories
+let s:vim_backupdir = s:vimcache_dir.'/backup'
+let s:vim_swap_dir  = s:vimcache_dir.'/swap'
+let s:vim_undo_dir  = s:vimcache_dir.'/undo'
+let s:vim_view_dir  = s:vimcache_dir.'/view'
 "
 " VI Compatibility
 " ================
@@ -26,12 +78,40 @@ set nocompatible
 " Runtime Path
 " ============
 " List of directories used for runtime files and plugins
-set runtimepath^=~/.vim,~/.config/vim,{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}/vim/vim.d,/etc/vim
+let &runtimepath=s:vimfiles_dir
+let s:systempath="{{ bashrc_bashrcdir_path|d('/etc/bash.bashrc.d',true) }}/vim/vim.d"
+if s:is_windows && isdirectory('C:/Program Files/vim/vimfiles')
+  set runtimepath+=C:/Program\ Files/vim/vimfiles
+endif
+if s:is_windows && isdirectory('C:/Program Files/vim/vim')
+  set runtimepath+=C:/Program\ Files/vim/vim
+endif
+if s:is_windows && isdirectory('C:/Program Files/vim/vim/pack/dist/opt/matchit')
+  set runtimepath+=C:/Program\ Files/vim/vim/pack/dist/opt/matchit
+endif
+if s:is_windows && isdirectory(s:vimfiles_dir.'/aafter')
+  let &runtimepath=&runtimepath.','.s:vimfiles_dir.'/after'
+endif
+if s:is_windows && isdirectory('C:/Program Files/vim/vimfiles/after')
+  set runtimepath+=C:/Program\ Files/vim/vimfiles/after
+endif
+if match(s:systempath,'^[{]{2}[ ]*') <= 0
+  if isdirectory(s:systempath)
+    let &runtimepath=&runtimepath.','.s:systempath
+  endif
+endif
+if isdirectory('/etc/vim')
+  set runtimepath+=/etc/vim
+endif
 "
 " Help file
 " =========
 " Name of the main help file
-"set helpfile=/usr/share/vim/vimXX/doc/help.txt
+"if s:is_windows
+"  set helpfile=C:\Program\ Files\vim\vim\doc\help.txt
+"else
+"  set helpfile=/usr/share/vim/vimXX/doc/help.txt
+"endif
 "
 " Language Settings
 " =================
@@ -44,7 +124,7 @@ elseif match(v:lang,'\.\ceuc\(-\|\)\cjp$') > 0
 elseif match(v:lang,'\.\cshift\(-\|\)\cjis$') > 0
   set encoding=sjis
 else
-  set encoding=utf-8
+  let &encoding=(s:is_windows) ? 'cp932' : 'utf-8'
 endif
 " Character encoding used by the terminal
 if (!&termencoding)
@@ -55,8 +135,13 @@ if (!&fileencoding)
   let &fileencoding=&encoding
 endif
 " Automatically detected character encodings
-set fileencodings=iso-2022-jp,euc-jp,cp932,sjis,utf-8,ucs-bom,utf-16,latin1
-"set fileencodings=utf-8,cp932,sjis,euc-jp,iso-2022-jp,ucs-bom,utf-16,latin1
+set fileencodings=ucs-bom,utf-8,iso-2022-jp,euc-jp,cp932,sjis
+set fileencodings+=utf-16le,utf-16,latin1,default
+" Only effective when 'encoding' is "utf-8" or another Unicode encoding.
+" Tells Vim what to do with characters with East Asian Width Class
+" Ambiguous (such as Euro, Registered Sign, Copyright Sign, Greek
+" letters, Cyrillic letters).
+set ambiwidth=double
 "
 " Reading and Writing files
 " =========================
@@ -67,7 +152,7 @@ set modeline
 " end-of-line format: "dos", "unix" or "mac"
 "set fileformat=unix
 " List of file formats to look for when editig a file
-set fileformats=unix,dos,mac
+let &fileformats=((s:is_windows) ? 'dos,unix,mac' : 'unix,dos,mac')
 " Writing files is allowed
 "set write
 " Write a backup file before overwriting a file
@@ -81,18 +166,55 @@ set fileformats=unix,dos,mac
 " Automatically read a file when it was modified outside of Vim
 "set noautoread
 "
+" Viminfo
+" =======
+" When non-empty, the viminfo file is read upon startup and written
+" when exiting Vim (see viminfo-file).
+" Except when 'viminfofile' is "NONE".
+set viminfo='0,<50,f50,s20,h
+let &viminfo=&viminfo.','.((s:is_windows) ? 'rA:,rB:' : '')
+" Overrides the file name used for viminfo.
+if v:version >= 801
+  let &viminfofile=s:vim_viminfo
+endif
+"
+" Swap
+" =====
+" Use a swapfile for the buffer.
+"set swapfile=on
+" When this option is not empty a swap file is synced to disk after
+" writing to it.
+"set swapsync=fsync
+" List of directory names for the swap file, separated with commas.
+""set directory=.,$TEMP
+"call s:set_directory('directory',s:vim_swap_dir)
+"
 " Backups
 " =======
 " Keep a backup after overwriting a file
 set nobackup
 " Patterns that specify for which files a backup is not made
-"set backupskip=/tmp/*
+"set backupskip=
+"if !empty($TEMP) && isdirectory(expand($TEMP))
+"  let &backupskip=&backupskip.','.expand($TEMP).'/*'
+"endif"
+"if empty($TEMP) && !empty($TMP) && isdirectory(expand($TEMP))
+"  let &backupskip=&backupskip.','.expand($TMP).'/*'
+"endif
+"if isdirectory('/tmp')
+"  set backupskip+=/tmp/*
+"endif
 " Whether to make the backup as a copy or rename the existing file
 "set backupcopy=auto
 " List of directories to put backup files in
-"set backupdir=
+""set backupdir=~/.vim/backup
+"call s:set_directory('backupdir',s:vim_backupdir)
 " File name extension for the backup file
 "set backupext=~
+" When non-empty the oldest version of a file is kept.
+" This can be used to keep the original version of a file if you
+" are changing files in a source distribution.
+"set patchmode=.ORIG
 "
 " Messages and info.
 " ==================
@@ -105,7 +227,7 @@ set ruler
 " Alternate format to be used for the ruler
 "set rulerformat=
 " List of preferred languages for finding help
-set helplang=ja
+set helplang=ja,en
 "
 " Displaying Text
 " ===============
@@ -124,20 +246,23 @@ set sidescrolloff=8
 " Long lines wrap
 "set nowrap
 " Wrap long lines at a character in 'breakat'
-"set linebreak
+set linebreak
 " Which characters might cause a line break
-"set breakat=\ \	!@*-+;:,./?
+set breakat=\ \	!@*-+;:,./?
 " String to put before wrapped screen lines
-"set showbreak=
+set showbreak=
+" Change the way text is displayed.
+" This is a comma-separated list of flags.
 " Include "lastline" to show the last line even if it doesn't fit
 " Include "uhex" to show unprintable characters as a hex number
-"set display=
+set display=lastline
 " Characters to use for the status line, folds and filler lines
 "set fillchars=vert:\|,fold:-
 " Show <Tab> as ^I and end-of-line as $
-"set list
+set list
 " List of strings used for list mode
 "set listchars=eol:$
+set listchars=tab:>-,trail:_,nbsp:%
 " Show the line number for each line
 "set number
 " Number of columns to use for the line number
@@ -146,11 +271,24 @@ set sidescrolloff=8
 "set lazyredraw
 " Delay in msec for each char written to the display (for debugging)
 "set writedelay=0
+" Indicates a fast terminal connection.  More characters will be sent
+" to the screen for redrawing, instead of using insert/delete line
+" commands. 
+set ttyfast
 "
 " Editing Text
 " ============
+" When on, Vim automatically saves undo history to an undo file when
+" writing a buffer to a file, and restores undo history from the same
+" file on buffer read.
+set undofile
 " Maximum number of changes that can be undone
-"set undolevels=1000
+set undolevels=100
+" List of directory names for undo files, separated with commas.
+"set undodir=~/.vim/undo
+call s:set_directory('undodir',s:vim_undo_dir)
+" Save the whole buffer for undo when reloading it.
+"set undoreload=10000
 " Changes have been made and not written to a file
 "set modified
 " Buffer is not to be written
@@ -163,10 +301,21 @@ set sidescrolloff=8
 "set wrapmargin=0
 " Definition of what comment lines look like
 "set comments=s1:/*,mb:*,ex:*/,://,b:#,:%,:XCOMM,n:>,fb:-
+" When "on" the commands listed below move the cursor to the
+" first non-blank of the line.  When off the cursor is kept in
+" the same column (if possible).
+set nostartofline
 " Specifies what <BS>, CTRL-W, etc. can do in Insert mode
+" 0:none, 1:[indent,eol], 2:[indent,eol,start], 3:[indent,eol,nostop]
 "set backspace=2
+" Allow specified keys that move the cursor left/right to move to
+" the previous/next line when the cursor is on the first/last
+" character in the line. 
+"set whichwrap=b,s,h,l,~,<,>,[,]
+set whichwrap=
 " List of flags that tell how automatic formatting works
-"set formatoptions=tcq
+set formatoptions=tcq
+set formatoptions+=mMj
 " Pattern to recognize a numbered list
 "set formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 " Expression used for "gq" to format lines
@@ -174,18 +323,19 @@ set sidescrolloff=8
 " When inserting a bracket, briefly jump to its match
 set showmatch
 " Tenth of a second to show a match for 'showmatch'
-"set matchtime=5
+set matchtime=3
 " List of pairs that match for the "%" command
-"set matchpairs=(:),{:},[:]
+set matchpairs=(:),{:},[:]
 " Enable entering digraps with c1 <BS> c2
 "set digraph
 " The "~" command behaves like an operator
 "set tildeop
-" Function called for the"g@"  operator
+" Function called for the "g@" operator
 "set operatorfunc=
 " Use two spaces after '.' when joining a line
 "set joinspaces
-" Number formats recognized for CTRL-A and CTRL-X commands; 'alpha', 'octal' and/or 'hex';
+" Number formats recognized for CTRL-A and CTRL-X commands;
+" 'alpha', 'octal' and/or 'hex';
 "set nrformats=octal,hex
 "
 " Completion
@@ -217,7 +367,17 @@ set showmatch
 " Highlighting
 " ============
 " Which highlighting to use for various occasions
-"set highlight=:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,c:VertSplit,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn,A:DiffAdd,C:DiffChange,D:DiffDelete,T:DiffText,>:SignColumn,B:SpellBad,P:SpellCap,R:SpellRare,L:SpellLocal,+:Pmenu,=:PmenuSel,x:PmenuSbar,X:PmenuThumb,*:TabLine,#:TabLineSel,_:TabLineFill,!:CursorColumn,.:CursorLine
+"set highlight=8:SpecialKey,~:EndOfBuffer,@:NonText,d:Directory,e:ErrorMsg
+"set highlight+=i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg
+"set highlight+=n:LineNr,a:LineNrAbove,b:LineNrBelow,N:CursorLineNr,r:Question
+"set highlight+=s:StatusLine,S:StatusLineNC,c:VertSplit,t:Title,v:Visual,V:VisualNOS
+"set highlight+=w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn
+"set highlight+=A:DiffAdd,C:DiffChange,D:DiffDelete,T:DiffText
+"set highlight+=>:SignColumn,-:Conceal,B:SpellBad,P:SpellCap,R:SpellRare,L:SpellLocal
+"set highlight+=+:Pmenu,=:PmenuSel,x:PmenuSbar,X:PmenuThumb
+"set highlight+=*:TabLine,#:TabLineSel,_:TabLineFill
+"set highlight+=!:CursorColumn,.:CursorLine,o:ColorColumn,q:QuickFixLine
+"set highlight+=z:StatusLineTerm,Z:StatusLineTermNC
 " Highlight all matches for the last used search pattern
 set hlsearch
 " Highlight the screen column of the cursor
@@ -244,26 +404,39 @@ set hlsearch
 " ==================
 " Number of spaces a <Tab> in the text stands for
 set tabstop=4
+" If non-zero, number of spaces to insert for a <Tab>
+"set softtabstop=4
 " Number of spaces used for each step of (auto)indent
 set shiftwidth=4
 " A <Tab> in an indent inserts 'shiftwidth' spaces
 "set smarttab
-" If non-zero, number of spaces to insert for a <Tab>
-"set softtabstop=0
+set nosmarttab
 " Expand <Tab> to spaces in Insert mode
 "set expandtab
+set noexpandtab
 " Automatically set the indent of a new line
 "set autoindent
+set noautoindent
 " Do clever autoindenting
 "set smartindent
+set nosmartindent
 " Copy whitespace for indenting from previous line
 "set copyindent
 " Expression used to obtain the indent of a line
-"set indentexpr=
+set indentexpr=
 " Keys that trigger indenting with 'indentexpr' in Insert mode
 "set indentkeys=0{,0},:,0#,!^F,o,O,e
+set indentkeys=
 " Preserve kind of whitespace when changing indent
-"set preserveindent
+set preserveindent
+"
+" View
+" ====
+" Changes the effect of the :mkview command.
+"set viewoptions=folds,options,cursor,curdir
+" Name of the directory where to store files for :mkview.
+"set view_dir=~/.vim/view
+call s:set_directory('viewdir',s:vim_view_dir)
 "
 " "C" Indenting
 " =============
@@ -360,9 +533,11 @@ set suffixes+=.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc
 "
 " Editing Options
 " ===============
-" Don't write backup file if vim is being called by "crontab -e"
-"au BufWrite /tmp/crontab.* set nowritebackup
-" Don't write backup file if vim is being called by "chpass"
-"au BufWrite /etc/pw.* set nowritebackup
+"if !s:is_windows && !s:is_macos
+"  " Don't write backup file if vim is being called by "crontab -e"
+"  au BufWrite /tmp/crontab.* set nowritebackup
+"  " Don't write backup file if vim is being called by "chpass"
+"  au BufWrite /etc/pw.* set nowritebackup
+"endif
 "
 "*eof*
